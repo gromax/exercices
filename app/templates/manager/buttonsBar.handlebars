@@ -1,0 +1,29 @@
+<div id="{{id}}" class="row">
+{{{html_buttons}}} {{!--Envoi direct du html pour fabriquer les boutons--}}
+
+{{#if buttons}}
+	<div class="col-md-6 col-xs-12">
+		<div class="btn-group" role="group">
+	{{#each buttons}}
+		{{#if this.link}}
+			<a class="btn btn-default" href="#{{ this.link }}" role="button">{{ this.title }}</a>
+		{{else}}
+			<button type="button" class="btn btn-default" name="{{ this.name }}">{{ this.title }}</button>
+		{{/if}}
+	{{/each}}
+		</div>
+	</div>
+{{/if}}
+
+{{#if search}}
+	<div class="col-md-6 col-xs-12">
+		<div class="input-group">
+			<span class="input-group-addon"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></span>
+			<input type="text" class="form-control" name="search" placeholder="Recherche">
+		</div>
+	</div>
+{{/if}}
+	<div class="col-md-4 col-xs-12" id="{{id_pagination}}">
+{{{html_pagination}}}
+	</div>
+</div>

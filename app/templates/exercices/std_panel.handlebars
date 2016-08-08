@@ -1,0 +1,46 @@
+<div class="panel panel-{{#if focus}}warning{{else}}primary{{/if}}">
+	<div class="panel-heading"><h4 class="panel-title">{{ title }}</h4></div>
+{{#each zones}}
+	{{#if this.body}}
+	<div class="panel-body" name="{{ this.body }}">
+		{{{this.html}}}
+	</div>
+	{{/if}}
+	{{#if this.well}}
+	<div class="well" name="{{ this.well }}">
+		{{{this.html}}}
+	</div>
+	{{/if}}
+	{{#if this.list}}
+	<ul class="list-group" name="{{ this.list }}">
+		{{{this.html}}}
+	</ul>
+	{{/if}}
+	{{#if this.help}}
+	<ul class="list-group collapse" id="{{ this.help }}">{{!--Il ne peut y avoir qu'une seule aide active à la fois dans un exercice--}}
+		{{{this.html}}}
+	</ul>
+	{{/if}}
+	{{#if this.table}}
+	<table class="table table-bordered" name="{{ this.table }}">
+		{{#if this.entetes}}
+		<thead>
+			<tr>
+			{{#each this.entetes}}<th>{{this}}</th>{{/each}}
+			</tr>
+		</thead>
+		{{/if}}
+		{{#if this.lignes}}
+		<tbody>
+			{{#each this.lignes}}
+			<tr>
+				{{#if this.entete}}<td>{{ this.entete }}</td>{{/if}}
+				{{#each this.items}}<td>{{ this }}</td>{{/each}}
+			</tr>
+			{{/each}}
+		</tbody>
+		{{/if}}
+	</table>
+	{{/if}}
+{{/each}}
+</div>

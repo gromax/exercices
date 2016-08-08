@@ -1,0 +1,12 @@
+{{#if messages}}
+	{{#each messages}}
+<div class="alert alert-danger" role="alert">
+		{{ this }}
+</div>
+	{{/each}}
+{{else}}
+<div class="alert alert-danger" role="alert">
+	<h4><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> <b>Erreur !</b></h4>
+	<p>Soit cette page n'existe pas, soit vous n'êtes pas autorisé à la voir.</p>
+</div>
+{{/if}}

@@ -1,0 +1,8 @@
+{{! Correction avec un div pour ajouter un contenu }}
+{{#if good}}
+<li class="list-group-item list-group-item-success">Vous avez fait le bon choix :</li>
+<li class="list-group-item list-group-item-success"><center><div name="{{ name }}"></div></center></li>
+{{else}}
+<li class="list-group-item list-group-item-danger">Vous n'avez pas fait le bon choix. Vous auriez dû choisir :</li>
+<li class="list-group-item list-group-item-danger"><center><div name="{{ name }}"></div></center></li>
+{{/if}}

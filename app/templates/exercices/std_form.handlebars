@@ -1,0 +1,48 @@
+<form id="{{id}}">
+<div class="row">
+{{#each inputs}}
+	{{#if this.radio}}
+	<div class="col-xs-12 col-md-12">
+		{{#each this.list}}
+		<label class="radio-inline">
+			<input type="radio" name="{{../radio}}" value="{{ this.value }}" {{#if this.checked }}checked{{/if}}>{{ this.title }}
+		</label>
+		{{/each}}
+	</div>
+	{{else}}
+	{{#if this.clavier}}
+	<div class="col-xs-12 col-md-6">
+		<div class="btn-group" role"group">
+		{{#each this.clavier}}
+			<button class="btn btn-default" name="{{ this.name }}" type="button" title="{{ this.title }}">{{ this.tag }}</button>
+		{{/each}}
+		</div>
+	</div>
+	{{else}}
+		{{#if large}}
+	<div class="col-xs-12 col-md-12">
+		{{else}}
+	<div class="col-xs-12 col-md-4">
+		{{/if}}
+		<div class="input-group">
+			{{#if tag}}<span class="input-group-addon">{{ this.tag }}</span>{{/if}}
+			<input type="text" name={{ this.name }} class="form-control" placeholder="{{ this.description }}">
+			{{#if postTag}}<span class="input-group-addon">{{ this.postTag }}</span>{{/if}}
+		</div>
+	</div>
+	{{/if}}
+	{{/if}}
+{{/each}}
+	<div class="col-xs-12 col-md-4">
+		<div class="btn-group" role"group">
+{{#if help_target}}
+			<button class="btn btn-info" type="button" data-toggle="collapse" data-target="#{{ help_target }}" title="Aide"><span class="glyphicon glyphicon-info-sign"></span></button>
+{{/if}}
+{{#each clavier}}
+			<button class="btn btn-default" name="{{ this.name }}" type="button" title="{{ this.title }}">{{ this.tag }}</button>
+{{/each}}
+			<button type="submit" class="btn btn-default">Valider</button>
+		</div>
+	</div>
+</div>
+</form>

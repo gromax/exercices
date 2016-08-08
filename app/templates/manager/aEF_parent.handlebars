@@ -1,0 +1,9 @@
+{{#if params.links.direct}}
+<div id="{{id}}"><!-- Conteneur pour les items -->
+	{{{liste_html}}}
+</div>
+{{else}}
+<ul class="list-group" id="{{id}}"><!-- Conteneur pour les items -->
+	{{{liste_html}}}
+</ul>
+{{/if}}

@@ -1,0 +1,48 @@
+{{#if userIsEmpty}}
+<li class="list-group-item {{#if goodIsntEmpty}}list-group-item-danger{{else}}list-group-item-success{{/if}}">
+Vous avez répondu $\mathcal{S}=\varnothing$.{{#if goodIsEmpty}} Bonne réponse.{{/if}}
+</li>
+{{/if}}
+{{#if users}}
+<li class="list-group-item list-group-item-warning">
+Vous avez répondu : $\left\lbrace {{users}} \right\rbrace$.
+</li>
+{{/if}}
+{{#if goodIsEmpty}}
+<li class="list-group-item list-group-item-danger">
+La bonne réponse était $\mathcal{S}=\varnothing$, c'est à dire : <b>aucune solution</b>.
+</li>
+{{/if}}
+{{#if goodValues}}
+	{{#each goodValues}}
+		{{#with this}}
+<li class="list-group-item {{#if ok}}list-group-item-success{{else}}list-group-item-danger{{/if}}">
+	Vous avez donné la solution ${{ userTex }}$.
+			{{#if erreur.exact}}
+				{{#if formeOk}}
+	C'est une <b>bonne réponse</b>.
+				{{else}}
+	C'est une bonne réponse, mais vous devez donner le résultat sous <b>forme simplifiée</b> : ${{ good }}$.
+				{{/if}}
+			{{else}}
+				{{#if approximation}}
+	Votre résultat est une <b>approximation</b> de la bonne réponse< : ${{ good }}$.
+				{{/if}}
+			{{/if}}
+			{{#if erreur.moduloError}}
+	Vous avez oublié le <b>modulo</b>. Ici : $k\cdot {{erreur.moduloError}}$.
+			{{/if}}
+</li>
+		{{/with}}
+	{{/each}}
+{{/if}}
+{{#if lefts}}
+<li class="list-group-item list-group-item-danger">
+<b>Vous n'avez pas donné</b> les solutions suivantes : ${{lefts}}$
+</li>
+{{/if}}
+{{#if bads}}
+<li class="list-group-item list-group-item-danger">
+Ces solutions que vous avez données sont <b>fausses</b> : ${{bads}}$
+</li>
+{{/if}}

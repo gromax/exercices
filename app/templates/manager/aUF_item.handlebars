@@ -1,0 +1,49 @@
+{{#if add}}
+	{{#if params.links.direct}}
+<a href="#{{params.links.direct}}{{ item.id }}" class="list-group-item" id="{{id}}">
+	{{else}}
+<li class="list-group-item" id="{{id}}">
+	{{/if}}
+{{/if}}
+	<div>
+	{{#if params.links.indirect}}
+		<a href="#{{params.links.indirect}}{{ item.id }}">
+	{{/if}}
+		<h4 class="list-group-item-heading pull-left">{{#if params.showUser}}{{item._user.prenom}} {{item._user.nom}}{{else}}{{ item._fiche.nom }}{{/if}} <small>donné le {{item.dateFr}}</small></h4>
+	{{#if params.links.indirect}}
+		</a>
+	{{/if}}
+		<div class="pull-right">
+<div class="btn-group" role="group">
+{{#if params.links.indirect}}
+	<a href="#{{params.links.indirect}}{{ item.id }}" class="btn btn-primary btn-sm" role="button"><span class="glyphicon glyphicon-list-alt" data-toggle="tooltip" data-placement="top" title="Voir les notes"></span></a>
+{{/if}}
+	<button type="button" class="btn {{#if item.actif}}btn-success{{else}}btn-danger{{/if}} btn-sm" {{#unless item.actif}}data-toggle="tooltip" data-placement="top" title="Note verrouillée"{{/unless}}>
+{{#if item._pasnote}}
+		<b>Pas noté</b>
+{{else}}
+		Note : <b>{{item.str_moyenne}}%</b>
+{{/if}}
+	</button>
+
+{{#if params.canMod}}
+	{{#if item.actif}}
+		<button type="button" class="btn btn-success btn-sm" name="activateButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Rendre inactif"><span class="glyphicon glyphicon-ok-circle"></span></button>
+	{{else}}
+		<button type="button" class="btn btn-danger btn-sm" name="activateButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Rendre actif"><span class="glyphicon glyphicon-ban-circle"></span></button>
+	{{/if}}
+		<button type="button" class="btn btn-default btn-sm" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="glyphicon glyphicon-trash"></span></button>
+{{/if}}
+</div>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	{{#if params.showFiche}}<p class="list-group-item-text">{{ item._fiche.description }}</p>{{/if}}
+{{#if add}}
+	{{#if params.links.direct}}
+</a>
+	{{else}}
+</li>
+	{{/if}}
+{{/if}}
+

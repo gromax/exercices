@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+			<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+			<link rel="stylesheet" href="./dist/styles.css" media="screen"/>
+			<link href="./app/scripts/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" media="screen">
+			<link rel="stylesheet" href="./app/scripts/vendor/jquery-ui/themes/base/jquery-ui.min.css">
+			<link rel="stylesheet" href="./app/styles/vendor/animate.css">
+			<script src="./js_constantes.php"></script>
+			<script src="./app/scripts/vendor/jquery/dist/jquery.min.js"></script>
+			<script src="./app/scripts/vendor/jquery-ui/jquery-ui.min.js"></script>
+			<script src="./app/scripts/vendor/jquery-validation/dist/jquery.validate.min.js"></script>
+			<script src="./app/scripts/vendor/bootstrap/dist/js/bootstrap.min.js"></script>
+			<script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});</script>
+			<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+			<script src="./app/scripts/vendor/jsxgraph/distrib/jsxgraphcore.js"></script>
+			<!--<script src="./vendor/highcharts.js"></script>-->
+			<script src="./app/scripts/vendor/noty/js/noty/jquery.noty.js"></script>
+			<!--<script type="text/javascript" src="./vendor/noty/themes/bootstrap.js"></script>-->
+			<script src="./dist/math.js"></script>
+			<script src="./app/scripts/vendor/handlebars/handlebars.runtime.js"></script>
+			<script src="./app/scripts/functions.js"></script>
+			<script src="./dist/exercices.js"></script> <!-- script exercice -->
+			<script src="./dist/exercices.hbs"></script> <!-- template exercice -->
+			<script src="./dist/manager.js"></script>
+			<script src="./dist/manager.hbs"></script>
+			<title>Bienvenue sur TutoMaths</title>
+	</head>
+	<body onload="Controller.initPage();">
+		<nav class="navbar navbar-default" role="navigation">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#Home">Exercices de maths</a>
+				</div>
+				<div class="collapse navbar-collapse" id="navbar-collapse-1">
+					<ul class="nav navbar-nav" id="menus">
+					</ul>
+					<ul class="nav navbar-nav navbar-right" id="menu-droite">
+					</ul>
+				</div>
+			</div>
+		</nav>
+
+		<div class="modal fade" id="modalContainer" tabindex="-1" role="dialog">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content" id="modalContent">
+				</div>
+			</div>
+		</div>
+
+		<div class="container">
+			<div class="row">
+				<div class="col-xs-12 col-md-10 col-md-offset-1 col-xs-offset-0">
+					<ol class="breadcrumb" name="ariane">
+						<li><a href="#Home"><span class="glyphicon glyphicon-home"></span></a></li>
+					</ol>
+					<div id="mainContent"></div>
+					<ol class="breadcrumb" name="ariane">
+						<li><a href="#Home"><span class="glyphicon glyphicon-home"></span></a></li>
+					</ol>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

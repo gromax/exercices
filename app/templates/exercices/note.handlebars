@@ -1,0 +1,20 @@
+<div class="alert {{#if finished}}alert-success{{else}}alert-warning{{/if}}" role="alert">
+	{{#if finished}}
+	<p><span class="glyphicon glyphicon-ok"></span> <b>Terminé !</b> Votre note est de <b>{{note}}%</b>.</p>
+		{{#if todoOnce}}
+			{{#unless doneOnce}}
+	<p>Vous avez déjà fait cet exercice {{done}} fois et vous avez une moyenne de <b>{{moyenne}}%</b>.</p>
+			{{/unless}}
+		{{else}}
+		<p>Vous devez répéter cet exercice au moins {{todo}} fois. Vous l'avez fait <b>{{done}}</b> fois et vous avez une moyenne de <b>{{moyenne}}%</b>.</p>
+		{{/if}}
+		{{#if reload}}<p><i>Vous pouvez recommencer l'exercice pour améliorer votre note.</i></p>{{/if}}
+	{{else}}
+	<p>Votre note est de <b>{{note}}%</b>. <i>Attention l'exercice n'est pas terminé !</i></p>
+	{{/if}}
+</div>
+{{#if noteInBDD}}
+<div class="alert alert-danger" role="alert">
+La note en base de donnée est de <b>{{noteInBDD}}%</b> (sans doute à cause d'un bug).
+</div>
+{{/if}}

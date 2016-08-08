@@ -1,0 +1,11 @@
+{{#each points}}
+	{{#if this.good}}
+<li class="list-group-item list-group-item-danger"><b>Point ${{ this.good }}$ mal placé.</b>{{#if this.user}} Vous l'avez mis en {{this.user}}.{{/if}}{{#if this.xy_inverse}} Vous avez interverti l'abscisse et l'ordonnée.{{/if}}</li>
+	{{else}}
+		{{#if this.approx}}
+<li class="list-group-item list-group-item-success"><b>Point ${{ this.user }}$ :</b> est approximativement bien placé.</li>
+		{{else}}
+<li class="list-group-item list-group-item-success"><b>Point ${{ this.user }}$ :</b> est bien placé.</li>
+		{{/if}}
+	{{/if}}
+{{/each}}

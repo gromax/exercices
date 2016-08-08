@@ -1,0 +1,57 @@
+{{#if user.isAdmin}}
+<div class="jumbotron">
+	<h1>Bienvenue !</h1>
+	<p>Vous êtes administrateur du site. Vous pouvez exécuter une des commandes suivantes :</p>
+	<div class="btn-group" role="group" aria-label="...">
+		<a type="button" class="btn btn-primary" href="#Comptes">Voir les utilisateurs</a>
+		<a type="button" class="btn btn-primary" href="#Classes">Voir les classes</a>
+		<a type="button" class="btn btn-primary" href="#Exercices">Voir les exercices</a>
+		<a type="button" class="btn btn-primary" href="#Devoirs">Voir les devoirs</a>
+	</div>
+</div>
+{{/if}}
+{{#if user.isProf}}
+<div class="jumbotron">
+	<h1>Bienvenue !</h1>
+	<p>Vous êtes un professeur. Vous pouvez exécuter une des commandes suivantes :</p>
+	<div class="btn-group" role="group" aria-label="...">
+		<a type="button" class="btn btn-primary" href="#Comptes">Voir vos élèves</a>
+		<a type="button" class="btn btn-primary" href="#Classes">Voir vos classes</a>
+		<a type="button" class="btn btn-primary" href="#Exercices">Voir les exercices</a>
+		<a type="button" class="btn btn-primary" href="#Devoirs">Voir vos devoirs</a>
+	</div>
+</div>
+{{/if}}
+{{#if user.isEleve}}
+<div>
+	{{{html_premiere_connexion}}}
+
+	<h3>Vos devoirs</h3>
+	<h5><b>Sélectionnez un devoir</b></h5>
+	{{{html_devoirs}}}
+	<p></p>
+
+	{{#if unfinished}}
+	<div class="well">Vous avez commencé des exercices sans les achever. <a type="button" class="btn btn-danger" href="#mes-exercices">Terminer les exercices</a></div>
+	{{/if}}
+
+	{{!--<div class="well">Vous pouvez aussi voir la liste de tous les exercices pour faire des exercices librement, mais ils ne seront pas notés : <a href="#Exercices">Voir la liste des exercices</a></div>--}}
+
+	<div class="alert alert-info" role="alert">Pour tenir compte d'éventuels corrections, pensez à réactualiser la page (touche F5 sur PC)</div>
+</div>
+{{/if}}
+{{#if user.local}}
+<div class="jumbotron">
+	<h1>Bienvenue !</h1>
+	<p>Ce site propose des exercices de mathématiques générés automatiquement.</p>
+	<p><a href="#exercices">Voir les exercices</a></p>
+</div>
+{{else}}
+	{{#if user.isOff}}
+<div class="jumbotron">
+	<h1>Bienvenue !</h1>
+	<p>Ce site propose des exercices de mathématiques générés automatiquement afin de vous entraîner et de vous aider à progresser. <a href="#connexion">Connexion</a></p>
+	<p>Vous n'avez pas encore de compte ? <a class="btn btn-primary btn-lg" href="#rejoindre-une-classe" role="button">Inscrivez-vous !</a></p>
+</div>
+	{{/if}}
+{{/if}}

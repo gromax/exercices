@@ -1,0 +1,24 @@
+<div class="modal-header bg-primary">
+	<button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+	<h4 class="modal-title">{{#if glyph}}<span class="glyphicon {{ glyph }}"></span> {{/if}}{{{ title }}}</h4>
+</div>
+{{#if idForm}}{{!--Obligé de faire ainsi car le valid est dans l'autre div --}}
+<form class="form-horizontal" id="{{idForm}}" role="form">
+{{/if}}
+<div class="modal-body">
+{{{html}}}
+</div>
+<div class="modal-footer">
+	{{#each otherButtons}}
+		<button type="button" class="btn btn-default" id="{{this.id}}">{{this.text}}</button>
+	{{/each}}
+	{{#if idForm}}
+	<button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+	<button type="submit" class="btn btn-primary">Valider</button>
+	{{else}}
+	<button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>
+	{{/if}}
+</div>
+{{#if idForm}}
+</form>
+{{/if}}

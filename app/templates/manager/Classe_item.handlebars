@@ -1,0 +1,30 @@
+{{#if add}}<tr id="{{id}}">{{/if}}
+{{#if params.showId}}
+	<td><span class="badge">{{ item.id }}</span></td>
+{{/if}}
+	<td>
+		<a href='#{{params.links.classe}}{{ item.id }}'>{{ item.nom }}</a>
+	</td>
+{{#if params.showOwner}}
+	<td>{{ item.nomOwner }}</td>
+{{/if}}
+{{#if params.showOpen}}
+	<td>
+	{{#if item.ouverte}}
+		<span class="classeOuverte">Ouverte</span>
+	{{else}}
+		<span class="classeFermee">Fermée</span>
+	{{/if}}
+	</td>
+{{/if}}
+	<td>{{ item.dateFr }}</td>
+{{#if params.showModify}}
+	<td align="right">
+	<div class="btn-group" role="group">
+{{!Bouton d'édition}}
+	<button type="button" class="btn btn-default btn-sm" name="editButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Modifier"><span class="glyphicon glyphicon-pencil"></span></button>
+{{!Bouton suppression}}
+	<button type="button" class="btn btn-default btn-sm" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="glyphicon glyphicon-trash"></span></button>
+	</div>
+{{/if}}
+{{#if add}}</tr>{{/if}}

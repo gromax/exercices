@@ -1,0 +1,11 @@
+{{#if ineq}}
+<p>On considère l'équation : ${{ gauche }} {{ineq}} {{ droite }}$.</p>
+<p>Vous devez donner l'ensemble solution de cette inéquation.</p>
+{{else}}
+<p>On considère l'équation : ${{ gauche }} = {{ droite }}$.</p>
+<p>Vous devre donner la ou les solutions{{#if ensemble}} dans{{ensemble}}{{/if}} de cette équation, si elles existent.</p>
+<p>S'il n'y a pas de solution, écrivez $\varnothing$. s'il y a plusieurs solutions, séparez-les avec ;</p>
+{{/if}}
+{{#if modulo}}
+<p class="text-danger">N'oubliez pas le modulo, par exemple ${{ modulo }}$. Vous pouvez écrire pi ou utiliser la touche $\pi$.</p>
+{{/if}}

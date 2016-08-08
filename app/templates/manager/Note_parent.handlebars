@@ -1,0 +1,15 @@
+<table class="table table-striped">
+	<thead>
+		<tr>
+			{{#if params.showId}}<th width="16px">#</th>{{/if}}
+			<th width="160px"><a href="" sortBy="date"><span class="glyphicon glyphicon-time"></span></a></th>
+			<th></th> <!-- ajuste la largeur -->
+			<th width="80px">Note</th>
+			<th width="16px">Fini</th>
+			<th width="100px"></th> <!-- bouton oeil|suppression -->
+		</tr>
+	</thead>
+	<tbody id="{{id}}"><!-- Conteneur pour les items -->
+	{{{liste_html}}}
+	</tbody>
+</table>

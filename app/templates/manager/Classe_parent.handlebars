@@ -1,0 +1,17 @@
+<table class="table table-striped">
+	<thead>
+		<tr>
+			{{#if params.showId}}<th width="16px"><a href="" sortBy="id">#</a></th>{{/if}}
+			<th><a href="" sortBy="nom">Nom</a></th>
+			{{#if params.showOwner}}<th>Professeur</th>{{/if}}
+			{{#if params.showOpen}}<th>ouverte</th>{{/if}}
+			<th><a href="" sortBy="date">Création</a></th>
+			{{#if params.showModify}}
+			<th width="100"></th> <!-- bouton d'édition|bouton de suppression -->
+			{{/if}}
+		</tr>
+	</thead>
+	<tbody id="{{id}}"><!-- Conteneur pour les items -->
+		{{{liste_html}}}
+	</tbody>
+</table>

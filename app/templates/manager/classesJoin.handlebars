@@ -1,0 +1,16 @@
+{{#if classes}}
+<h3>Sélectionnez la classe à rejoindre</h3>
+<div name="classesList">
+	{{#each classes}}
+	<a href="" classeId="{{ this.id }}" class="list-group-item">
+		<h4 class="list-group-item-heading">{{ this.nom }}</h4>
+		<p class="list-group-item-text">{{ this.description }}</p>
+	</a>
+	{{/each}}
+</div>
+{{else}}
+<div class="alert alert-danger" role="alert">
+	<h4><span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span> <b>Erreur !</b></h4>
+	<p>Aucune classe ouverte !</p>
+</div>
+{{/if}}

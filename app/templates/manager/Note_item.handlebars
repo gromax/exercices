@@ -1,0 +1,25 @@
+{{#if add}}<tr id="{{id}}">{{/if}}
+{{#if params.showId}}
+	<td><span class="badge">{{ item.id }}</span></td>
+{{/if}}
+	<td><a href="#{{params.links}}{{ item.id }}">{{ item.dateFr }} à {{ item.hour }}</a></td>
+	<td></td>
+	<td>{{ item.note }}%</td>
+	<td>
+{{#if item.finished }}
+		<span class="text-success glyphicon glyphicon-ok"></span>
+{{else}}
+		<span class="text-danger glyphicon glyphicon-remove"></span>
+{{/if}}
+	</td>
+	<td>
+	<div class="btn-group" role="group">
+{{!Lien vers les notes}}
+	<a href="#{{params.link}}{{ item.id }}" class="btn btn-primary btn-sm" role="button"><span class="glyphicon glyphicon-eye-open" data-toggle="tooltip" data-placement="top" title="Voir"></span></a>
+{{!Bouton suppression}}
+{{#if params.showDel}}
+	<button type="button" class="btn btn-default btn-sm" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="glyphicon glyphicon-trash"></span></button>
+{{/if}}
+	</div>
+	</td>
+{{#if add}}</tr>{{/if}}

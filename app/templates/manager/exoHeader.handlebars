@@ -1,0 +1,32 @@
+<div class="page-header">
+	<h2>
+		{{ title }}
+		<div class="btn-group" role"group">
+			{{#if showReload}} <a class="btn btn-default" role="button" data-toggle="tooltip" data-placement="bottom" title="Recommencer" id="again_{{divId}}" href="#"><span class="glyphicon glyphicon-repeat"></span></a>{{/if}}
+			{{#if showOptions}}<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#{{ showOptions }}" title="Options"><span class="glyphicon glyphicon-cog"></span></button>{{/if}}
+		</div>
+
+		{{#if todo}}<small data-toggle="tooltip" data-placement="bottom" title="Vous devez faire au moins {{todo}} fois cet exercice."><span name="doneCounter">{{ done }}</span>/{{ todo }}</small>{{/if}}
+	</h2>
+	{{#if neighbours}}
+	<div>
+		<nav>
+			<ul class='pagination'>
+				{{#if neighbours.prev}}
+				<li class=""><a href="#{{links.notes}}{{neighbours.prev}}"><span class="glyphicon glyphicon-chevron-left"></span></a></li>
+				{{else}}
+				<li class="disabled"><a href="#"><span class="glyphicon glyphicon-chevron-left"></span></a></li>
+				{{/if}}
+				{{#if upBDDbutton}}
+				<li class=""><a href="#" id="upBDD_{{divId}}" data-toggle="tooltip" data-placement="bottom" title="Mettre à jour la BDD"><span class="glyphicon glyphicon-save"></span></a></li>
+				{{/if}}
+				{{#if neighbours.next}}
+				<li class=""><a href="#{{links.notes}}{{neighbours.next}}"><span class="glyphicon glyphicon-chevron-right"></span></a></li>
+				{{else}}
+				<li class="disabled"><a href="#"><span class="glyphicon glyphicon-chevron-right"></span></a></li>
+				{{/if}}
+			</ul>
+		</nav>
+	</div>
+	{{/if}}
+</div>

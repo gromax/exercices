@@ -1,0 +1,17 @@
+{
+  "name": "exercices",
+  "version": "0.0.1",
+  "description": "Site for mathematics exercices",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gromax/exercices"
+  },
+  "devDependencies": {
+    "grunt": "latest",
+    "grunt-contrib-less": "latest",
+    "grunt-contrib-requirejs": "latest",
+    "grunt-contrib-watch": "latest",
+    "grunt-contrib-handlebars": "latest",
+    "grunt-contrib-coffee": "latest"
+  }
+}

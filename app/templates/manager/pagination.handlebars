@@ -1,0 +1,22 @@
+{{#if pages}}
+	<nav>
+		<ul class='pagination'>
+	{{#each pages}}
+		{{#if this.active}}
+		<li class="active"><a href="">{{ this.index }}</a></li>
+		{{else}}
+		<li><a href="" page="{{ this.index }}">{{ this.index }}</a></li>
+		{{/if}}
+	{{/each}}
+		</ul>
+	</nav>
+{{/if}}
+{{#if others}}
+	<nav>
+		<ul class='pagination'>
+	{{#each others}}
+		<li class="{{ this.class }}"><a href="{{ this.link }}">{{ this.name }}</a></li>
+	{{/each}}
+		</ul>
+	</nav>
+{{/if}}

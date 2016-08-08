@@ -1,0 +1,15 @@
+<div class="panel panel-primary">
+	<div class="panel-heading">Résultats</div>
+	<div class="panel-body">
+		<ul class="list-group">
+{{#each items}}
+	{{#if this.ok}}
+			<li class="list-group-item list-group-item-success unselectable" ></span>{{ title }} <span style="background-color: {{this.userColor}};" class="bouton-rectangle"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></span></li>
+	{{else}}
+			<li class="list-group-item list-group-item-danger unselectable" ></span>{{ title }} <span style="background-color: {{this.userColor}};" class="bouton-rectangle"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></span> <span rank={{this.rank}} style="background-color: {{this.goodColor}};" class="bouton-rectangle"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span></span></li>
+	{{/if}}
+{{/each}}
+		</ul>
+		En cas d'erreur, la bonne réponse est donnée à gauche, votre réponse à droite.
+	</div>
+</div>

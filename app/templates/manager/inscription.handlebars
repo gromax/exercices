@@ -1,0 +1,48 @@
+{{#if pwd}}
+<p>Un mot de passe vous a été communiqué. Utilisez-le pour être autorisé à rejoindre la classe.</p>
+<div class="form-group">
+	<label for="pwdInput" class="col-sm-4 control-label">Mot de passe</label>
+	<div class="col-sm-8">
+		<input type="password" class="form-control" name="pwd" id="pwdInput" value="" placeholder="Entrez le mot de passe de la classe">
+	</div>
+</div>
+{{else}}
+<p>Vous pouvez maintenant vous inscrire.</p>
+<input type="hidden" value="{{pwdClasse}}" name="pwdClasse">
+<div class="form-group">
+	<label for="pseudoInput" class="col-sm-2 control-label">Identifiant</label>
+	<div class="col-sm-10">
+		<input type="text" class="form-control" name="pseudo" id="pseudoInput" value="" placeholder="Entrez un identifiant">
+	</div>
+</div>
+<div class="form-group">
+	<label for="nomInput" class="col-sm-2 control-label">Nom</label>
+	<div class="col-sm-10">
+		<input type="text" class="form-control" name="nom" id="nomInput" value="" placeholder="Entrez un nom">
+	</div>
+</div>
+<div class="form-group">
+	<label for="prenomInput" class="col-sm-2 control-label">Prénom</label>
+	<div class="col-sm-10">
+		<input type="text" class="form-control" name="prenom" id="prenomInput" value="" placeholder="Entrez un prénom">
+	</div>
+</div>
+<div class="form-group">
+	<label for="emailInput" class="col-sm-2 control-label">eMail</label>
+	<div class="col-sm-10">
+		<input type="text" class="form-control" name="email" id="emailInput" value="" placeholder="Entrez un eMail">
+	</div>
+</div>
+<div class="form-group" >
+	<label for="pwdInput" class="col-sm-2 control-label">Mot de passe</label>
+	<div class="col-sm-10">
+		<input type="password" class="form-control" name="pwd" id="pwdInput" placeholder="Mot de passe">
+	</div>
+</div>
+<div class="form-group">
+	<label for="pwdInputConfirm" class="col-sm-2 control-label">Confirmez</label>
+	<div class="col-sm-10">
+		<input type="password" class="form-control" name="pwdConfirm" id="pwdInputConfirm" placeholder="Confirmez le mot de passe">
+	</div>
+</div>
+{{/if}}

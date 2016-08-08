@@ -1,0 +1,21 @@
+<div class="form-group">
+	<label for="nomInput" class="col-sm-2 control-label">Nom</label>
+	<div class="col-sm-10">
+		<input type="text" class="form-control" name="nom" id="nomInput" value="{{item.nom}}" placeholder="Entrez un nom">
+	</div>
+</div>
+<div class="form-group">
+	<label for="descriptionInput" class="col-sm-2 control-label">Description</label>
+	<div class="col-sm-10">
+		<input type="text" class="form-control" name="description" id="descriptionInput" value="{{item.description}}" placeholder="Entrez une description">
+	</div>
+</div>
+<div class="checkbox">
+	<label>
+		<input type="checkbox" name="ouverte" value="1" {{#if item.ouverte}}checked{{/if}}> Classe ouverte
+	</label>
+</div>
+<div class="form-group" >
+	<label for="pwdInput">Mot de passe destiné aux élèves voulant s'inscrire dans la classe</label>
+	<input type="text" class="form-control" name="pwd" id="pwdInput" value="{{ item.pwd }}" placeholder="Mot de passe">
+</div>

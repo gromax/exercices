@@ -1,0 +1,8 @@
+<li><a href="#Home"><span class="glyphicon glyphicon-home"></span></a></li>
+{{#each fils}}
+	{{#if this.link}}
+<li><a href="#{{this.link}}">{{this.text}}</a></li>
+	{{else}}
+<li><b>{{this.text}}</b></li>
+	{{/if}}
+{{/each}}

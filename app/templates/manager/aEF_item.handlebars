@@ -1,0 +1,47 @@
+{{#if add}}
+	{{#if params.links.direct}}
+<a href="#{{params.links.direct}}{{item.id}}" class="list-group-item" id="{{id}}">
+	{{else}}
+<li class="list-group-item" id="{{id}}">
+	{{/if}}
+{{/if}}
+	<div>
+		<h4 class="list-group-item-heading pull-left">{{ item.title }}</h4>
+		<div class="pull-right">
+<div class="btn-group" role="group">
+{{#if params.aUF}}
+	<button type="button" class="btn btn-success btn-sm">
+		Note : <b>{{item.str_moyenne}}%</b>
+	</button>
+{{/if}}
+	<button type="button" class="btn btn-warning btn-sm" data-toggle="tooltip" data-placement="top" title="Répéter {{item.num}} fois"><span class="glyphicon glyphicon-repeat"></span>{{ item.num }}</button>
+	<button type="button" class="btn btn-warning btn-sm" data-toggle="tooltip" data-placement="top" title="Coefficent {{item.coeff}}"><span class="glyphicon glyphicon-scale"></span>{{ item.coeff }}</button>
+{{#unless params.links.direct}}
+{{!Bouton d'édition}}
+	<button type="button" class="btn btn-default btn-sm" name="editButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Modifier"><span class="glyphicon glyphicon-pencil"></span></button>
+{{!Bouton suppression}}
+	<button type="button" class="btn btn-default btn-sm" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="glyphicon glyphicon-trash"></span></button>
+{{!Lien pour voir l'exercice}}
+	{{#if params.links.test}}
+	<a href="#{{params.links.test}}{{ item.id }}" class="btn btn-primary btn-sm" role="button"><span class="glyphicon glyphicon-eye-open" data-toggle="tooltip" data-placement="top" title="Tester l'exercice"></span></a>
+	{{/if}}
+{{/unless}}
+</div>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<p class="list-group-item-text">{{ item.description }}</p>
+{{#if params.aUF}}
+	{{#if params.user }}
+	<p class="list-group-item-text text-info"><i>{{params.user.prenom}} {{params.user.nom}} a fait cet exercice <b>{{ item._done }} fois</b> et a une moyenne de <b>{{ item._moyenne }}%</b></i></p>
+	{{else}}
+	<p class="list-group-item-text text-info"><i>Vous avez fait cet exercice <b>{{ item._done }} fois</b> et vous avez une moyenne de <b>{{ item._moyenne }}%</b></i></p>
+	{{/if}}
+{{/if}}
+{{#if add}}
+	{{#if params.links.direct}}
+</a>
+	{{else}}
+</li>
+	{{/if}}
+{{/if}}

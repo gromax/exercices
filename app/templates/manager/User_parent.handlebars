@@ -1,0 +1,20 @@
+<table class='table table-striped'>
+	<thead>
+		<tr>
+			{{#if params.addButton }}<th></th>{{/if}}
+			{{#if params.showIds }}<th><a href="" sortBy="id">#</a></th>{{/if}}
+			{{#if params.showPseudo}}<th><a href="" sortBy="pseudo">Pseudo</a></th>{{/if}}
+			<th><a href="" sortBy="nom">Nom</a></th>
+			{{#if params.showEmail}}<th><span class="glyphicon glyphicon-envelope"></span></th>{{/if}}
+			{{#if params.showClasses}}<th><a href="" sortBy="nomClasse"><span class="glyphicon glyphicon-education"></span></a></th>{{/if}}
+			<th><a href="" sortBy="date"><span class="glyphicon glyphicon-time"></span></a></th>
+			{{#if params.showRanks}}<th><a href="" sortBy="rank">Rang</a></th>{{/if}}
+			{{#if params.canModif}}
+			<th width="180"></th> <!-- boutons verrou|modification|suppression|lien notes -->
+			{{/if}}
+		</tr>
+	</thead>
+	<tbody id="{{id}}"><!-- Conteneur pour les items -->
+	{{{liste_html}}}
+	</tbody>
+</table>

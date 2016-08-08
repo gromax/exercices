@@ -1,0 +1,31 @@
+{{#if noForm}}
+<div class="panel {{#if noForm}}panel-primary{{else}}panel-warning{{/if}}">
+	<div class="panel-heading">{{ title }}</div>
+	<div class="panel-body">
+		<ul class="list-group">
+{{#each items}}
+			<li class="list-group-item unselectable">{{ this.title }} <span style="background-color: {{this.color}};" class="bouton-rectangle"></span></li>
+{{/each}}
+		</ul>
+	</div>
+</div>
+{{else}}
+<div class="panel panel-warning">
+	<div class="panel-heading">{{ title }}</div>
+	<div class="panel-body">
+		<form id="form">
+			<ul class="list-group">
+{{#each items}}
+				<li class="list-group-item unselectable">{{ this.title }} <span rank={{ this.rank }} name="bc-{{this.rank}}" class="colorButton bouton-rectangle"></span></li>
+{{/each}}
+			</ul>
+			<div class="btn-group" role"group">
+{{#if help_target}}
+				<button class="btn btn-info" type="button" data-toggle="collapse" data-target="#{{ help_target }}" title="Aide"><span class="glyphicon glyphicon-info-sign"></span></button>
+{{/if}}
+				<button type="submit" class="btn btn-default">Valider</button>
+			</div>
+		</form>
+	</div>
+</div>
+{{/if}}

@@ -1,0 +1,41 @@
+
+class ExerciceZZZZ extends Exercice
+	@description: -> { title:"Exercice de test", description:"Exercice pour faire des tests.", keyWords:["Test"], niveau_max:0 }
+	#-------------------------
+	#--- Initialisation ------
+	#-------------------------
+	init: ->
+	#---------------
+	#--- Main ------
+	#---------------
+	displayCustom: ->
+	run: (upBdd) ->
+		x = NumberManager.makeNumber("3x y pi")
+		y = NumberManager.makeNumber("32y")
+		z = x.toClone().md(y,true)
+		console.log String x
+		console.log String y
+		console.log z
+		console.log String z
+		if typeof @answers.x is "undefined" then @run_etape_1()
+		else
+			@verif_etape_1()
+			@finish()
+		@refreshDisplay()
+		if upBdd then @updateBDD()
+	#-----------------
+	#--- Étapes ------
+	#-----------------
+	run_etape_1: ->
+		@corps = $("<div/>").appendTo(@container).html(Handlebars.templates.std_champs_input({ title:"Zone de test", inputs:[{tag:"valeur ?", description:"Valeur à entrer", name:"x"}], id:@id}))
+		$("#form#{@id}").on 'submit', (event) =>
+			@answers.x = $("input[name='x']").val()
+			@run true
+			false
+		$("input[name='x']").focus()
+	verif_etape_1: ->
+		sol = (new Ensemble()).insertBorne(0,false).insertBorne(1,true).inverse()
+		si = new Parser @answers.x, {developp:true}
+		@corps.append("<p>$#{sol.tex()}$</p>")
+		@corps.append("<p>$#{si.userTex()}$ => $#{si.object.tex()}$</p>")
+		@corps.append("<p>$#{sol.isEqual(si.object)}$</p>")

@@ -1,0 +1,59 @@
+	<input type="hidden" name="id" value="{{ item.id }}">
+{{#unless item}}<h6>Attention : Vous ne pouvez pas créer un élève. Les élèves doivent s'inscrire eux-mêmes.</h6>{{/unless}}
+{{#if params.changePseudo}}
+	<div class="form-group">
+		<label for="pseudoInput" class="col-sm-2 control-label">Identifiant</label>
+		<div class="col-sm-10">
+			<input type="text" class="form-control" name="pseudo" id="pseudoInput" value="{{item.pseudo}}" placeholder="Entrez un identifiant">
+		</div>
+	</div>
+{{/if}}
+{{#if params.changeInfos}}
+	<div class="form-group">
+		<label for="nomInput" class="col-sm-2 control-label">Nom</label>
+		<div class="col-sm-10">
+			<input type="text" class="form-control" name="nom" id="nomInput" value="{{item.nom}}" placeholder="Entrez un nom">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="prenomInput" class="col-sm-2 control-label">Prénom</label>
+		<div class="col-sm-10">
+			<input type="text" class="form-control" name="prenom" id="prenomInput" value="{{item.prenom}}" placeholder="Entrez un prénom">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="emailInput" class="col-sm-2 control-label">eMail</label>
+		<div class="col-sm-10">
+			<input type="text" class="form-control" name="email" id="emailInput" value="{{item.email}}" placeholder="Entrez un eMail">
+		</div>
+	</div>
+{{/if}}
+	<div name="pwdZone">
+{{#if params.changePwd}}
+	<div class="form-group" >
+		<label for="pwdInput" class="col-sm-2 control-label">Mot de passe</label>
+		<div class="col-sm-10">
+			<input type="password" class="form-control" name="pwd" id="pwdInput" placeholder="Mot de passe">
+		</div>
+	</div>
+	<div class="form-group">
+		<label for="pwdInputConfirm" class="col-sm-2 control-label">Confirmez</label>
+		<div class="col-sm-10">
+			<input type="password" class="form-control" name="pwdConfirm" id="pwdInputConfirm" placeholder="Confirmez le mot de passe">
+		</div>
+	</div>
+{{else}}
+	<button type="button" name="changePWD" class="btn btn-default">Changer le mot de passe</button>
+{{/if}}
+	</div>
+
+{{#if params.chooseRank}}
+	<select name="rank" class="form-control">
+		<option value="Admin" >Administrateur</option>
+		<option value="Prof" >Professeur</option>
+	</select>
+{{else}}
+	{{#if params.defaultRank}}
+	<input type="hidden" name="rank" value="{{ defaultRank }}">
+	{{/if}}
+{{/if}}

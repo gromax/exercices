@@ -1,0 +1,33 @@
+{{#if add}}<tr id="{{id}}">{{/if}}
+{{#if params.showId}}
+	<td><span class="badge">{{ item.id }}</span></td>
+{{/if}}
+	<td><a href="#{{ params.links.devoir }}{{item.id}}"><b>{{ item.nom }}</b></a> : {{item.description}} </td>
+{{#if params.showOwner}}
+	<td>{{ item.ownerName }}</td>
+{{/if}}
+	<td>{{ item.dateFr }}</td>
+{{#if params.showModify}}
+	<td align="right">
+	<div class="btn-group" role="group">
+{{!Lien vers les notes}}
+	<a href="#{{params.links.notes}}{{ item.id }}" class="btn btn-primary btn-sm" role="button"><span class="glyphicon glyphicon-user" data-toggle="tooltip" data-placement="top" title="Voir les élèves"></span></a>
+{{!Bouton visible}}
+	{{#if item.visible}}
+	<button type="button" class="btn btn-default btn-success btn-sm" name="visibleButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Rendre invisible"><span class="glyphicon glyphicon-eye-open"></span></button>
+	{{else}}
+	<button type="button" class="btn btn-default btn-danger btn-sm" name="visibleButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Rendre visible"><span class="glyphicon glyphicon-eye-close"></span></button>
+	{{/if}}
+{{!Bouton actif}}
+	{{#if item.actif}}
+		<button type="button" class="btn btn-success btn-sm" name="activateButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Rendre inactif"><span class="glyphicon glyphicon-ok-circle"></span></button>
+	{{else}}
+		<button type="button" class="btn btn-danger btn-sm" name="activateButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Rendre actif"><span class="glyphicon glyphicon-ban-circle"></span></button>
+	{{/if}}
+{{!Bouton d'édition}}
+	<button type="button" class="btn btn-default btn-sm" name="editButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Modifier"><span class="glyphicon glyphicon-pencil"></span></button>
+{{!Bouton suppression}}
+	<button type="button" class="btn btn-default btn-sm" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="glyphicon glyphicon-trash"></span></button>
+	</div>
+{{/if}}
+{{#if add}}</tr>{{/if}}
