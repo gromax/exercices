@@ -40,7 +40,6 @@ Exercice.liste.push
 		# Calcul de la dérivée
 		polyDer = poly.derivate()
 		col = Math.floor(Math.random() * 2)
-		console.log h_colors[col]
 		polys = [
 			[ poly, h_colors[col] ]
 			[ polyDer, h_colors[1-col] ]
