@@ -51,6 +51,16 @@ oHelp = {
 			"Le troisième quartile $Q_3$ est la valeur pour laquelle la <b>fréquence cumulée croissante</b> atteint ou dépsse 75%."
 			"<b>Attention :</b> $Q_1$ et $Q_3$ sont toujours des valeurs de la série. La calculatrice utilise une autre définition et peut parfois donner une valeur qui n'est pas dans la série (quand une FCC tombe juste sur 25% ou sur 75%). Dans ce cas, il faut prendre la valeur de la série juste inférieure à la valeur donnée par la calculatrice."
 		]
+		ajustement: [
+			"Ces formules sont données à titre informatif. <b>Faites le calcul directement avec la calculatrice !</b>"
+			"L'ajustement affine de $y$ en $x$ nous donne une équation de la forme $y=ax+b$."
+			"La méthode des moindres carrés consiste à chercher la droite qui minimise le total des erreurs au carré selon l'axe $y$."
+			"La droite des mondres carrés passe par le point moyen : $G\\left(\\overline{x};\\overline{y}\\right)$, donc $b = \\overline{y}-a\\overline{x}$"
+			"On obtient également $a = \\frac{C_{xy}}{V(x)}$ "
+
+		]
+		covariance: [ "La <b>covariance</b> a pour formule $C_{xy} = \\left( \\frac{1}{N}\\sum_i x_iy_i\\right) - \\overline{x}\\cdot\\overline{y}$ où $N$ est l'effectif total"]
+		variance: [ "La <b>variance</b> a pour formule $V(x) = \\left( \\frac{1}{N}\\sum_i x_i^2\\right) - \\left(\\overline{x}\\right)^2$ où $N$ est l'effectif total"]
 	}
 	proba : {
 		binomiale : {
@@ -147,6 +157,18 @@ oHelp = {
 			"$m$ est le coefficient directeur et est donné par la dérivée : Si on veut la tangente en $x=a$, alors $m=f'(a)$."
 			"Une fois $m$ connu, on peut déduire $p$ en tenant compte du fait que la tangente doit passer par le point de la courbe dont l'abscisse vous est donnée. Soit $A\\left(x_A;y_A\\right)$ ce point avec $x_A=a$. On sait alors que $y_A = f(a)$ et que $y_A = m x_A + p$."
 			"Pour les amateurs de formule, l'équation de la tangente en $x=a$ est obtenue directement : $\\mathcal{T} : y= f'(a) (x-a)+ f(a)$."
+		]
+		variation : [
+			"Quand une fonction est croissante, sa dérivée est positive"
+			"Quand la fonction est décroissante, sa dérivée est négative."
+			"Quand la dérivée s'annule en changeant de signe, la fonction atteint un maximum ou un minimum."
+		]
+	}
+	primitive : {
+		variation : [
+			"Quand une fonction est positive, ses primitives sont croissantes"
+			"Quand la fonction est négative, ses primitives sont décroissantes."
+			"Quand la fonction s'annule en changeant de signe, ses primitives atteignent un maximum ou un minimum."
 		]
 	}
 

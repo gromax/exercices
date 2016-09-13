@@ -264,7 +264,7 @@ class User
 	{
 		// $force permet de passer les tests
 		if (!$force) {
-			if ((!USE_PSEUDO) && (!self::checkPseudo($this->pseudo))) {
+			if ((USE_PSEUDO) && (!self::checkPseudo($this->pseudo))) {
 				EC::addError("Pseudo invalide.");
 				return null;
 			}
@@ -277,7 +277,7 @@ class User
 		require_once BDD_CONFIG;
 		try {
 			// Vérification que l'identifiant n'existe pas déjà
-			if ((!$force) && (self::identifiantExists($this->identifiant()!==false ))) {
+			if ((USE_PSEUDO) && (!$force) && (self::identifiantExists($this->identifiant()!==false ))) {
 				EC::addError("L'identifiant existe déjà.");
 				return null;
 			}

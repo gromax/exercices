@@ -73,7 +73,7 @@ class @Exercice
 		else
 			inputs = {}
 			answers = {}
-		@data = { inputs:inputs, answers:answers, note:0, options:@data.options, noteObject:note, divId:@divId }
+		@data = { inputs:inputs, answers:answers, note:0, options:@data.options, noteObject:note, divId:@divId, isAdmin:Controller?.uLog.isAdmin }
 		@finished = false
 		@stages = @model.init(@data)
 		for stg,i in @stages

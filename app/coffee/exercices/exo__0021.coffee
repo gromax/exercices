@@ -13,13 +13,13 @@ Exercice.liste.push
 			max = moy.toResolution(resolution) + 5*resolution
 			N = Proba.aleaEntreBornes(50,200)
 			table = (Proba.gaussianAlea(moy,std,{min:min, max:max, delta:resolution}) for i in [1..N])
-			stat = new Stats( table )
-			stat.countEffectifs()
-			data.inputs.table = stat.storeInString()
+			serie = new SerieStat( table )
+			serie.countEffectifs()
+			data.inputs.table = serie.storeInString()
 		else
-			stat = new Stats(data.inputs.table)
-		values = (item.value for item in stat.toStr())
-		effectifs = (item.effectif for item in stat.toStr())
+			serie = new SerieStat(data.inputs.table)
+		values = (item.value for item in serie.toStr())
+		effectifs = (item.effectif for item in serie.toStr())
 		[
 			new BEnonce { zones:[
 				{body:"enonce", html:"<p>On considère la série statistique donnée par le tableau suivant :</p>"}
@@ -29,7 +29,7 @@ Exercice.liste.push
 				data:data
 				bareme:100
 				title:"Donnez les indicateurs statistiques de la série"
-				liste:[{tag:"$N$", name:"N", description:"Effectif total", good:stat.N()}, {tag:"Médiane", name:"mediane", description:"Médiane (à 0,1 près)", good:stat.mediane(), params:{arrondi:-1}}, {tag:"$q_1$", name:"q1", description:"Premier quartile (à 0,1 près)", good:stat.fractile(1,4), params:{arrondi:-1}}, {tag:"$q_3$", name:"q3", description:"Premier quartile (à 0,1 près)", good:stat.fractile(3,4), params:{arrondi:-1}}]
+				liste:[{tag:"$N$", name:"N", description:"Effectif total", good:serie.N()}, {tag:"Médiane", name:"mediane", description:"Médiane (à 0,1 près)", good:serie.mediane(), params:{arrondi:-1}}, {tag:"$q_1$", name:"q1", description:"Premier quartile (à 0,1 près)", good:serie.fractile(1,4), params:{arrondi:-1}}, {tag:"$q_3$", name:"q3", description:"Premier quartile (à 0,1 près)", good:serie.fractile(3,4), params:{arrondi:-1}}]
 				aide: oHelp.stats.N.concat(oHelp.stats.mediane, oHelp.stats.quartiles)
 			}
 		]

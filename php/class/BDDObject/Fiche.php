@@ -44,7 +44,7 @@ final class Fiche
 				$bdd_result=DB::query("SELECT DISTINCT f.id, f.nom, f.date, f.description, f.visible, f.actif FROM ".PREFIX_BDD."fiches f JOIN ".PREFIX_BDD."assocUF a ON f.id = a.idFiche WHERE a.idUser=%s AND f.visible=1 ORDER BY date",$params["eleve"]);
 				// Un même élève pourrait être attaché plusieurs fois à une même fiche
 			} else {
-				$bdd_result=DB::query("SELECT f.id, f.idOwner, f.nom, f.date, f.description, f.visible, f.actif, u.pseudo as pseudoOwner FROM (".PREFIX_BDD."fiches f INNER JOIN ".PREFIX_BDD."users u ON f.idOwner=u.id) ORDER BY f.date");
+				$bdd_result=DB::query("SELECT f.id, f.idOwner, f.nom, f.date, f.description, f.visible, f.actif FROM (".PREFIX_BDD."fiches f) ORDER BY f.date");
 			}
 		} catch(MeekroDBException $e) {
 			EC::addBDDError($e->getMessage(), "Fiche/getList");

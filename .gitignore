@@ -1,4 +1,10 @@
-app/scripts/vendor
 node_modules
 dist
 config/bddConfig.php
+vendor
+local
+avecRequireJS
+avecBower
+*.gz
+*.old
+notes

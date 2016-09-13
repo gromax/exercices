@@ -13,13 +13,13 @@ Exercice.liste.push
 			max = moy.toResolution(resolution) + 5*resolution
 			N = Proba.aleaEntreBornes(50,200)
 			table = (Proba.gaussianAlea(moy,std,{min:min, max:max, delta:resolution}) for i in [1..N])
-			stat = new Stats( table )
-			stat.countEffectifs()
-			data.inputs.table = stat.storeInString()
+			serie = new SerieStat( table )
+			serie.countEffectifs()
+			data.inputs.table = serie.storeInString()
 		else
-			stat = new Stats(data.inputs.table)
-		values = (item.value for item in stat.toStr())
-		effectifs = (item.effectif for item in stat.toStr())
+			serie = new SerieStat(data.inputs.table)
+		values = (item.value for item in serie.toStr())
+		effectifs = (item.effectif for item in serie.toStr())
 		[
 			new BEnonce { zones:[
 				{body:"enonce", html:"<p>On considère la série statistique donnée par le tableau suivant :</p><p><i>Les $x_i$ sont les valeurs et les $n_i$ sont les effectifs</i></p>"}
@@ -29,7 +29,7 @@ Exercice.liste.push
 				data:data
 				bareme:100
 				title:"Donnez les indicateurs statistiques de la série"
-				liste:[{tag:"$N$", name:"N", description:"Effectif total", good:stat.N()}, {tag:"$\\overline{x}$", name:"m", description:"Moyenne (à 0,1 près)", good:stat.moyenne(), params:{arrondi:-1}}, {tag:"$\\sigma$", name:"std", description:"Écart-type (à 0,1 près)", good:stat.std(), params:{arrondi:-1}}]
+				liste:[{tag:"$N$", name:"N", description:"Effectif total", good:serie.N()}, {tag:"$\\overline{x}$", name:"m", description:"Moyenne (à 0,1 près)", good:serie.moyenne(), params:{arrondi:-1}}, {tag:"$\\sigma$", name:"std", description:"Écart-type (à 0,1 près)", good:serie.std(), params:{arrondi:-1}}]
 				aide:oHelp.stats.N.concat(oHelp.stats.moyenne,oHelp.stats.ecart_type)
 			}
 		]

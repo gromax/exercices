@@ -1,5 +1,5 @@
 <?php
-	define("PATH_TO_MEEKRODB", "./php/vendor/meekrodb/db.class.php");
+	define("PATH_TO_MEEKRODB", "./php/meekrodb/db.class.php");
 	define("PATH_TO_CLASS", "./php/class");
 
 	// Sel pour les mots de passe

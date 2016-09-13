@@ -109,12 +109,14 @@ final class Classe
 
 		require_once BDD_CONFIG;
 		try {
-			$bdd_result=DB::queryFirstRow("SELECT c.id id, c.nom nom, c.description, c.idOwner idOwner, c.pwd pwd, c.date date, c.ouverte ouverte, u.nom nomOwner, u.prenom prenomOwner, u.pseudo pseudoOwner, u.rank rankOwner, u.email emailOwner FROM ".PREFIX_BDD."classes c INNER JOIN ".PREFIX_BDD."users u ON c.idOwner = u.id WHERE c.id=%s", $id);
+			if (USE_PSEUDO) $bdd_result=DB::queryFirstRow("SELECT c.id id, c.nom nom, c.description, c.idOwner idOwner, c.pwd pwd, c.date date, c.ouverte ouverte, u.nom nomOwner, u.prenom prenomOwner, u.pseudo pseudoOwner, u.rank rankOwner, u.email emailOwner FROM ".PREFIX_BDD."classes c INNER JOIN ".PREFIX_BDD."users u ON c.idOwner = u.id WHERE c.id=%s", $id);
+			else $bdd_result=DB::queryFirstRow("SELECT c.id id, c.nom nom, c.description, c.idOwner idOwner, c.pwd pwd, c.date date, c.ouverte ouverte, u.nom nomOwner, u.prenom prenomOwner, u.rank rankOwner, u.email emailOwner FROM ".PREFIX_BDD."classes c INNER JOIN ".PREFIX_BDD."users u ON c.idOwner = u.id WHERE c.id=%s", $id);
 			if ($bdd_result==null) return null;
 
 			// Construction de l'objet pour sauvegarde en session
 			if ((self::SAVE_IN_SESSION) || ($returnObject)) {
-				$bdd_result['owner']=new User(array('id'=>$bdd_result['idOwner'], 'nom'=>$bdd_result['nomOwner'], 'prenom'=>$bdd_result['prenomOwner'], 'pseudo'=>$bdd_result['pseudoOwner'], 'rank'=>$bdd_result['rankOwner'], 'email'=>$bdd_result['emailOwner']));
+				if (USE_PSEUDO) $bdd_result['owner']=new User(array('id'=>$bdd_result['idOwner'], 'nom'=>$bdd_result['nomOwner'], 'prenom'=>$bdd_result['prenomOwner'], 'pseudo'=>$bdd_result['pseudoOwner'], 'rank'=>$bdd_result['rankOwner'], 'email'=>$bdd_result['emailOwner']));
+				else $bdd_result['owner']=new User(array('id'=>$bdd_result['idOwner'], 'nom'=>$bdd_result['nomOwner'], 'prenom'=>$bdd_result['prenomOwner'], 'rank'=>$bdd_result['rankOwner'], 'email'=>$bdd_result['emailOwner']));
 				$classe = new Classe($bdd_result);
 				if (self::SAVE_IN_SESSION) SC::get()->setParamInCollection('classes', $classe->getId(), $classe);
 				if ($returnObject) return $classe;

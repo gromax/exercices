@@ -112,7 +112,7 @@ class @Controller
 						fiche = Controller.uLog.fiches.get(Number m[1])
 						fiche?.load { type:"load", cb:(fiche)->
 							Controller.setAriane [
-								{link:"devoirs:", text:"Liste des devoirs"}
+								{link:"devoirs", text:"Liste des devoirs"}
 								{text:"Devoir : #{fiche.nom}"}
 							]
 							new VList_aEF {
@@ -561,6 +561,17 @@ class @Controller
 						Controller.uLog.on { type:"connexion", cb: ()-> new VHome {} }
 						@setAriane()
 						new VConnexion {}
+				}
+				{
+					regex:/// ^rejoindre-une-classe:([0-9]+)$ ///i
+					exec:(m)->
+						if (classe = Controller.uLog.classes.get Number(m[1]))?
+							@setAriane [
+								{link:"rejoindre-une-classe", text:"Rejoindre une classe"}
+								{text:classe.nom}
+							]
+							new VInscription { classe:classe }
+						else new VClassesJoin {}
 				}
 				{
 					regex:/// ^rejoindre-une-classe$ ///i

@@ -4,6 +4,23 @@ module.exports = function(grunt) {
   //Initializing the configuration object
   grunt.initConfig({
     // Task configuration
+    uglify: {
+      main: {
+        files: {
+          'dist/main.min.js': 'dist/main.js',
+        }
+      }
+    },
+    concat: {
+      js: {
+        src: ['app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/exercices.hbs.js','dist/manager.js', 'dist/manager.hbs.js'],
+        dest: 'dist/main.js'
+      },
+      js_local: {
+        src: ['app/scripts/localConstantes.js','app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/exercices.hbs.js','dist/manager.js', 'dist/manager.hbs.js'],
+        dest: 'dist/main.local.js'
+      }
+    },
     less: {
       development: {
           options: {
@@ -41,8 +58,8 @@ module.exports = function(grunt) {
           knownHelpersOnly: true
         },
         files: {
-          'dist/exercices.hbs': 'app/templates/exercices/*.handlebars',
-          'dist/manager.hbs': 'app/templates/manager/*.handlebars'
+          'dist/exercices.hbs.js': 'app/templates/exercices/*.handlebars',
+          'dist/manager.hbs.js': 'app/templates/manager/*.handlebars'
         }
       }
     },
@@ -53,13 +70,22 @@ module.exports = function(grunt) {
           join:true
         },
         files: {
-          'dist/exercices.js': ['app/coffee/exercices/exercice.coffee', 'app/coffee/exercices/briques.coffee', 'app/coffee/exercices/aide.coffee', 'app/coffee/exercices/gestClavier.coffee', 'app/coffee/exercices/exo__*.coffee'],
+          'dist/exercices.js': ['app/coffee/exercices/exercice.coffee','app/coffee/exercices/briques.coffee','app/coffee/exercices/aide.coffee','app/coffee/exercices/gestClavier.coffee','app/coffee/exercices/exo__*.coffee'],
           'dist/manager.js': 'app/coffee/manager/*.coffee',
           'dist/math.js': 'app/coffee/math/*.coffee'
         }
       }
     },
     watch: {
+        less: {
+            // Watch all .lesshandlebars files from styles
+            files: ['app/styles/*.less'],
+            tasks: ['less'],
+            // Reloads the browser
+            options: {
+              livereload: true
+            }
+        },
         handlebars: {
             // Watch all .handlebars files from the handlebars directory)
             files: ['app/templates/exercices/*.handlebars', 'app/templates/manager/*.handlebars'],
@@ -71,7 +97,7 @@ module.exports = function(grunt) {
         },
         coffee: {
             // Watch only main.js so that we do not constantly recompile the .js files
-            files: [ 'app/coffee/exercices/*.coffee', 'app/coffee/manager/*.coffee', 'app/coffee/math/*.coffee'],
+            files: [ 'dev/exercices/coffee/*.coffee', 'dev/manager/coffee/*.coffee', 'dev/math/*.coffee'],
             tasks: [ 'coffee' ],
             // Reloads the browser
             options: {
@@ -83,10 +109,11 @@ module.exports = function(grunt) {
 
   // Plugin loading
   grunt.loadNpmTasks('grunt-contrib-less');
-  //grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-handlebars');
   grunt.loadNpmTasks('grunt-contrib-coffee');
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
 
   // Task definition
   grunt.registerTask('default', ['watch']);

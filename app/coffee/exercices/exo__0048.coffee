@@ -48,6 +48,10 @@ Exercice.liste.push
 			{ rank:col, title: "$#{tag_poly}$" }
 			{ rank:1-col, title: "$#{tag_polyDer}$" }
 		]
+		# Pour le debug
+		if data.isAdmin
+			console.log "fct : #{poly.toClone().simplify().toString().replace(/,/g,'.').replace(/x/g,'(\\x)')}"
+			console.log "der : #{polyDer.toClone().simplify().toString().replace(/,/g,'.').replace(/x/g,'(\\x)')}"
 		# Objet de sortie :
 		[
 			new BEnonce { zones:[

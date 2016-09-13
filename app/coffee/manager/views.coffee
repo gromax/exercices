@@ -550,39 +550,29 @@ class VExoFicheMod extends VMod
 class VClassesJoin extends View
 	# Rejoindre une classe, créant un compte élève
 	html: ->  Handlebars.templates.classesJoin { classes:Controller.uLog.classes.liste() }
-	events: -> [ { evt:"click", selector:"div[name='classesList']", subSelector:"a", callback:"action" } ]
-	action: (event) ->
-		classe = Controller.uLog.classes.get $(@).attr("classeId")
-		if classe? then new VInscription { classe:classe }
 class VInscription extends View
-	_defaultContainer: "#modalContent"
 	init_config:(params=null) ->
 		h_push super(), {
-			title:"Inscription dans la classe <b>#{params.classe.nom }}</b>"
+			title:"Inscription dans la classe <b>#{params.classe.nom}</b>"
 		}
 	html:->
 		if @config.authorized # phase finale de l'inscription
 			Handlebars.templates.inscription {
-				classe:@config.classe
-				pwdClasse:$("input[name='pwd']").val()
-				id:"inscription_#{@divId}"
+				nomClasse:@config.classe.nom
+				pwdClasse:$("input[name='pwdClasse']").val()
+				idForm:"inscription#{@divId}"
 			}
 		else
 			Handlebars.templates.inscription {
-				classe:@config.classe
+				nomClasse:@config.classe.nom
+				idForm:"inscription#{@divId}"
 				pwd:true
-				id:"inscription_#{@divId}"
 			}
 	bind_dom_and_events:($container) ->
 		classe = @config.classe
 		if @config.authorized
-			$("#inscription_#{@divId}").data("classe",classe).validate {
+			$("#inscription#{@divId}").data("classe",classe).validate {
 				rules: {
-					"pseudo":{
-						"required": true,
-						"minlength": PSEUDO_MIN_SIZE,
-						"maxlength": PSEUDO_MAX_SIZE
-					},
 					"email": {
 						"required": true
 						"email": true
@@ -599,8 +589,7 @@ class VInscription extends View
 					}
 				},
 				submitHandler: () ->
-					$("#inscrForm").data("classe").join {
-						#pseudo:$("input[name='pseudo']").val()
+					$(@currentForm).data("classe").join {
 						nom:$("input[name='nom']").val()
 						prenom:$("input[name='prenom']").val()
 						email:$("input[name='email']").val()
@@ -616,20 +605,20 @@ class VInscription extends View
 			}
 		else
 			# Première phase: on vérifie le mdp pour entrer dans la classe
-			$("#inscription_#{@divId}").data("classe",classe).validate {
+			$("#inscription#{@divId}").data("classe",classe).validate {
 				rules: {
-					"pwd": {
+					"pwdClasse": {
 						"required": true
 					}
 				},
 				submitHandler: () ->
-					$("#inscriptionForm").data("classe").testMDP $("input[name='pwd']").val()
+					$(@currentForm).data("classe").testMDP $("input[name='pwdClasse']").val()
 					false
 			}
-			classe.on({ type:"testMDP", cb:@inscriptionFinal })
-	inscriptionFinal: (classe) ->
-		@config.authorized = true
-		@display()
+			classe.on({ type:"testMDP", obj:@, cb:@inscriptionFinal })
+	inscriptionFinal: (view,classe) ->
+		view.config.authorized = true
+		view.display()
 class VExercice extends View
 	exo:null
 	init_config: (params)->
