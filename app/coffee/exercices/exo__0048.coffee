@@ -43,8 +43,8 @@ Exercice.liste.push
 		polyDer = poly.derivate()
 		col = Math.floor(Math.random() * 2)
 		polys = data.polys = [
-			[ poly, h_colors[col], h_tex_colors[col] ]
-			[ polyDer, h_colors[1-col], h_tex_colors[1-col] ]
+			[ poly, colors[col].html, colors[col].tex ]
+			[ polyDer, colors[1-col].html, colors[1-col].tex ]
 		]
 		items = [
 			{ rank:col, title: "$#{tag_poly}$" }

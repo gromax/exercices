@@ -33,7 +33,7 @@ Exercice.liste.push
 		inp.o = o.join("")
 		# On affecte le rang, ce qui revient à affecter les couleurs
 		item.rank = o[i] for item,i in items
-		l_gauche = Tools.arrayShuffle ({title:"$"+item.a+"$", color:h_colors[item.rank]} for item in items)
+		l_gauche = Tools.arrayShuffle ({title:"$"+item.a+"$", color:colors[item.rank].html} for item in items)
 		l_droite = ({title:"$#{item.b}$ et $u_0=#{item.c}$", rank:item.rank} for item in items)
 		[
 			new BEnonce { zones:[{body:"enonce", html:"<p>À gauche, des suites données explicitement. À droite elles sont données par récurence.", "Associez-les en utilisant les boutons de couleurs à droite.</p>"}]}

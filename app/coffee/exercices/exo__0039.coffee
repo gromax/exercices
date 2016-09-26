@@ -39,7 +39,7 @@ Exercice.liste.push
 			tabX = ["$-\\infty$", "$#{xA}$", "$+\\infty$"]
 			if yB>yA then variations = "+/$+\\infty$,-/$#{yA}$,+/$+\\infty$"
 			else variations = "-/$-\\infty$,+/$#{yA}$,-/$-\\infty$"
-			tab = (new TabVar(tabX, {hauteur_ligne:25, color:h_colors[i], texColor:h_tex_colors[i]})).addVarLine(variations)
+			tab = (new TabVar(tabX, {hauteur_ligne:25, color:colors[i].html, texColor:colors[i].tex})).addVarLine(variations)
 			tabs.push tab
 			items.push item
 		data.items = items

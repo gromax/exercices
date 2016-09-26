@@ -49,7 +49,7 @@ Exercice.liste.push
 			poly = Polynome.make([-xA, 1]).puissance(2)
 			fact = NumberManager.makeNumber({numerator:yB-yA, denominator:poly.toNumber(xB)}).simplify()
 			poly = poly.mult(fact).addMonome(0,yA)
-			item = { color:h_colors[i], rank:i, title:"$\\Delta = #{poly.discriminant().tex()}$ et $a = #{poly.getCoeff(2).tex()}$"}
+			item = { color:colors[i].html, rank:i, title:"$\\Delta = #{poly.discriminant().tex()}$ et $a = #{poly.getCoeff(2).tex()}$"}
 			items.push item
 			polys.push [poly,item.color]
 		[

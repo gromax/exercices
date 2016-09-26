@@ -15,7 +15,7 @@ Exercice.liste.push
 			B = Vector.makeRandom "B"+i, data.inputs, { ext:[[-max,max]] }
 			while A.sameAs B, "x"
 				B = Vector.makeRandom "B"+i, data.inputs, { overwrite:true, ext:[[-max,max]] }
-			item= { color:h_colors[i], rank:i, title:"$"+ Droite2D.par2Pts(A,B).affineTex("","x",true)+"$" }
+			item= { color:colors[i].html, rank:i, title:"$"+ Droite2D.par2Pts(A,B).affineTex("","x",true)+"$" }
 			pts.push [A,B,item.color]
 			items.push item
 		[

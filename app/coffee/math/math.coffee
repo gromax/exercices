@@ -717,10 +717,15 @@ class SymbolNumber extends NumberObject
 		else @_exposant = 1
 	@makeSymbol: (name) ->
 		# Le but de cette méthode est de créer directement le bon type d'objet
-		if name is 'i'then return new ComplexeNumber(0, 1)
-		if (name is '∞') or (name is 'infini') then return new InftyNumber()
-		if (name isnt "") then return new SymbolNumber(name)
-		return new RealNumber()
+		switch
+			when name is "ℝ" then (new Ensemble()).inverse()
+			when name is "π" then new SymbolNumber("pi")
+			when name is "∅" then new Ensemble()
+			when (name is "∞") or (name is "infini") then new InftyNumber()
+			when name is "i" then new ComplexeNumber(0,1)
+			when name is "#" then new SymbolNumber("modulo")
+			when name is "" then new RealNumber()
+			else new SymbolNumber(name)
 	@pi: -> new SymbolNumber "pi"
 	@addSymbol: (symbolName, value) ->
 		if (symbolName isnt "e") and (symbolName isnt "pi")

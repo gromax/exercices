@@ -1,7 +1,17 @@
 
 # helpers functions
-h_colors = ["#ff0000", "#00aa00", "#0000ff", "#880088", "#ffa500","#ff00aa", "#00aaff", "#996600", "#cc6600", "#616161"]
-h_tex_colors = ["Mahogany", "OliveGreen", "blue", "violet"]
+colors = [
+	{ tex:"red", html:"#ff0000" }
+	{ tex:"JungleGreen", html:"#347c2c" }
+	{ tex:"Violet", html:"#8d38c9" }
+	{ tex:"Orange", html:"#ffa500" }
+	{ tex:"blue", html:"#0000ff" }
+	{ tex:"gray", html:"#808080" }
+	{ tex:"Thistle", html:"#d2b9d3" }
+	{ tex:"Mahogany", html:"#c04000" }
+	{ tex:"yellow", html:"#ffff00" }
+	{ tex:"CornflowerBlue", html:"#6495ed" }
+]
 h_ineqSymb = ["<", ">", "\\leqslant", "\\geqslant"]
 h_genId = () -> Math.floor(Math.random() * 10000)
 h_init = (inpName,saveObj,_min,_max, force=false) ->

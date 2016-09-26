@@ -19,7 +19,7 @@ Exercice.liste.push
 			poly = Polynome.make([A.x.toClone().opposite(), 1]).puissance(2)
 			fact = B.y.toClone().am(A.y,true).md(poly.calc(B.x),true)
 			poly = poly.mult(fact).addMonome(0,A.y).simplify()
-			item = { color:h_colors[i], rank:i, title: "$x \\mapsto #{poly.tex({canonique:f is 1})}$" }
+			item = { color:colors[i].html, rank:i, title: "$x \\mapsto #{poly.tex({canonique:f is 1})}$" }
 			polys.push [poly,item.color]
 			items.push item
 		[

@@ -64,17 +64,28 @@ class Brique extends BaseBrique
 		true
 	run: (upBDD) -> @parent?.run(upBDD)
 	verification: (name, tag, user, good, bareme, params) ->
-		# Paramètres :
-		# formes: Objet listant certaines simplifications dont on peut s'abstenir (objet Parser) p_forme est la pondération de barême- défaut = null et 0.5
-		# tolerance : un résultat est condidéré comme juste s'il est à +- tolerance (0 pour un résultat exact) - défaut = 0
-		# approx : on tolère un résultat approximatif, avec un barême pondéré (p_approx) et un signalement d'erreur - défaut = 0.1 et 0.5
-		# arrondi : force un arrondi à une certaines puissance => exige alors une écriture décimale (null sinon), pondération si valeur exacte mais mal arrondie ou avec une troncature (p_arrondi)- défaut = null et 0.5
-		# p_modulo : pondération pour une erreur de modulo - défaut : 0.5
-		config = Tools.merge({ formes:null, p_forme:0.5, tolerance:0, approx:0.1, p_approx:0.5, arrondi:null, p_arrondi:0.5, p_modulo:0.5, developp:false, cor_prefix:""}, params)
-		if good instanceof Ensemble then parse_type = "ensemble"
-		else parse_type = "number"
+		# name = nom de la réponse dans les champs de formulaire
+		# tag = étiquette utilisée pour l'utilisateur
+		# user = valeur retournée par l'utilisateur. Peut être un objet déjà parsé.
+		# good = bonne valeur. Un NumberObject ou EnsembleObject
+		# bareme = nombres de points alloués à cette question (bareme total = 100)
+		# params = objet de paramètres dont les possibilités sont données ci-dessous
+		config = Tools.merge({
+			formes:null		# forme autorisées. Par ex : { racine:true, fraction:true } ou encore "FRACTION"
+			p_forme:0.5		# pondération pour une forme pas suffisemment simplifiée
+			tolerance:0		# Une approximation dans la tolérance est considérée comme juste et n'est pas signalée
+			approx:0.1		# Une approximation est tolérée mais signalée comme fausse
+			p_approx:0.5	# Pondération si le résultat n'est qu'approximatif et dans la tolérance
+			arrondi:null	# Si on demande un arrondi, on précise ici une puissance (-2 pour 0.01 par ex.)
+			p_arrondi:0.5	# Pondération si arrondi demandé et mal fait
+			p_modulo:0.5	# Pondération si le modulo est faux
+			developp:false	# Indique s'il faut développer le résultat de l'utilisateur
+			cor_prefix:""
+		}, params)
+		# La bonne valeur peut-être un ensemble ou un number.
+		if good instanceof Ensemble then parse_type = "ensemble" else parse_type = "number"
 		if user instanceof Parser then info=user # Cas où on fournirait un user déjà parsé
-		else info = new Parser user, {type:parse_type, developp:config.developp}
+		else info = new Parser user, { type:parse_type, developp:config.developp }
 		if good?
 			# On peut transmettre un tableau de nombres
 			if Tools.typeIsArray good # Ce n'est donc pas un ensemble
@@ -84,22 +95,34 @@ class Brique extends BaseBrique
 				else good = NumberManager.searchClosest info.object, good
 			# Si c'est un nombre, on le transforme en objet
 			if typeof good is "number" then good = NumberManager.makeNumber good
-		else good=NumberManager.makeNaN()
+		else good=NumberManager.makeNaN() # Valeur par défaut
 		output = {
-			name:name
-			tag: tag
-			goodObject: good
-			good: config.cor_prefix+good.tex()
-			bareme: 0
-			ok:false
-			user:info.expression
-			userTex:config.cor_prefix+info.tex
-			userObject:info.object
+			name:name							# nom de la réponse, correspond au champ de formulaire
+			tag: tag							# étiquette
+			goodObject: good					# bonne réponse sous forme d'objet
+			good: config.cor_prefix+good.tex()	# bonne réponse sous forme tex
+			bareme: 0							# nombre de points obtenus
+			ok:false							# ok = true -> la réponse s'affiche en vert avec éventuellement une remarque
+			user:info.expression				# text entré par l'utilisateur
+			userTex:config.cor_prefix+info.tex	# tex de la réponse entrée par l'utilisateur
+			userObject:info.object				# objet parsé entré par l'utilisateur
+			formeOk : true						# La forme est ok par défaut
 		}
-		# Le flag ok renverra un message en vert avec éventuellement une remarque
+		# Dans le cas d'un number, output renverra également :
+		# - erreur = objet produit par la fonction NumberManager.erreur et contenant les infos :
+		# -- exact = true/false : valeur exacte
+		# -- float = true/false : valeur décimale
+		# -- approx_ok:true/false : approximation correctement faite
+		# -- ecart:ecart = nombre
+		# -- moduloError = false/tex : en cas d'erreur, on envoie le tex du modulo demandé
+		# -- p_user = nombre entier : puissance du dernier chiffre significatif
+		# - resolution = string : Dans le cas d'un arrondi, text de la forme "0,01"
+		# - good_arrondi = valeur numérique de la bonne réponse arrondie correctement
+		# - mauvais_arrondi = true : La valeur donnée n'est pas un float ou erreur de troncature ou précision trop grande
+		# - approximation = true : Quand la réponse utilisateur est un float, approx correcte et dans la zone tolérée (mais éventuellement pénalisée) d'une approx
 		if parse_type is "ensemble"
 			output.ok = good.isEqual(info.object,config.tolerance)
-			output.formeOk = true # par défaut, à améliorer
+			# on ne vérifie pas la forme pour un ensemble (formeOk)
 			if output.ok then @data.note += output.bareme = bareme
 		else
 			erreur = output.erreur = NumberManager.erreur good, info.object
@@ -430,13 +453,13 @@ class BChoice extends Brique
 		if (typeof answersList[rank] is "undefined") then answersList[rank] = 0
 		else answersList[rank] = answersList[rank]+1
 		if answersList[rank] is answersList.length then answersList[rank] = 0
-		$node.css('background-color',h_colors[answersList[rank]])
+		$node.css('background-color',colors[answersList[rank]].html)
 	ver: ->
 		N = @config.liste.length
 		for item in @config.liste
 			item.user = @a[@config.aKey+item.rank]
-			item.userColor = h_colors[item.user]
-			item.goodColor = h_colors[item.rank]
+			item.userColor = colors[item.user].html
+			item.goodColor = colors[item.rank].html
 			if item.user is item.rank
 				item.ok = true
 				@data.note+=@bareme/N

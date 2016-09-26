@@ -40,15 +40,7 @@ class TokenVariable extends Token
 	@getRegex: -> "[#π∅ℝ∞a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*"
 	acceptOperOnLeft: -> true
 	acceptOperOnRight: -> true
-	execute: (stack) ->
-		switch
-			when @name is "ℝ" then (new Ensemble()).inverse()
-			when @name is "π" then new SymbolNumber("pi")
-			when @name is "∅" then new Ensemble()
-			when @name is "∞" then new InftyNumber()
-			when @name is "i" then new ComplexeNumber(0,1)
-			when @name is "#" then new SymbolNumber("modulo")
-			else new SymbolNumber @name
+	execute: (stack) -> SymbolNumber.makeSymbol @name
 class TokenOperator extends Token
 	operand1: null
 	operand2: null
