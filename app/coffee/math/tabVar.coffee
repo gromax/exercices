@@ -3,7 +3,7 @@
 # uses SVG
 class @TabVar
 	constructor: (x_list, params) ->
-		@config = { espace_gauche:100, marge:20, margeArrow:15, espace_entre_valeurs:100, hauteur_ligne:40, x_tag:"$x$", color:"#000000" }
+		@config = { espace_gauche:100, marge:20, margeArrow:15, espace_entre_valeurs:100, hauteur_ligne:40, x_tag:"$x$", color:"#000000", texColor:"black" }
 		if (typeof params is "object") and params isnt null
 			@config[key] = params[key] for key of params
 		@x_list = x_list
@@ -49,7 +49,7 @@ class @TabVar
 				when tab[0] is "-D+" then out.push { type:"forbidden", leftPos:"bottom", leftTag:tab[1], rightPos:"top", rightTag:tab[2] }
 				when tab[0] is "+D-" then out.push { type:"forbidden", leftPos:"top", leftTag:tab[1], rightPos:"bottom", rightTag:tab[2] }
 				when tab[0] is "+D+" then out.push { type:"forbidden", leftPos:"top", leftTag:tab[1], rightPos:"top", rightTag:tab[2] }
-		@lines.push {type:"var", tag:config.tag, values:out, hauteur:Math.max(config.h,3)}
+		@lines.push {type:"var", tag:config.tag, str:line.join(), values:out, hauteur:Math.max(config.h,3)}
 		@
 	addSignLine: (line, params) ->
 		# line est un texte qui a la forme z,+,z
@@ -64,6 +64,17 @@ class @TabVar
 		line.pop() while line.length>2*@x_list.length-1 # On s'assure d'une longueur maximum
 		@lines.push {type:"sign", tag:config.tag, values:line, hauteur:Math.max(config.h,1)}
 		@
+	tex: (params) ->
+		config = { lgt:1, espcl:1.5, lw:"1pt" }
+		if (typeof params is "object") and params isnt null
+			config[key] = params[key] for key of params
+		entetes = ("#{line.tag}/#{line.hauteur/2}" for line in @lines)
+		entetes.unshift "#{@x_tag}/1"
+		out = "\\tkzTabInit[lgt=#{config.lgt},espcl=#{config.espcl}, lw=#{config.lw}]{#{entetes.join()}}{#{@x_list.join()}}"
+		for line in @lines
+			if line.type is "sign" then out += "\\tkzTabLine{#{line.values}}"
+			else out += "\\tkzTabVar[color=#{@config.texColor}]{#{line.str}}"
+		"\\begin{tikzpicture}[color=#{@config.texColor}]"+out+"\\end{tikzpicture}"
 	render: (div) ->
 		longueur = @config.espace_gauche+(@x_list.length-1)*@config.espace_entre_valeurs+2*@config.marge
 		hauteur = @linesNumber() * @config.hauteur_ligne

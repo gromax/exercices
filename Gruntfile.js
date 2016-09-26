@@ -28,7 +28,7 @@ module.exports = function(grunt) {
              },
           files: {
              //compiling base.less into styles.css
-             "dist/styles.css":"app/styles/base.less"
+             "app/styles/styles.css":"app/styles/base.less"
              }
           },
       production: {
@@ -40,6 +40,13 @@ module.exports = function(grunt) {
              //compiling base.less into main.min.css
              "dist/styles.min.css": "app/styles/base.less"
           }
+      }
+    },
+    cssmin: {
+      minify:{
+        files: {
+          'dist/styles.min.css': ['app/styles/styles.css']
+        }
       }
     },
     handlebars: {
@@ -109,6 +116,7 @@ module.exports = function(grunt) {
 
   // Plugin loading
   grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-handlebars');
   grunt.loadNpmTasks('grunt-contrib-coffee');

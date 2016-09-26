@@ -9,6 +9,7 @@
     "grunt-contrib-handlebars": "latest",
     "grunt-contrib-coffee": "latest",
     "grunt-contrib-uglify": "latest",
-    "grunt-contrib-concat": "latest"
+    "grunt-contrib-concat": "latest",
+    "grunt-contrib-cssmin": "latest"
   }
 }

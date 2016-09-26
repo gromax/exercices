@@ -22,19 +22,24 @@ class SimpleModel
 	equals: (other) -> (other?.id is @id)
 class MExercice extends SimpleModel
 	_glyph: "glyphicon-edi"
+	tex_exists:false
 	defaultValues: -> { title:"", description:"", keyWords:null }
 	parse: ->
 		if @keyWords isnt null then @searchValue = (@title+";"+@description+";"+@keyWords.join(";")).toLowerCase()
 		else @searchValue = (@title+";"+@description).toLowerCase()
+		if @slide? then @tex_exists = true
 	match: (filter) -> filter.reg?.test(@searchValue) isnt false
 class Model extends SimpleModel
-	events:[]
+	events:null # On ne peut pas initialiser le tableau ici, autrement il est commun à tous les objets !
 	pending_save:null
 	showSuccessMessages:true
 	# Les enfants doivent contenir :
 	# enteteForMessages()
 	# _name
 	# bddJSON
+	constructor: (json, parent) ->
+		@events=[]
+		super(json, parent)
 	on: (ev) -> @events.push ev
 	triggerEvent: (type, params=[@]) ->
 		i=0
@@ -240,8 +245,8 @@ class @MLog extends MUser
 		else
 			if data.success
 				@log data.logged, data
-				@triggerEvent "reinitMDP",[true]
-			else @triggerEvent "reinitMDP",[false]
+				@triggerEvent "reinitMDP",[@,true]
+			else @triggerEvent "reinitMDP",[@,false]
 class MClasse extends Model
 	_glyph: "glyphicon-education"
 	_name: "classe"
@@ -330,6 +335,9 @@ class MFiche extends Model
 	pushExoFiche: (exofiche) ->
 		unless @exercices? then @exercices = new CExosFiche null,@parent.exercices,@
 		@exercices.push exofiche
+	toTexSlide: ->
+		# Produit une version tex d'un slide avec tous les exercices de la fiche
+		Handlebars.templates.slideTex { items:(exo.toTexSlide() for exo in @exercices.liste()) }
 	moyenne: (user) ->
 		if @exercices?
 			totalCoeff = 0
@@ -376,6 +384,10 @@ class MExoFiche extends Model
 		if mods.num? then toBDD.num = mods.num
 		toBDD
 	match: (filter) -> filter.reg?.test(@title+" "+@description) isnt false
+	toTexSlide: ->
+		# Produit une version tex d'un slide avec tous les exercices de la fiche
+		exo = new Exercice { model:@exercice }
+		@exercice.slide?( ( exo.init().data for i in [1..@num]) ) or ""
 	moyenne: (user,aUF) ->
 		if user? then notes = user.notes().liste { aEF:@id, aUF:aUF }
 		else notes=Controller.uLog.notes().liste { aEF:@id, aUF:aUF }

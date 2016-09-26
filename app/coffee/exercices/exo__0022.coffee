@@ -17,7 +17,7 @@ Exercice.liste.push
 		else
 			poly = NumberManager.makeSum([@aleaMult(0),@aleaMult(2)])
 			data.inputs.p = String poly
-		polyTex = poly.tex()
+		data.polyTex = polyTex = poly.tex()
 		polyObj = poly.toPolynome()
 		data.polyDev = polyObj.toNumberObject()
 		data.polyDevTex = "P(x)="+polyObj.tex()
@@ -120,5 +120,17 @@ Exercice.liste.push
 			output = NumberManager.makeProduct expr_array
 		if Proba.aleaEntreBornes(1,3) is 3 then output.opposite()
 		output
-
+	slide: (data) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		out = ""
+		for itemData,i in data
+			out += "\\item $P_{#{i}}(x) = #{itemData.polyTex}$"
+		out = "
+			\\section{Développer}
+			\\begin{frame}
+			\\myFrameTitle
+			\\begin{enumerate}[a)] "+out+" \\end{enumerate}
+			\\end{frame}
+		"
+		out
 

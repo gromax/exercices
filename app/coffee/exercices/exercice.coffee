@@ -1,6 +1,7 @@
 
 # helpers functions
 h_colors = ["#ff0000", "#00aa00", "#0000ff", "#880088", "#ffa500","#ff00aa", "#00aaff", "#996600", "#cc6600", "#616161"]
+h_tex_colors = ["Mahogany", "OliveGreen", "blue", "violet"]
 h_ineqSymb = ["<", ">", "\\leqslant", "\\geqslant"]
 h_genId = () -> Math.floor(Math.random() * 10000)
 h_init = (inpName,saveObj,_min,_max, force=false) ->
@@ -53,7 +54,7 @@ class @Exercice
 		@divId = config.divId
 		@oEF = config.oEF
 		@aUF = config.aUF
-		unless (@model = @constructor.getModel(config.idE ? @oEF?.idE))?
+		unless (@model = config.model or @constructor.getModel(config.idE ? @oEF?.idE))?
 			# On envoie un modèle erreur
 			@model = {
 				title: "Exercice inexistant"
@@ -79,6 +80,8 @@ class @Exercice
 		for stg,i in @stages
 			stg.parent = @
 			stg.divId = @divId+"s"+i
+		@title = @data.title or @model.title # Le title peut-être changé en fonction des options
+		@
 	toString: -> @model.title
 	refreshDisplay: ->
 		#if @finished then @displayNote()
@@ -147,3 +150,7 @@ class @Exercice
 		for it in optionsArray
 			@data.options[it.name]?.value = Number it.value
 		@init null
+	#----------------------------------------------------
+	#--------- production d'un fichier tex --------------
+	#----------------------------------------------------
+	slide: (data) -> @model?.side?(data) or ""

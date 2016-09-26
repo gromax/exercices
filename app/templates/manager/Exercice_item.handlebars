@@ -1,9 +1,9 @@
 {{#if params.exoChoice}}
-<a href="#" idExoChoice="{{item.id}}" class="list-group-item" id="{{id}}">
+<a href="#" name="exoChoice" _id="{{item.id}}" class="list-group-item" id="{{id}}">
 {{else}}
 <a href="#tester-exercice:{{ item.id }}" class="list-group-item" id="{{id}}">
 {{/if}}
 	<h4 class="list-group-item-heading">{{ item.title }}</h4>
 	<p class="list-group-item-text">{{ item.description }}</p>
-	{{#if params.showKeyWords}}<p>{{#each item.keyWords}}<span class="label label-default">{{this}}</span> {{/each}}</p>{{/if}}
+	{{#if params.showKeyWords}}<p>{{#each item.keyWords}}<span class="label label-default">{{this}}</span> {{/each}}{{#if item.tex_exists}}<span class="label label-info">tex</span>{{/if}}</p>{{/if}}
 </a>

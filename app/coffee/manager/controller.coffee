@@ -122,6 +122,21 @@ class @Controller
 						}
 				}
 				{ # aussi prof
+					regex:/// ^devoir:([0-9]+)/ajout-exercice$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						fiche?.load { type:"load", cb:(fiche)->
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{text:"Devoir : #{fiche.nom}"}
+							]
+							new VList_aEF {
+								fiche: fiche
+								links: { direct:null, notes:"notes-devoir:", test:"devoir:#{fiche.id}/tester-exercice:"}
+							}
+						}
+				}
+				{ # aussi prof
 					regex:/// ^devoir:([0-9]+)/tester-exercice:([0-9]+)$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])
@@ -153,6 +168,20 @@ class @Controller
 								canMod:true
 								links: { direct:null, indirect:"notes-devoir:#{fiche.id}/eleve:"}
 							}
+						}
+				}
+				{ # aussi prof (avec "vos devoirs")
+					regex:/// ^notes-devoir:([0-9]+)/ajout-eleve$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						fiche?.load { type:"load", cb:(fiche)->
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{link:"devoir:#{fiche.id}", text:"Devoir : #{fiche.nom}"}
+								{link:"notes-devoir:#{m[1]}", text:"Liste des élèves"}
+								{text:"Ajouter des élèves"}
+							]
+							new VUserChoice { fiche:fiche }
 						}
 				}
 				{ # aussi prof (avec "vos devoirs")
@@ -582,9 +611,9 @@ class @Controller
 				{
 					regex:/// ^reinit:([a-z0-9]+)$ ///i
 					exec:(m)->
-						Controller.uLog.on { type:"reinitMDP", cb: (user)->
+						Controller.uLog.on { type:"reinitMDP", cb: (user,success)->
 							Controller.setAriane()
-							new VHome {}
+							new VHome { reinit:success }
 							if success then new VUserMod { item:user, mdp:true }
 							else Controller.notyMessage "La clef n'est pas ou plus valide", "error"
 						}

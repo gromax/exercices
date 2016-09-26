@@ -12,8 +12,8 @@ Exercice.liste.push
 		while A.sameAs B,"x"
 			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
 		x = NumberManager.makeSymbol("x")
-		membreGauche = x.toClone().md(A.x,false).am(A.y,false).simplify().tex()
-		membreDroite = x.md(B.x,false).am(B.y,false).simplify().tex()
+		data.mg = membreGauche = x.toClone().md(A.x,false).am(A.y,false).simplify().tex()
+		data.md = membreDroite = x.md(B.x,false).am(B.y,false).simplify().tex()
 		xCoeff = A.x.toClone().am(B.x,true)
 		solutions = [B.y.toClone().am(A.y,true).md(xCoeff,true).simplify()]
 		[
@@ -24,3 +24,10 @@ Exercice.liste.push
 				solutions:solutions
 			}
 		]
+	slide: (data) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		out = ""
+		for itemData,i in data
+			out += "\\item $#{itemData.mg} = #{itemData.md}$"
+		out = "\\section{Équations du premier degré.} \\begin{frame} \\myFrameTitle Résoudre: \\begin{enumerate}[a)] "+out+" \\end{enumerate} \\end{frame}"
+		out

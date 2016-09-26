@@ -79,11 +79,21 @@ class VList extends View
 	_pagination: 20
 	_template: "Defaut_parent"
 	_liste:null
+	_buttonActionList:null
+	_actionList:null
 	init_config:(params=null) -> h_push super(), {
 			pagination:@_pagination
 			template:@_template
 			filtre:{}
 		}
+	push_action: (obj,type) ->
+		if type is "button"
+			if @_buttonActionList is null then @_buttonActionList=[]
+			@_buttonActionList.push obj
+		else
+			if @_actionList is null then @_actionList=[]
+			@_actionList.push obj
+		@
 	html: ->
 		liste = @collection().liste(@config.filtre)
 		html = Handlebars.templates.buttonsBar {
@@ -155,23 +165,12 @@ class VList extends View
 					view._page = Number $(@).attr("page")
 					view.renderItems()
 					view.final()
-				when dom.attr("name") is "filtreClasseButton"
-					# Pour listUser
-					id = Number dom.attr("_id")
-					nomClasse = dom.attr("nomClasse")
-					if id>0
-						if id is view.config.filtre.idClasse
-							view.config.filtre.idClasse = null
-							Controller.uLog.setClasseFiltre null
-						else
-							view.config.filtre.idClasse = id
-							Controller.uLog.setClasseFiltre Controller.uLog.classes.get(id)
-						view.renderItems()
-						view.final()
-				when dom.attr("idExoChoice")?
-					# Pour le mod de choix d'exercice
-					# L'objet VExercicesList a été attaché à un config.exChoice = VList_EF. Son modal gère la création d'une exercice.
-					view.config.exoChoice?.modal(Number dom.attr("idExoChoice"))
+				else
+					if view._actionList isnt null
+						name = dom.attr("name")
+						id = Number dom.attr("_id")
+						for item in view._actionList
+							if item.name is name then view[item.fct_name](id)
 		#event.stopPropagation() -> Pose aussi problème dans le modal lors du choix d'exercice...
 	buttonAction: (event) ->
 		view = $(event.delegateTarget).data("view")
@@ -180,11 +179,6 @@ class VList extends View
 			name = dom.attr("name")
 			switch name
 				when "_add_button" then view.add()
-				when "_sort_notes_by_name"
-					# Tri par nom, dans une liste de notes Vlist_aUF
-					view.collection().sortByUser?()
-					view._page = 1
-					view.renderItems()
 				when "_eleves_button"
 					new VUserChoice { fiche:view.config.fiche, viewToRefresh:view }
 				when "deleteButton"
@@ -195,22 +189,6 @@ class VList extends View
 							view.final()
 						}
 						item.delete()
-				when "activateButton"
-					# Pour VFichesList
-					item = view.collection().get dom.attr("_id")
-					item.on { type:"change", obj:view, cb:(view,item) ->
-						view.itemUpdateLine item
-						view.final()
-					}
-					item.save {actif:not item.actif}
-				when "visibleButton"
-					# Pour VFichesList
-					item = view.collection().get dom.attr("_id")
-					item.on { type:"change", obj:view, cb:(view,item) ->
-						view.itemUpdateLine item
-						view.final()
-					}
-					item.save {visible:not item.visible}
 				when "editButton"
 					item = view.collection().get dom.attr("_id")
 					item.on { type:"change", obj:view, cb:(view,item) ->
@@ -218,24 +196,11 @@ class VList extends View
 						view.final()
 					}
 					view.modal item
-				when "lockButton"
-					# Pour VUserList
-					item = view.collection().get dom.attr("_id")
-					item.on { type:"change", obj:view, cb:(view,item) ->
-						view.itemUpdateLine item
-						view.final()
-					}
-					item.save {locked:not item.locked}
-				when "userAddButton"
-					# Pour VUserChoice => Ajout d'une asso user-fiche
-					idUser = Number dom.attr("_id")
-					user = view.collection().get idUser
-					fiche = view.config.fiche
-					Controller.uLog.UFlist.on {type:"add", obj:view, cb:(view,fiche)->
-						view.renderItems()
-						view.config.viewToRefresh?.renderItems() # Raffraichit la vue des UF qui est en fond
-					}
-					Controller.uLog.UFlist.add { idUser:idUser, idFiche:fiche.id }
+				else
+					if view._buttonActionList?
+						id = Number dom.attr("_id")
+						for ba in view._buttonActionList
+							if ba.name is name then view[ba.fct_name](id)
 		event.stopPropagation()
 	searchAction: (event) =>
 		searchStr = $(event.currentTarget).val().toLowerCase()
@@ -255,6 +220,8 @@ class VUsersList extends VList
 	_itemTemplate: "User_item"
 	_glyph: "glyphicon-user"
 	init_config:(params=null)->
+		@push_action { name:"lockButton", fct_name:"lockAction" }, "button"
+		@push_action { name:"filtreClasseButton", fct_name:"filtreClasse" }, "button"
 		h_push super(), {
 			showEmail:true
 			showClasses:true
@@ -268,18 +235,42 @@ class VUsersList extends VList
 		}
 	collection: -> Controller.uLog.users
 	modal: (item) -> new VUserMod { item:item }
+	lockAction: (idUser) ->
+		item = @collection().get idUser
+		item.on { type:"change", obj:@, cb:(view,item) ->
+			view.itemUpdateLine item
+			view.final()
+		}
+		item.save {locked:not item.locked}
+	filtreClasse: (idClasse) ->
+		if idClasse is @config.filtre.idClasse
+			@config.filtre.idClasse = null
+			Controller.uLog.setClasseFiltre null
+		else
+			@config.filtre.idClasse = idClasse
+			Controller.uLog.setClasseFiltre Controller.uLog.classes.get(idClasse)
+		@renderItems()
+		@final()
 class VUserChoice extends VList
-	_defaultContainer: "#modalContent"
 	_template: "User_parent"
 	_itemTemplate: "User_item"
 	_glyph: "glyphicon-user"
 	init_config: (params=null) ->
+		@push_action { name:"userAddButton", fct_name:"userAdd" }, "button"
 		h_push super(), {
 			showClasses:true
 			addButton:true
 			filtre: { idClasse:Controller.uLog.classeFiltre?.id, rank:"Élève" }
 			title: "Choix des utilisateurs"
+
 		}
+	userAdd: (idUser) ->
+		user = @collection().get idUser
+		fiche = @config.fiche
+		Controller.uLog.UFlist.on {type:"add", obj:@, cb:(view,fiche)->
+			view.renderItems()
+		}
+		Controller.uLog.UFlist.add { idUser:idUser, idFiche:fiche.id }
 	collection: -> Controller.uLog.users
 class VClassesList extends VList
 	_template: "Classe_parent"
@@ -302,6 +293,9 @@ class VFichesList extends VList
 	_glyph: "glyphicon-file"
 	init_config:(params=null) ->
 		# Lancé seulement par prof et admin
+		@push_action { name:"activateButton", fct_name:"activateAction" }, "button"
+		@push_action { name:"visibleButton", fct_name:"visibleAction" }, "button"
+		@push_action { name:"texSlideButton", fct_name:"texSlideAction" }, "button"
 		h_push super(), {
 			showId:Controller.uLog.isAdmin
 			showOwner:Controller.uLog.isAdmin
@@ -310,6 +304,25 @@ class VFichesList extends VList
 		}
 	collection: -> Controller.uLog.fiches
 	modal: (item) -> new VFicheMod { item:item }
+	activateAction: (id) ->
+		item = @collection().get id
+		item.on { type:"change", obj:@, cb:(view,item) ->
+			view.itemUpdateLine item
+			view.final()
+		}
+		item.save {actif:not item.actif}
+	visibleAction: (id) ->
+		item = @collection().get id
+		item.on { type:"change", obj:@, cb:(view,item) ->
+			view.itemUpdateLine item
+			view.final()
+		}
+		item.save {visible:not item.visible}
+	texSlideAction: (id) ->
+		fiche = @collection().get id
+		fiche?.load { type:"load", obj:@, cb:(view,fiche)->
+			$(view.config.container).html fiche.toTexSlide()
+		}
 class VNotesList extends VList
 	_template: "Note_parent"
 	_itemTemplate: "Note_item"
@@ -339,6 +352,7 @@ class VList_aUF extends VList
 	_glyph: "glyphicon-file"
 	textIfEmpty: "Aucun devoir dans la liste."
 	init_config:(params=null) ->
+		@push_action { name:"_sort_notes_by_name", fct_name:"sortNotesByName" }, "button"
 		othersNav = null
 		buttons = null
 		if params.user? and (Controller.uLog.isProf or Controller.uLog.isAdmin)
@@ -354,12 +368,16 @@ class VList_aUF extends VList
 			othersNav=[precNav, suivNav]
 		if params.fiche? and (Controller.uLog.isProf or Controller.uLog.isAdmin)
 			# On propose d'ajouter des élèves
-			buttons=[ { name:"_eleves_button", title:"Ajouter des élèves"}, { name:"_sort_notes_by_name", title:"Trier par nom"}]
+			buttons=[ { link:"notes-devoir:#{params.fiche.id}/ajout-eleve", title:"Ajouter des élèves"}, { name:"_sort_notes_by_name", title:"Trier par nom"}]
 		h_push super(), {
 			othersNav:othersNav
 			buttons:buttons
 		}
 	collection: -> Controller.uLog.UFlist
+	sortNotesByName: () ->
+		@collection().sortByUser?()
+		@_page = 1
+		@renderItems()
 class VList_aEF extends VList
 	_template: "aEF_parent"
 	_itemTemplate: "aEF_item"
@@ -389,12 +407,17 @@ class VExercicesList extends VList
 	_itemTemplate: "Exercice_item"
 	_glyph: "glyphicon-edit"
 	init_config:(params=null) ->
+		exoChoice = if params.exoChoice? then true else false
+		if exoChoice then @push_action { name:"exoChoice", fct_name:"exoChoice" }, "a"
 		h_push super(), {
 			search:true
 			showKeyWords:Controller.uLog.isAdmin
-			exoChoice:if params.exoChoice? then true else false
+			exoChoice:exoChoice
 		}
 	collection: -> Controller.uLog.exercices
+	exoChoice: (idExo) ->
+		# L'objet VExercicesList a été attaché à un config.exoChoice = VList_EF. Son modal gère la création d'une exercice.
+		@config.exoChoice?.modal(idExo)
 class VMod extends View
 	_defaultContainer: "#modalContent"
 	formulaire:"form"
@@ -633,7 +656,7 @@ class VExercice extends View
 				}
 				@exo.init params.oNote
 				comp = {
-					title:@exo.model.title
+					title:@exo.title
 					showNote:true
 					showReload:false
 					todo:oEF.num # Nombre de répatitions demandées
@@ -649,7 +672,7 @@ class VExercice extends View
 				}
 				@exo.init null
 				comp = {
-					title:@exo.model.title
+					title:@exo.title
 					showNote:true
 					showReload:true
 				}
@@ -660,7 +683,7 @@ class VExercice extends View
 				}
 				@exo.init null
 				comp = { # Simple test
-					title:@exo.model.title
+					title:@exo.title
 					showNote:false
 					showReload:true
 					showOptions:if @exo.model.options? then "config#{@divId}" else false
@@ -685,6 +708,7 @@ class VExercice extends View
 			false
 		$("#form_opt_#{@divId}").on 'submit', (event) =>
 			@exo.reloadOptions $(event.delegateTarget).serializeArray()
+			@config.title = @exo.title
 			@display()
 			false
 		# initialisation des Brique graphique
@@ -699,17 +723,18 @@ class VHome extends View
 			filtre:{idUser:Controller.uLog.id}
 			user:Controller.uLog
 		})
-		super()
+		h_push super(), { reinit:params?.reinit is true }
 	html:->
 		if Controller.uLog.isEleve
 			Handlebars.templates.home {
 				user:Controller.uLog
+				reinit:@config.reinit
 				fiches:Controller.uLog.fiches.liste()
 				unfinished:Controller.uLog.notes().liste({ finished:false }).length>0
 				html_devoirs:"<div id='mesDevoirs#{@divId}'>#{@subViews[0].html()}</div>"
 				html_premiere_connexion: if @config.nouveau then Handlebars.templates.premiereConnexion { classe:Controller.uLog.classe() } else null
 			}
-		else Handlebars.templates.home {user:Controller.uLog}
+		else Handlebars.templates.home { user:Controller.uLog, reinit:@config.reinit }
 class VConnexion extends View
 	_defaultContainer: "#modalContent"
 	formulaire:"connexion"

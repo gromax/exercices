@@ -7,7 +7,7 @@ Exercice.liste.push
 	template:"2cols"
 	init: (data) ->
 		max = 6
-		items=[]
+		items = []
 		inp = data.inputs
 		# Les paraboles sont définies par sommet et point
 		liste = [{cano:true, convexe:true}, {cano:true, convexe:false}, {cano:false, convexe:true}, {cano:false, convexe:false}]
@@ -39,14 +39,16 @@ Exercice.liste.push
 			tabX = ["$-\\infty$", "$#{xA}$", "$+\\infty$"]
 			if yB>yA then variations = "+/$+\\infty$,-/$#{yA}$,+/$+\\infty$"
 			else variations = "-/$-\\infty$,+/$#{yA}$,-/$-\\infty$"
-			tab = (new TabVar(tabX, {hauteur_ligne:25, color:h_colors[i]})).addVarLine(variations)
+			tab = (new TabVar(tabX, {hauteur_ligne:25, color:h_colors[i], texColor:h_tex_colors[i]})).addVarLine(variations)
 			tabs.push tab
 			items.push item
+		data.items = items
+		data.tabs = tabs
 		[
 			new BEnonce { zones:[
 				{
 					body:"enonce"
-					html:"<p>On vous donne 5 tableaux de variations et 4 fonctions du second degré. Vous devez dire à quelle fonction correspond chaque tableau.</p>"
+					html:"<p>On vous donne 4 tableaux de variations et 4 fonctions du second degré. Vous devez dire à quelle fonction correspond chaque tableau.</p>"
 				}
 				{
 					help:data.divId+"aide"
@@ -72,4 +74,11 @@ Exercice.liste.push
 				aide:data.divId+"aide"
 			}
 		]
+	slide: (data) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		out = ""
+		for itemData in data
+			tex = "\\begin{multicols}{2}"+(tab.tex() for tab in itemData.tabs).join(" ")+"\\end{multicols} \\begin{multicols}{2} \\begin{Large} \\begin{enumerate}[a)] \\item"+(" "+item.title+" " for item in itemData.items).join("\\item")+"\\end{enumerate} \\end{Large} \\end{multicols}"
+			out += "\\section{Associer tableaux et fonctions} \\begin{frame}\\myFrameTitle #{tex} \\end{frame}"
+		out
 

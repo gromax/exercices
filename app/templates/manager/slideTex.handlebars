@@ -1,0 +1,25 @@
+\documentclass[11pt,xcolor=dvipsnames]{beamer}
+\title{Exercice}
+\usetheme{Madrid}
+\hypersetup{pdfpagemode=FullScreen}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[default]
+
+\usepackage[french]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{multicol}
+\usepackage{tabularx,array}
+\usepackage{pstricks-add}
+\usepackage{tikz}
+\usepackage{tkz-tab}
+\usepackage{colortbl}
+\usepackage{mathtools}
+\renewcommand\thesection{\Alph{section}}
+\newcommand\myFrameTitle{\frametitle{\thesection) \insertsection}}
+\begin{document}
+{{#each items}}
+{{{this}}}
+{{/each}}
+\end{document}

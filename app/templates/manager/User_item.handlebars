@@ -14,13 +14,7 @@
 {{/if}}
 {{#if params.showClasses}}
 <td>
-	<a href="" name="filtreClasseButton" _id="{{ item.idClasse }}" >
-		{{#if params.filtre.idClasse}}
-			<span class="label label-danger">{{ item.nomClasse }}</span>
-		{{else}}
-			{{ item.nomClasse }}
-		{{/if}}
-	</a>
+	<button type="button" class="btn {{#if params.filtre.idClasse}}btn-danger{{else}}btn-default{{/if}} btn-sm" name="filtreClasseButton" _id="{{ item.idClasse }}">{{ item.nomClasse }}</button>
 </td>
 {{/if}}
 <td>{{ item.dateFr }} à {{ item.hour }}</td>
