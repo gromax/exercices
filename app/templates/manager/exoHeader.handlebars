@@ -2,7 +2,9 @@
 	<h2>
 		{{ title }}
 		<div class="btn-group" role"group">
-			{{#if showReload}} <a class="btn btn-default" role="button" data-toggle="tooltip" data-placement="bottom" title="Recommencer" id="again_{{divId}}" href="#"><span class="glyphicon glyphicon-repeat"></span></a>{{/if}}
+			{{#if linkPrev}}<a class="btn btn-default" role="button" href="#{{linkPrev}}"><span class="glyphicon glyphicon-chevron-left"></span></a>{{/if}}
+			{{#if showReload}} <button class="btn btn-default" type="button" data-toggle="tooltip" data-placement="bottom" title="Recommencer" id="again_{{divId}}" href="#"><span class="glyphicon glyphicon-repeat"></span></button>{{/if}}
+			{{#if linkNext}}<a class="btn btn-default" role="button" href="#{{linkNext}}"><span class="glyphicon glyphicon-chevron-right"></span></a>{{/if}}
 			{{#if showOptions}}<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#{{ showOptions }}" title="Options"><span class="glyphicon glyphicon-cog"></span></button>{{/if}}
 		</div>
 

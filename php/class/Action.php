@@ -6,6 +6,7 @@ use BDDObject\User;
 use BDDObject\Classe;
 use BDDObject\Logged;
 use BDDObject\Fiche;
+use BDDObject\Exam;
 use BDDObject\ExoFiche;
 use BDDObject\Note;
 use BDDObject\AssoUF;
@@ -371,6 +372,39 @@ class Action
 		return array("error"=>true, "messages"=>EC::messages(), "unlogged"=>$unlogged);
 	}
 
+	protected function examSave()
+	{
+		$uLog=Logged::getConnectedUser();
+		if ($unlogged = !$uLog->connexionOk()) EC::addError("Connexion requise.");
+		elseif (!$uLog->isProf(true)) EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
+		else {
+			$id = getPost("id");
+			if ($id===null) {
+				// Création d'un exam
+				// Il faut s'assurer que la fiche parente est autorisée
+				$idFiche = getPost("idFiche");
+				$fiche = Fiche::getObject($idFiche);
+				if ($fiche===null) EC::addError("Devoir introuvable.");
+				elseif ($uLog->isAdmin() || $fiche->isOwnedBy($uLog)) {
+					$exam = new Exam(extractFromPost(array("data"=>null, "idFiche"=>null )));
+					$id = $exam->insertion();
+					if ($id !== null) return array("success"=>true, "exam"=>$exam->toArray(), "id"=>$id, "messages"=>EC::messages());
+				} else EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
+			} else {
+				$exam = Exam::getObject($id);
+				if ($exam === null) EC::addError("Examen introuvable.");
+				else {
+					$fiche = $exam->getFiche();
+					if ($uLog->isAdmin() || $fiche->isOwnedBy($uLog)) {
+						$exam->update(extractFromPost(array('data'=>null, 'locked'=>null)));
+						return array("success"=>true, "exam"=>$exam->toArray(), "messages"=>EC::messages());
+					} else EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
+				}
+			}
+		}
+		return array("error"=>true, "messages"=>EC::messages(), "unlogged"=>$unlogged);
+	}
+
 	protected function noteSave()
 	{
 		$uLog=Logged::getConnectedUser();
@@ -530,6 +564,23 @@ class Action
 		return array("error"=>true, "messages"=>EC::messages(), "unlogged"=>$unlogged);
 	}
 
+	protected function examDelete()
+	{
+		$uLog=Logged::getConnectedUser();
+		if ($unlogged = !$uLog->connexionOk()) EC::addError("Connexion requise.");
+		elseif ($uLog->isProf(true)) {
+			$id = getPost("id");
+			if ($id!==null) {
+				$exam = Exam::getObject($id);
+				if ($exam === null) EC::addError("Exam introuvable.");
+				elseif ($uLog->isAdmin() || $exam->getFiche()->isOwnedBy($uLog)) {
+					if ($exam->delete()) return array("success"=>true, "messages"=>EC::messages());
+				} else EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
+			}
+		} else EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
+		return array("error"=>true, "messages"=>EC::messages(), "unlogged"=>$unlogged);
+	}
+
 	protected function noteDelete()
 	{
 		$uLog=Logged::getConnectedUser();
@@ -595,11 +646,13 @@ class Action
 				if ($uLog->isEleve()) {
 					$eleves = $listeAssoc;
 					$faits = Note::getList(array("idUser"=>$uLog->getId(), "idFiche"=>$id));
+					$exams = null;
 				} else {
 					$eleves = AssoUF::getList(array("idFiche"=>$id));
 					$faits = Note::getList(array("idFiche"=>$id));
+					$exams = Exam::getList(array("idFiche"=>$id));
 				}
-				return array("fiche"=>$fiche->toArray(), "exercices"=>ExoFiche::getList(array("idFiche"=>$id)), "eleves"=>$eleves, "faits"=>$faits, "messages"=>EC::messages());
+				return array("fiche"=>$fiche->toArray(), "exercices"=>ExoFiche::getList(array("idFiche"=>$id)), "eleves"=>$eleves, "faits"=>$faits, "exams"=>$exams, "messages"=>EC::messages());
 			} else {
 				EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
 			}

@@ -257,6 +257,7 @@ class VUserChoice extends VList
 	_glyph: "glyphicon-user"
 	init_config: (params=null) ->
 		@push_action { name:"userAddButton", fct_name:"userAdd" }, "button"
+		@push_action { name:"filtreClasseButton", fct_name:"filtreClasse" }, "button"
 		h_push super(), {
 			showClasses:true
 			addButton:true
@@ -272,6 +273,15 @@ class VUserChoice extends VList
 		}
 		Controller.uLog.UFlist.add { idUser:idUser, idFiche:fiche.id }
 	collection: -> Controller.uLog.users
+	filtreClasse: (idClasse) ->
+		if idClasse is @config.filtre.idClasse
+			@config.filtre.idClasse = null
+			Controller.uLog.setClasseFiltre null
+		else
+			@config.filtre.idClasse = idClasse
+			Controller.uLog.setClasseFiltre Controller.uLog.classes.get(idClasse)
+		@renderItems()
+		@final()
 class VClassesList extends VList
 	_template: "Classe_parent"
 	_itemTemplate: "Classe_item"
@@ -295,7 +305,6 @@ class VFichesList extends VList
 		# Lancé seulement par prof et admin
 		@push_action { name:"activateButton", fct_name:"activateAction" }, "button"
 		@push_action { name:"visibleButton", fct_name:"visibleAction" }, "button"
-		@push_action { name:"texSlideButton", fct_name:"texSlideAction" }, "button"
 		h_push super(), {
 			showId:Controller.uLog.isAdmin
 			showOwner:Controller.uLog.isAdmin
@@ -318,11 +327,51 @@ class VFichesList extends VList
 			view.final()
 		}
 		item.save {visible:not item.visible}
-	texSlideAction: (id) ->
-		fiche = @collection().get id
-		fiche?.load { type:"load", obj:@, cb:(view,fiche)->
-			$(view.config.container).html fiche.toTexSlide()
+class VExamsList extends VList
+	_template: "Exam_parent"
+	_itemTemplate: "Exam_item"
+	_glyph: "glyphicon-blackboard"
+	init_config:(params=null) ->
+		# Lancé seulement par prof et admin
+		@push_action { name:"lockButton", fct_name:"lockAction" }, "button"
+		@push_action { name:"texSlideButton", fct_name:"texSlideAction" }, "button"
+		@push_action { name:"texButton", fct_name:"texAction" }, "button"
+		h_push super(), {
+			showId:Controller.uLog.isAdmin
+			showOwner:Controller.uLog.isAdmin
+			showModify:true
+			buttons:[{ name:"_add_button", title:"Ajouter un exam"}]
 		}
+	collection: ->
+		unless @_collection?
+			if @config.fiche? then @_collection=@config.fiche.exams
+		@_collection
+	texSlideAction: (id) ->
+		exam = @collection().get id
+		console.log exam.toTex(true)
+		#fiche?.load { type:"load", obj:@, cb:(view,fiche)->
+		#	$(view.config.container).html fiche.toTexSlide()
+		#}
+	texAction: (id) ->
+		exam = @collection().get id
+		console.log exam.toTex(false)
+		#fiche?.load { type:"load", obj:@, cb:(view,fiche)->
+		#	$(view.config.container).html fiche.toTexSlide()
+		#}
+	lockAction: (id) ->
+		item = @collection().get id
+		item.on { type:"change", obj:@, cb:(view,item) ->
+			view.itemUpdateLine item
+			view.final()
+		}
+		item.save {locked:not item.locked}
+	add: ->
+		if @config.fiche?
+			@collection().on {type:"add", obj:@, cb:(view, item)->
+				view.renderItems()
+				view.final()
+			}
+			@collection().add { idFiche:@config.fiche.id, data:@config.fiche.toNewExam() }
 class VNotesList extends VList
 	_template: "Note_parent"
 	_itemTemplate: "Note_item"
@@ -654,7 +703,7 @@ class VExercice extends View
 					aUF:aUF
 					divId:@divId
 				}
-				@exo.init params.oNote
+				@exo.init { note:params.oNote }
 				comp = {
 					title:@exo.title
 					showNote:true
@@ -675,6 +724,21 @@ class VExercice extends View
 					title:@exo.title
 					showNote:true
 					showReload:true
+				}
+			when params.examInfos?
+				@exo = new Exercice { # exercice dans un examen
+					idE:params.examInfos.idE
+					options:params.examInfos.options
+					divId:@divId
+				}
+				@exo.init params.examInfos
+				comp = {
+					title:@exo.title
+					showNote:true
+					showReload:true
+					examInfos : params.examInfos
+					linkNext: params.linkNext
+					linkPrev: params.linkPrev
 				}
 			else
 				@exo = new Exercice { # Simple test
@@ -704,6 +768,7 @@ class VExercice extends View
 			false
 		$("#again_#{@divId}").on 'click', (event) =>
 			@exo.init null
+			if (infos = @config.examInfos)? then infos.update @exo.data.inputs
 			@display()
 			false
 		$("#form_opt_#{@divId}").on 'submit', (event) =>

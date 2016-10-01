@@ -130,7 +130,7 @@ class @Parser
 		@context = "" # A modifier : mise dans un context particulier pour certaines simplifications
 
 		# config
-		@config = Tools.merge({ developp:false, simplify:true, type:"number" }, params)
+		@config = Tools.merge({ developp:false, simplify:true, type:"number", toLowercase:false }, params)
 		if typeof value is "string" then value = @parse value
 		if value instanceof MObject
 			# Cas où on a fourni directement un objet pour suivi de simplifications
@@ -148,6 +148,9 @@ class @Parser
 		@initParse()
 		# Les élèves ont le réflexe d'utiliser la touche ² présente sur les claviers
 		expression = expression.replace?("²", "^2")
+		expression = expression.replace?("³", "^3")
+		expression = expression.replace?("⁴", "^4")
+		if @config.toLowercase then expression = expression.toLowerCase()
 		#try
 		matchList = expression.match(@globalRegex)
 		if matchList?

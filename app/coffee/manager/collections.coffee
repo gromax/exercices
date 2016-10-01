@@ -174,8 +174,12 @@ class CFiches extends Collection
 		for fiche in @_liste
 			if (out = fiche.exercices?.get(aEF))? then return out
 		return null
+class CExams extends Collection
+	constructor: (liste, @parent) ->
+		@model = MExam
+		super(liste)
 class CExosFiche extends Collection
-	constructor: (liste, @exercices, @parent) -> # Les exercices étant fixe, ont fait une connexion directe
+	constructor: (liste, @exercices, @parent) -> # Les exercices étant fixes, ont fait une connexion directe
 		@model = MExoFiche
 		super(liste)
 	@sortExosFiches: (liste, fiches) ->

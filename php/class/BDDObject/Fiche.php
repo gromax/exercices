@@ -50,7 +50,6 @@ final class Fiche
 			EC::addBDDError($e->getMessage(), "Fiche/getList");
 			return array();
 		}
-
 		return $bdd_result;
 	}
 
@@ -119,6 +118,8 @@ final class Fiche
 	{
 		require_once BDD_CONFIG;
 		try {
+			// Suppression des exams liés à la fiche
+			DB::delete(PREFIX_BDD."exams", "idFiche=%i", $this->id);
 			// Suppression des notes liées aux exercices contenues dans la fiche
 			DB::query("DELETE ".PREFIX_BDD."assocUE FROM ".PREFIX_BDD."assocUE INNER JOIN ".PREFIX_BDD."assocEF f ON (aEF = f.id) WHERE f.idFiche=%i", $this->id);
 			// Suppression des exercices de la fiche

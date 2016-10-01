@@ -1,17 +1,19 @@
 
 # helpers functions
-colors = [
-	{ tex:"red", html:"#ff0000" }
-	{ tex:"JungleGreen", html:"#347c2c" }
-	{ tex:"Violet", html:"#8d38c9" }
-	{ tex:"Orange", html:"#ffa500" }
-	{ tex:"blue", html:"#0000ff" }
-	{ tex:"gray", html:"#808080" }
-	{ tex:"Thistle", html:"#d2b9d3" }
-	{ tex:"Mahogany", html:"#c04000" }
-	{ tex:"yellow", html:"#ffff00" }
-	{ tex:"CornflowerBlue", html:"#6495ed" }
-]
+colors = (id) ->
+	switch id
+		when 0 then { tex:"red", html:"#ff0000" }
+		when 1 then { tex:"JungleGreen", html:"#347c2c" }
+		when 2 then { tex:"Violet", html:"#8d38c9" }
+		when 3 then { tex:"Orange", html:"#ffa500" }
+		when 4 then { tex:"blue", html:"#0000ff" }
+		when 5 then { tex:"gray", html:"#808080" }
+		when 6 then { tex:"Thistle", html:"#d2b9d3" }
+		when 7 then { tex:"Mahogany", html:"#c04000" }
+		when 8 then { tex:"yellow", html:"#ffff00" }
+		when 9 then { tex:"CornflowerBlue", html:"#6495ed" }
+		else { tex:"black", html:"#000000" }
+
 h_ineqSymb = ["<", ">", "\\leqslant", "\\geqslant"]
 h_genId = () -> Math.floor(Math.random() * 10000)
 h_init = (inpName,saveObj,_min,_max, force=false) ->
@@ -60,6 +62,8 @@ class @Exercice
 		# idE : id de l'exercice, contenu dans exoFiche.idE
 		# oEF : objet d'association entre exercice et devior
 		# aUF : id de l'association d'un élève avec un devoir
+		# options : transmis directement
+		# model : transmis directement
 		config = Tools.merge { divId:0 },params
 		@divId = config.divId
 		@oEF = config.oEF
@@ -76,14 +80,17 @@ class @Exercice
 						})
 					]
 			}
-		@data = { options:Exercice.read_options(params.oEF?.options, @model.options)}
-	init: (note) ->
-		if note?
-			inputs = note.inputs
-			answers = note.answers
-		else
-			inputs = {}
-			answers = {}
+		@data = { options:Exercice.read_options(params.oEF?.options or params.options, @model.options)}
+	init: (obj) ->
+		note = null
+		inputs = {}
+		answers = {}
+		if obj?
+			if obj.note?
+				note = obj.note
+				inputs = obj.note.inputs
+				answers = obj.note.answers
+			else if obj.inputs? then inputs = obj.inputs
 		@data = { inputs:inputs, answers:answers, note:0, options:@data.options, noteObject:note, divId:@divId, isAdmin:Controller?.uLog.isAdmin }
 		@finished = false
 		@stages = @model.init(@data)

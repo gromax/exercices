@@ -62,19 +62,15 @@ class @TabVar
 		if not(typeIsArray(line)) then return
 		line.push('?') while line.length<2*@x_list.length-1 # On s'assure une longueur minimum
 		line.pop() while line.length>2*@x_list.length-1 # On s'assure d'une longueur maximum
-		@lines.push {type:"sign", tag:config.tag, values:line, hauteur:Math.max(config.h,1)}
+		@lines.push {type:"sign", sign:true, tag:config.tag, values:line, hauteur:Math.max(config.h,1)}
 		@
 	tex: (params) ->
-		config = { lgt:1, espcl:1.5, lw:"1pt" }
-		if (typeof params is "object") and params isnt null
-			config[key] = params[key] for key of params
 		entetes = ("#{line.tag}/#{line.hauteur/2}" for line in @lines)
 		entetes.unshift "#{@x_tag}/1"
-		out = "\\tkzTabInit[lgt=#{config.lgt},espcl=#{config.espcl}, lw=#{config.lw}]{#{entetes.join()}}{#{@x_list.join()}}"
-		for line in @lines
-			if line.type is "sign" then out += "\\tkzTabLine{#{line.values}}"
-			else out += "\\tkzTabVar[color=#{@config.texColor}]{#{line.str}}"
-		"\\begin{tikzpicture}[color=#{@config.texColor}]"+out+"\\end{tikzpicture}"
+		config = { lgt:1, espcl:1.5, lw:"1pt", entetes:entetes.join(), lines:@lines, x_list:@x_list.join(), color:@config.texColor }
+		if (typeof params is "object") and params isnt null
+			config[key] = params[key] for key of params
+		Handlebars.templates["tex_tab"] config
 	render: (div) ->
 		longueur = @config.espace_gauche+(@x_list.length-1)*@config.espace_entre_valeurs+2*@config.marge
 		hauteur = @linesNumber() * @config.hauteur_ligne

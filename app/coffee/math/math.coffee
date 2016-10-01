@@ -1322,10 +1322,10 @@ class RealNumber extends SimpleNumber
 				r=Math.floor v
 				p++
 		else
-			while ((v-r) isnt 0) and (p>-20)
-				v=v*10
-				r=Math.floor v
-				p--
+			# Il y a des chiffres après la virgule
+			regex = /// ^([0-9]+)[.,]?([0-9]*)$ ///i
+			m = (String v).match regex
+			if m then p = - m[2].length
 		return p
 	string_arrondi: (puissance=0) ->
 		resolution = Math.pow(10,puissance)

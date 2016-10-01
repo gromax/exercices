@@ -36,6 +36,7 @@ Exercice.liste.push
 			inp.b = String(b)
 			inp.c = String(c)
 		poly = Polynome.make([c, b, a])
+		data.equation = poly.tex()+" = 0"
 		[
 			new BEnonce {
 				zones:[{
@@ -56,3 +57,12 @@ Exercice.liste.push
 				solutions:poly.solveExact(0,not dansR)
 			}
 		]
+	tex: (data, slide) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		if data[0]?.options.d.value is 0 then title = "Résoudre dans $\\mathbb{R}$"
+		else title = "Résoudre dans $\\mathbb{C}"
+		{
+			title:title
+			content:Handlebars.templates["tex_enumerate"] { items: ("$#{item.equation}$" for item in data), large:slide is true }
+		}
+

@@ -20,6 +20,20 @@
 \newcommand\myFrameTitle{\frametitle{\thesection) \insertsection}}
 \begin{document}
 {{#each items}}
+
+\section{ {{this.title}} }
+\begin{frame}
+\myFrameTitle
+
+{{# if this.content}}{{{this.content}}}{{/if}}
+{{# if this.contents}}
+{{#each this.contents}}
 {{{this}}}
+
+{{/each}}
+{{/if}}
+
+\end{frame}
+
 {{/each}}
 \end{document}

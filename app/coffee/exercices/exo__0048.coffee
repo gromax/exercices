@@ -43,8 +43,8 @@ Exercice.liste.push
 		polyDer = poly.derivate()
 		col = Math.floor(Math.random() * 2)
 		polys = data.polys = [
-			[ poly, colors[col].html, colors[col].tex ]
-			[ polyDer, colors[1-col].html, colors[1-col].tex ]
+			{ obj:poly, color:colors(col) }
+			{ obj:polyDer, color:colors(1-col)}
 		]
 		items = [
 			{ rank:col, title: "$#{tag_poly}$" }
@@ -71,11 +71,12 @@ Exercice.liste.push
 				params:{axis:true, grid:true, boundingbox:[-@max,@max,@max,-@max]}
 				zone:"gauche"
 				polys:polys
+				max:@max
 				customInit:->
 					for poly in @config.polys
 						@graph.create('functiongraph', [
 							(x) -> @getAttribute('poly').toNumber(x)
-							-@max, @max], {strokeColor:poly[1], strokeWidth:4, fixed:true, poly:poly[0] })
+							-@config.max, @config.max], {strokeColor:poly.color.html, strokeWidth:4, fixed:true, poly:poly.obj })
 			}
 			new BChoice {
 				data:data
@@ -86,34 +87,18 @@ Exercice.liste.push
 				aide:data.divId+"aide"
 			}
 		]
-	slide: (data) ->
+	tex: (data,slide) ->
 		if not Tools.typeIsArray(data) then data = [ data ]
-		out = ""
+		out = []
 		for itemData,i in data
 			if itemData.options.a.value is 0
 				title = "Identifier la courbe de $f$ et celle de sa dérivée $f'$"
 			else
 				title = "Identifier la courbe de $f$ et celle de sa primitive $F$"
-			texItem = ""
-			for polyArr in itemData.polys
-				texItem += "\\draw[line width=2pt,color=#{polyArr[2]}] plot[smooth, domain=#{-@max-.1}:#{@max+.1}](\\x,{#{polyArr[0].toClone().simplify().toString().replace(/,/g,'.').replace(/x/g,'(\\x)') }});"
-			out += "
-			\\section{#{title}}
-			\\begin{frame}
-			\\myFrameTitle
-			\\begin{center}
-			\\begin{tikzpicture}[scale=.6]
-			\\draw (#{-@max},#{@max}) node[below right,color=white,fill=black]{\\textbf{#{i+1}}};
-			\\draw [color=black, line width=.1pt] (#{-@max},#{-@max}) grid[step=1](#{@max},#{@max});
-			\\draw[line width=1pt] (0,0) node[below left]{$O$} (1,-2pt) node[below, fill=white]{$1$}--++(0,4pt) (-2pt,1) node[left, fill=white]{$1$}--++(4pt,0);
-			\\draw[line width=2pt](#{-@max},0)--(#{@max},0) (0,#{-@max})--(0,#{@max});
-
-			\\begin{scope}
-			\\clip (#{-@max},#{-@max}) rectangle (#{@max},#{@max});
-			#{texItem}
-			\\end{scope}
-			\\end{tikzpicture}
-			\\end{center}
-			\\end{frame}
-			"
+			courbes = ( { color:item.color.tex, expr:item.obj.toClone().simplify().toString().replace(/,/g,'.').replace(/x/g,'(\\x)') } for item in itemData.polys )
+			graphique = Handlebars.templates["tex_courbes"] { index:i+1, max:@max, courbes:courbes, scale:.6*@max/6, center:true }
+			out.push {
+				title:title
+				content:graphique
+			}
 		out

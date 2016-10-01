@@ -120,17 +120,9 @@ Exercice.liste.push
 			output = NumberManager.makeProduct expr_array
 		if Proba.aleaEntreBornes(1,3) is 3 then output.opposite()
 		output
-	slide: (data) ->
+	tex: (data,slide) ->
 		if not Tools.typeIsArray(data) then data = [ data ]
-		out = ""
-		for itemData,i in data
-			out += "\\item $P_{#{i}}(x) = #{itemData.polyTex}$"
-		out = "
-			\\section{Développer}
-			\\begin{frame}
-			\\myFrameTitle
-			\\begin{enumerate}[a)] "+out+" \\end{enumerate}
-			\\end{frame}
-		"
-		out
-
+		{
+			title:"Développer"
+			content:Handlebars.templates["tex_enumerate"] { items: ({title:"$P_{#{i}}(x) = #{itemData.polyTex}$"} for item,i in data), large:slide is true }
+		}

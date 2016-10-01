@@ -80,12 +80,13 @@ class Brique extends BaseBrique
 			p_arrondi:0.5	# Pondération si arrondi demandé et mal fait
 			p_modulo:0.5	# Pondération si le modulo est faux
 			developp:false	# Indique s'il faut développer le résultat de l'utilisateur
+			toLowercase:false
 			cor_prefix:""
 		}, params)
 		# La bonne valeur peut-être un ensemble ou un number.
 		if good instanceof Ensemble then parse_type = "ensemble" else parse_type = "number"
 		if user instanceof Parser then info=user # Cas où on fournirait un user déjà parsé
-		else info = new Parser user, { type:parse_type, developp:config.developp }
+		else info = new Parser user, { type:parse_type, developp:config.developp, toLowercase:config.toLowercase }
 		if good?
 			# On peut transmettre un tableau de nombres
 			if Tools.typeIsArray good # Ce n'est donc pas un ensemble
@@ -453,13 +454,13 @@ class BChoice extends Brique
 		if (typeof answersList[rank] is "undefined") then answersList[rank] = 0
 		else answersList[rank] = answersList[rank]+1
 		if answersList[rank] is answersList.length then answersList[rank] = 0
-		$node.css('background-color',colors[answersList[rank]].html)
+		$node.css('background-color',colors(answersList[rank]).html)
 	ver: ->
 		N = @config.liste.length
 		for item in @config.liste
 			item.user = @a[@config.aKey+item.rank]
-			item.userColor = colors[item.user].html
-			item.goodColor = colors[item.rank].html
+			item.userColor = colors(item.user).html
+			item.goodColor = colors(item.rank).html
 			if item.user is item.rank
 				item.ok = true
 				@data.note+=@bareme/N

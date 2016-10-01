@@ -5,8 +5,9 @@ Exercice.liste.push
 	description:"La courbe d'une fonction étant donnée, il faut déterminer un antécédent et une image."
 	keyWords:["Fonctions","Antécédent","Image","Seconde"]
 	template:"2cols"
+	max:10 # Définit la taille de la fenêtre graphique
 	init: (data) ->
-		max = 10 # Définit la taille de la fenêtre graphique
+		max = @max
 		decimals = 3
 		inp = data.inputs
 		# Initialisation du polynome
@@ -32,7 +33,7 @@ Exercice.liste.push
 		h_init("xa",inp,-max,max,true) while inp.xa is inp.xi
 		ya = poly.toNumber(inp.xa,decimals)
 		antecedents = poly.solve_numeric(-max,max,decimals,ya)
-
+		data.values = { poly:poly, ya:ya, xi:inp.xi}
 		# Création de l'objet graphiques
 		graphContainer = new BGraph {
 			params: {axis:true, grid:true, boundingbox:[-max,max,max,-max]}
@@ -143,3 +144,27 @@ Exercice.liste.push
 					@config.graphContainer.solutions(cor,inp,str_antecedents)
 			}
 		]
+	tex: (data, slide) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		out = []
+		for itemData,i in data
+			courbe = { color:"blue", expr:itemData.values.poly.toClone().simplify().toString().replace(/,/g,'.').replace(/x/g,'(\\x)') }
+			xi = itemData.values.xi
+			ya = itemData.values.ya
+			questions = Handlebars.templates["tex_enumerate"] { items:["Donnez l'image de #{xi}", "Donnez le(s) antécédent(s) de #{ya}"] }
+			# Calcul de la taille
+			graphique = Handlebars.templates["tex_courbes"] { index:i+1, max:@max, courbes:[ courbe ], scale:.4*@max/10 }
+			if slide is true
+				out.push {
+					title:@title
+					content: Handlebars.templates["tex_cols"] { cols:[
+						{ width:0.6, center:true, content:graphique}
+						{ width:0.4, content:questions }
+					]}
+				}
+			else
+				out.push {
+					title:@title
+					contents: [graphique, questions]
+				}
+		out

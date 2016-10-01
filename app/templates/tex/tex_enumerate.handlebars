@@ -1,0 +1,12 @@
+{{#if multicols}}\begin{multicols}{ {{multicols}} } {{/if}}
+{{#if large}}\begin{Large}{{/if}}
+\begin{enumerate}[{{#if numero}}{{numero}}{{else}}a){{/if}}]
+{{#each items}}
+\item {{ this }}
+
+\medskip
+
+{{/each}}
+\end{enumerate}
+{{#if large}}\end{Large}{{/if}}
+{{#if multicols}}\end{multicols} {{/if}}

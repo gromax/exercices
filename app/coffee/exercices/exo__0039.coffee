@@ -39,7 +39,7 @@ Exercice.liste.push
 			tabX = ["$-\\infty$", "$#{xA}$", "$+\\infty$"]
 			if yB>yA then variations = "+/$+\\infty$,-/$#{yA}$,+/$+\\infty$"
 			else variations = "-/$-\\infty$,+/$#{yA}$,-/$-\\infty$"
-			tab = (new TabVar(tabX, {hauteur_ligne:25, color:colors[i].html, texColor:colors[i].tex})).addVarLine(variations)
+			tab = (new TabVar(tabX, {hauteur_ligne:25, color:colors(i).html, texColor:colors(i).tex})).addVarLine(variations)
 			tabs.push tab
 			items.push item
 		data.items = items
@@ -74,11 +74,21 @@ Exercice.liste.push
 				aide:data.divId+"aide"
 			}
 		]
-	slide: (data) ->
+	tex: (data,slide) ->
 		if not Tools.typeIsArray(data) then data = [ data ]
-		out = ""
+		out = []
 		for itemData in data
-			tex = "\\begin{multicols}{2}"+(tab.tex() for tab in itemData.tabs).join(" ")+"\\end{multicols} \\begin{multicols}{2} \\begin{Large} \\begin{enumerate}[a)] \\item"+(" "+item.title+" " for item in itemData.items).join("\\item")+"\\end{enumerate} \\end{Large} \\end{multicols}"
-			out += "\\section{Associer tableaux et fonctions} \\begin{frame}\\myFrameTitle #{tex} \\end{frame}"
+			if slide is true
+				out.push {
+					title:"Associer tableaux et fonctions"
+					contents: [
+						Handlebars.templates["tex_plain"] { multicols:2, contents:(tab.tex() for tab in itemData.tabs) }
+						Handlebars.templates["tex_enumerate"] { multicols:2, items:(item.title for item in itemData.items)}
+					]
+				}
+			else
+				out.push {
+					title:"Associer tableaux et fonctions"
+					contents: (tab.tex() for tab in itemData.tabs).concat(Handlebars.templates["tex_enumerate"] { items:(item.title for item in itemData.items)})
+				}
 		out
-

@@ -122,6 +122,40 @@ class @Controller
 						}
 				}
 				{ # aussi prof
+					regex:/// ^devoir:([0-9]+)/exams$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						fiche?.load { type:"load", cb:(fiche)->
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{text:"Examens du devoir : #{fiche.nom}"}
+							]
+							new VExamsList {
+								fiche: fiche
+								links: { test:"devoir:#{m[1]}/exam:" }
+							}
+						}
+				}
+				{ # aussi prof
+					regex:/// ^devoir:([0-9]+)/exam:([0-9]+)/exo:([0-9]+)$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						fiche?.load { type:"load", cb:(fiche)->
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{link:"devoir:#{fiche.id}/exams", text:"Examens du devoir : #{fiche.nom}"}
+							]
+							exam = fiche.exams.get(Number m[2])
+							# On cherche l'exercice à afficher
+							indice = Number m[3]
+							examInfos = exam.getExo indice-1
+							if examInfos isnt null
+								if examInfos.next then linkNext = "devoir:#{m[1]}/exam:#{m[2]}/exo:#{indice+1}" else linkNext = null
+								if examInfos.prev then linkPrev = "devoir:#{m[1]}/exam:#{m[2]}/exo:#{indice-1}" else linkPrev = null
+								new VExercice { examInfos:examInfos, linkNext:linkNext, linkPrev:linkPrev }
+						}
+				}
+				{ # aussi prof - Est-il encore d'actualité ???
 					regex:/// ^devoir:([0-9]+)/ajout-exercice$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])

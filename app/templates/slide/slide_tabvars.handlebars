@@ -1,0 +1,23 @@
+\section{ {{title}} }
+\begin{frame}
+\myFrameTitle
+\begin{multicols}{2}
+{{#each tabs}}
+{{{this}}}
+
+\medskip
+{{/each}}
+\end{multicols}
+\begin{multicols}{2}
+\begin{Large}
+\begin{enumerate}[a)]
+{{#each items}}
+\item {{this.title}}
+
+\medskip
+
+{{/each}}
+\end{enumerate}
+\end{Large}
+\end{multicols}
+\end{frame}

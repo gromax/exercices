@@ -5,7 +5,7 @@ Exercice.liste.push
 	description:"Il faut résoudre une inéquation du second degré."
 	keyWords:["Analyse","Trinome","Équation","Racines","Première"]
 	init: (data) ->
-		inp = data.inputs = {a:1, b:0, c:-1, ineq:1}
+		inp = data.inputs
 		if (typeof inp.a isnt "undefined") and (typeof inp.b isnt "undefined") and (typeof inp.c isnt "undefined") and (typeof inp.ineq isnt "undefined")
 			a = Number inp.a
 			b = Number inp.b

@@ -1,0 +1,14 @@
+\section{ {{title}} }
+\begin{frame}
+\myFrameTitle
+\begin{columns}[{{#if align}}{{align}}{{else}}c{{/if}}]
+{{#each cols}}
+\begin{column}{ {{this.width}}\textwidth}
+{{#if this.center}}\begin{center}{{/if}}
+{{{ this.content }}}
+{{#if this.center}}\end{center}{{/if}}
+\end{column}
+
+{{/each}}
+\end{columns}
+\end{frame}

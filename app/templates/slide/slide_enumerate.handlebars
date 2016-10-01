@@ -1,0 +1,19 @@
+\section{ {{title}} }
+\begin{frame}
+\myFrameTitle
+{{#if multicols}}
+\begin{multicols}{ {{multicols}} }
+{{/if}}
+{{#if large}}\begin{Large}{{/if}}
+\begin{enumerate}[a)]
+{{#each items}}
+\item {{{this.title}}}
+
+\medskip
+{{/each}}
+\end{enumerate}
+{{#if large}}\end{Large}{{/if}}
+{{#if multicols}}
+\end{multicols}
+{{/if}}
+\end{frame}

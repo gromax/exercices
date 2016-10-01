@@ -13,11 +13,11 @@ module.exports = function(grunt) {
     },
     concat: {
       js: {
-        src: ['app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/exercices.hbs.js','dist/manager.js', 'dist/manager.hbs.js'],
+        src: ['app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/manager.js', 'dist/templates.hbs.js'],
         dest: 'dist/main.js'
       },
       js_local: {
-        src: ['app/scripts/localConstantes.js','app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/exercices.hbs.js','dist/manager.js', 'dist/manager.hbs.js'],
+        src: ['app/scripts/localConstantes.js','app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/manager.js', 'dist/templates.hbs.js'],
         dest: 'dist/main.local.js'
       }
     },
@@ -65,8 +65,7 @@ module.exports = function(grunt) {
           knownHelpersOnly: true
         },
         files: {
-          'dist/exercices.hbs.js': 'app/templates/exercices/*.handlebars',
-          'dist/manager.hbs.js': 'app/templates/manager/*.handlebars'
+          'dist/templates.hbs.js' : ['app/templates/exercices/*.handlebars', 'app/templates/manager/*.handlebars', 'app/templates/slide/*.handlebars', 'app/templates/tex/*.handlebars'],
         }
       }
     },

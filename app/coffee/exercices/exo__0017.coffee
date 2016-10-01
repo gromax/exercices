@@ -5,8 +5,9 @@ Exercice.liste.push
 	description:"Cinq paraboles sont données. On propose cinq fonctions du second degré dont on ne connait que le discriminant et le coefficient du terme de second degré. À chaque fonction, il faut attribuer la parabole qui la représente."
 	keyWords:["Analyse","Fonction","Courbe","Affine","Seconde"]
 	template:"2cols"
+	max:6
 	init: (data) ->
-		max=6
+		max=@max
 		items = []
 		polys = []
 		# Les paraboles sont définies par sommet et point
@@ -49,9 +50,12 @@ Exercice.liste.push
 			poly = Polynome.make([-xA, 1]).puissance(2)
 			fact = NumberManager.makeNumber({numerator:yB-yA, denominator:poly.toNumber(xB)}).simplify()
 			poly = poly.mult(fact).addMonome(0,yA)
-			item = { color:colors[i].html, rank:i, title:"$\\Delta = #{poly.discriminant().tex()}$ et $a = #{poly.getCoeff(2).tex()}$"}
+			color = colors(i)
+			item = { color:color.html, rank:i, title:"$\\Delta = #{poly.discriminant().tex()}$ et $a = #{poly.getCoeff(2).tex()}$"}
 			items.push item
-			polys.push [poly,item.color]
+			polys.push { obj:poly, color:color }
+			data.polys = polys
+			data.items = items
 		[
 			new BEnonce { zones:[
 				{
@@ -67,11 +71,12 @@ Exercice.liste.push
 				params:{axis:true, grid:true, boundingbox:[-max,max,max,-max]}
 				zone:"gauche"
 				polys:polys
+				max:@max
 				customInit:->
 					for poly in @config.polys
 						@graph.create('functiongraph', [
 							(x) -> @getAttribute('poly').toNumber(x)
-							-max, max], {strokeColor:poly[1], strokeWidth:4, fixed:true, poly:poly[0] })
+							-@config.max, @config.max], {strokeColor:poly.color.html, strokeWidth:4, fixed:true, poly:poly.obj })
 			}
 			new BChoice {
 				data:data
@@ -82,3 +87,27 @@ Exercice.liste.push
 				aide:data.divId+"aide"
 			}
 		]
+	tex: (data,slide) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		out = []
+		for itemData,i in data
+			courbes = ( { color:item.color.tex, expr:item.obj.toClone().simplify().toString().replace(/,/g,'.').replace(/x/g,'(\\x)') } for item in itemData.polys )
+			Tools.arrayShuffle itemData.items
+			questions = Handlebars.templates["tex_enumerate"] { items:( item.title for item in itemData.items ) }
+			graphique = Handlebars.templates["tex_courbes"] { index:i+1, max:@max, courbes:courbes, scale:.5 }
+			if slide is true
+				out.push {
+					title:@title
+					content:Handlebars.templates["slide_cols"] {
+						cols:[
+							{ width:0.6, center:true, content:graphique}
+							{ width:0.4, content:questions }
+						]
+					}
+				}
+			else
+				out.push {
+					title:@title
+					contents:[graphique, questions]
+				}
+		out

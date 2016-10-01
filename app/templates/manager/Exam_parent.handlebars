@@ -1,0 +1,14 @@
+<table class="table table-striped">
+	<thead>
+		<tr>
+			{{#if params.showId}}<th width="16px">#</th>{{/if}}
+			<th width="80px">Création</th><!-- date -->
+			{{#if params.showModify}}
+				<th width="250px"></th> <!-- bouton lock|voir|toTex|suppression -->
+			{{/if}}
+		</tr>
+	</thead>
+	<tbody id="{{id}}"><!-- Conteneur pour les items -->
+	{{{liste_html}}}
+	</tbody>
+</table>

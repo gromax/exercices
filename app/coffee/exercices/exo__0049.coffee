@@ -29,6 +29,7 @@ Exercice.liste.push
 					good:poly
 					params:{
 						developp:true
+						toLowercase:true
 						custom:(output)->
 							if output.goodObject.toClone().am(NumberManager.makeSymbol("c"),true).am(output.userObject,true).simplify().isNul()
 								output.manque_constante_c = true

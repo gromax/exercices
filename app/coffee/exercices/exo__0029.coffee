@@ -24,10 +24,12 @@ Exercice.liste.push
 				solutions:solutions
 			}
 		]
-	slide: (data) ->
+	tex: (data,slide) ->
 		if not Tools.typeIsArray(data) then data = [ data ]
-		out = ""
-		for itemData,i in data
-			out += "\\item $#{itemData.mg} = #{itemData.md}$"
-		out = "\\section{Équations du premier degré.} \\begin{frame} \\myFrameTitle Résoudre: \\begin{enumerate}[a)] "+out+" \\end{enumerate} \\end{frame}"
-		out
+		{
+			title:"Équations du premier degré."
+			contents:[
+				"Résoudre :"
+				Handlebars.templates["tex_enumerate"] { items: ({title:"$#{itemData.mg} = #{itemData.md}$"} for item in data), large:slide is true }
+			]
+		}
