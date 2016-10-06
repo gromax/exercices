@@ -82,7 +82,7 @@ class TokenFunction extends Token
 	operand: null
 	# Debug : Le name semble limité deux fois de suite
 	constructor: (@name) ->
-	@getRegex: -> "sqrt|racine|cos|sin"
+	@getRegex: -> "sqrt|racine|cos|sin|ln|exp"
 	getPriority: -> 10
 	acceptOperOnLeft: -> true
 	operateOnRight: -> true
@@ -128,7 +128,6 @@ class @Parser
 		@simplificationList = [] #liste des flags de simplification
 		@messages = [] # messages d'erreur
 		@context = "" # A modifier : mise dans un context particulier pour certaines simplifications
-
 		# config
 		@config = Tools.merge({ developp:false, simplify:true, type:"number", toLowercase:false }, params)
 		if typeof value is "string" then value = @parse value
@@ -143,13 +142,13 @@ class @Parser
 			when "ensemble" then return (value instanceof EnsembleObject)
 			when "number" then return (value instanceof NumberObject)
 			else return false
-	parse: (expression,params) ->
+	parse: (expression) ->
 		@str = expression
 		@initParse()
 		# Les élèves ont le réflexe d'utiliser la touche ² présente sur les claviers
-		expression = expression.replace?("²", "^2")
-		expression = expression.replace?("³", "^3")
-		expression = expression.replace?("⁴", "^4")
+		expression = expression.replace?("²", "^2 ")
+		expression = expression.replace?("³", "^3 ")
+		expression = expression.replace?("⁴", "^4 ")
 		if @config.toLowercase then expression = expression.toLowerCase()
 		#try
 		matchList = expression.match(@globalRegex)

@@ -1,0 +1,23 @@
+<div class="collapse" id="{{id}}">
+	<div class="panel panel-warning">
+		<div class="panel-heading"><h4 class="panel-title"><span class="glyphicon glyphicon-wrench"></span> Debug</h4></div>
+		<div class="panel-body">
+			<form id="{{idForm}}">
+				<div class="col-xs-12 col-md-6">
+					{{#each answers}}
+						<div class="form-group">
+							<label for="{{@key}}Input" class="col-sm-2 control-label">{{@key}}</label>
+							<div class="col-sm-10">
+								<input type="text" class="form-control" name="{{@key}}" id="{{@key}}Input" value="{{this}}" placeholder="Entrez une valeur">
+							</div>
+						</div>
+					{{/each}}
+					<div class="btn-group" role"group">
+						<button type="submit" class="btn btn-default">Valider</button>
+					</div>
+				</div>
+			</div>
+			</form>
+		</div>
+	</div>
+</div>

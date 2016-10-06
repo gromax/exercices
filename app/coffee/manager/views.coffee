@@ -28,10 +28,19 @@ class View
 				glyph:@_glyph
 				idForm: if @formulaire? then @formulaire+@divId else null
 				divId:@divId
+				links:@config.links
 			}
 			$("#modalContainer").modal("show")
 		else
-			if @formulaire? then $container.html Handlebars.templates.default_form { idForm:@formulaire+@divId, html:@html(), title:@config.title }
+			if @formulaire? then $container.html Handlebars.templates.default_form {
+				title:@config.title
+				otherButtons:@config.otherButtons
+				html:@html()
+				glyph:@_glyph
+				idForm:@formulaire+@divId
+				divId:@divId
+				links:@config.links
+			}
 			else $container.html @html()
 		@applyEvents()
 		@final() # Traitement Mathjax et tooltip
@@ -63,6 +72,10 @@ class View
 		# éventuels traitements finaux comme le mathjax ou les toolstips
 		$('[data-toggle="tooltip"]').tooltip()
 		MathJax.Hub.Queue(["Typeset",MathJax.Hub])
+	formatValues: (arrValues)->
+		out = {}
+		out[it.name] = it.value for it in arrValues
+		out
 class VLogMenu extends View
 	init_config:(params=null) -> h_push super(),{ user:Controller.uLog, showMessages:Controller.showMessages, id:@divId }
 	html: -> Handlebars.templates.navbarDte @config
@@ -296,7 +309,6 @@ class VClassesList extends VList
 			buttons:if Controller.uLog.isAdmin or Controller.uLog.isProf then [{ name:"_add_button", title:"Ajouter une classe"}] else null
 		}
 	collection: -> Controller.uLog.classes
-	modal: (item) -> new VClasseMod { item:item }
 class VFichesList extends VList
 	_template: "Fiche_parent"
 	_itemTemplate: "Fiche_item"
@@ -312,7 +324,6 @@ class VFichesList extends VList
 			buttons:[{ name:"_add_button", title:"Ajouter une fiche"}]
 		}
 	collection: -> Controller.uLog.fiches
-	modal: (item) -> new VFicheMod { item:item }
 	activateAction: (id) ->
 		item = @collection().get id
 		item.on { type:"change", obj:@, cb:(view,item) ->
@@ -402,6 +413,7 @@ class VList_aUF extends VList
 	textIfEmpty: "Aucun devoir dans la liste."
 	init_config:(params=null) ->
 		@push_action { name:"_sort_notes_by_name", fct_name:"sortNotesByName" }, "button"
+		@push_action { name:"activateButton", fct_name:"activateAction" }, "button"
 		othersNav = null
 		buttons = null
 		if params.user? and (Controller.uLog.isProf or Controller.uLog.isAdmin)
@@ -427,6 +439,13 @@ class VList_aUF extends VList
 		@collection().sortByUser?()
 		@_page = 1
 		@renderItems()
+	activateAction: (id) ->
+		item = @collection().get id
+		item.on { type:"change", obj:@, cb:(view,item) ->
+			view.itemUpdateLine item
+			view.final()
+		}
+		item.save {actif:not item.actif}
 class VList_aEF extends VList
 	_template: "aEF_parent"
 	_itemTemplate: "aEF_item"
@@ -485,13 +504,9 @@ class VMod extends View
 					else view.collection().add values
 				false
 		}
-		if @config.container is @_defaultContainer
+		if @config.container is "#modalContent"
 			if @config.item? then @config.item.on {type:"change", modal:true}
 			else @collection().on {type:"add", modal:true}
-	formatValues: (arrValues)->
-		out = {}
-		out[it.name] = it.value for it in arrValues
-		out
 class VUserMod extends VMod
 	_template:"modUser"
 	_rules: {
@@ -712,6 +727,7 @@ class VExercice extends View
 					done:params.oNote.parent.filteredList({aEF:params.oNote.aEF, aUF:aUF}).length
 					neighbours: params.oNote.parent?.neighbours({aEF:params.oNote.aEF},params.oNote.id) # Permet la navigation entre les notes
 					upBDDbutton:Controller.uLog.isAdmin or Controller.uLog.isProf
+					showDebug:if Controller.uLog.isAdmin then "debug#{@divId}" else false
 				}
 			when params.oEF?
 				@exo = new Exercice { # Nouvel exercice noté - aUF et oEF fournis
@@ -735,7 +751,7 @@ class VExercice extends View
 				comp = {
 					title:@exo.title
 					showNote:true
-					showReload:true
+					showReload:params.canModif
 					examInfos : params.examInfos
 					linkNext: params.linkNext
 					linkPrev: params.linkPrev
@@ -754,13 +770,23 @@ class VExercice extends View
 				}
 		h_push super(), comp
 	html:->
-		if @config.showOptions? then conf = Handlebars.templates.exoOptionsDiv {
-			id:@config.showOptions
-			idForm:"form_opt_#{@divId}"
-			options:@exo.data.options
-		}
-		else conf = ""
-		Handlebars.templates.exoHeader(@config)+conf+@exo.makeContainers()+"<div id='note_#{@divId}'></div>"
+		html_showOptions = if @config.showOptions?
+			conf = Handlebars.templates.exoOptionsDiv {
+				id:@config.showOptions
+				idForm:"form_opt_#{@divId}"
+				options:@exo.data.options
+			}
+		else
+			""
+		html_showDebug = if @config.showDebug?
+			conf = Handlebars.templates.exoDebugDiv {
+				id:@config.showDebug
+				idForm:"form_debug_#{@divId}"
+				answers:@exo.data.answers
+			}
+		else
+			""
+		Handlebars.templates.exoHeader(@config)+html_showOptions+html_showDebug+@exo.makeContainers()+"<div id='note_#{@divId}'></div>"
 	bind_dom_and_events:($container)->
 		$("#upBDD_#{@divId}").on 'click', (event) =>
 			@exo.updateBDD(true)
@@ -776,6 +802,20 @@ class VExercice extends View
 			@config.title = @exo.title
 			@display()
 			false
+		if @config.showDebug then $("#form_debug_#{@divId}").data("view",@).validate {
+			ignore:[],
+			submitHandler: (event) ->
+				$form = $(@currentForm)
+				view = $form.data("view")
+				if view?
+					values = view.formatValues $form.serializeArray()
+					exo = view.exo
+					note = exo.note()
+					note.answers = values
+					exo.init { note:note }
+					view.display()
+				false
+		}
 		# initialisation des Brique graphique
 		stg.display?() for stg in @exo.stages
 		@exo.run()
@@ -804,30 +844,52 @@ class VConnexion extends View
 	_defaultContainer: "#modalContent"
 	formulaire:"connexion"
 	init_config:(params=null)->
-		h_push super(), {
-			title:"Connexion"
-			otherButtons:[{id:"forgottenButton#{@divId}", text:"Mot de passe oublié"}]
-		}
+		if params.reconnexion is true
+			h_push super(), {
+				title:"Reconnexion"
+				reconnexion:false
+				otherButtons:null
+				identifiant:Controller.uLog.identifiant()
+				links:{ cancel:"deconnexion" }
+			}
+		else
+			h_push super(), {
+				title:"Connexion"
+				reconnexion:false
+				otherButtons:[{id:"forgottenButton#{@divId}", text:"Mot de passe oublié"}]
+			}
 	html:-> Handlebars.templates.connexion @config
 	bind_dom_and_events:($container) ->
-		$("##{@formulaire}#{@divId}").validate {
-			rules: {"identifiant":{"required": true}},
-			submitHandler: () ->
-				Controller.uLog.connexion $("input[name='identifiant']").val(), $("input[name='pwd']").val()
-				false
-		}
-		$("#forgottenButton#{@divId}").on 'click', (event) =>
-			identifiant = $("input[name='identifiant']").val()
-			emailRegEx = /// ^[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)*@[a-zA-Z0-9._-]{2,}\.[a-z]{2,4}$ ///i
-			if identifiant.match emailRegEx
-				Controller.uLog.on { type:"forgotten", cb:(data)=>
-					if data.found then message = "Un email vous a été envoyé."
-					else message = "Aucun utilisateur n'a cet email."
-					$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:message }
-				}
-				Controller.uLog.forgotten identifiant
-			else
-				$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:"Indiquez un <b>email valide</b> dans le champ identifiant !" }
-		Controller.uLog.on { type:"connexion", modal:true }
-		$("input[name='pwd']").val("")
+		if @config.reconnexion
+			$("##{@formulaire}#{@divId}").validate {
+				rules: {"identifiant":{"required": true}, "pwd":{"required":true}},
+				submitHandler: () =>
+					if $("input[name='identifiant']").val() isnt Controller.uLog.identifiant()
+						$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:"Vous devez vous reconnecter avec le même <b>email</b> !" }
+					else
+						Controller.uLog.connexion $("input[name='identifiant']").val(), $("input[name='pwd']").val()
+					false
+			}
+			Controller.uLog.on { type:"connexion", modal:true }
+		else
+			$("##{@formulaire}#{@divId}").validate {
+				rules: { "identifiant":{"required": true}, "pwd":{"required":true} },
+				submitHandler: () ->
+					Controller.uLog.connexion $("input[name='identifiant']").val(), $("input[name='pwd']").val()
+					false
+			}
+			$("#forgottenButton#{@divId}").on 'click', (event) =>
+				identifiant = $("input[name='identifiant']").val()
+				emailRegEx = /// ^[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)*@[a-zA-Z0-9._-]{2,}\.[a-z]{2,4}$ ///i
+				if identifiant.match emailRegEx
+					Controller.uLog.on { type:"forgotten", cb:(data)=>
+						if data.found then message = "Un email vous a été envoyé."
+						else message = "Aucun utilisateur n'a cet email."
+						$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:message }
+					}
+					Controller.uLog.forgotten identifiant
+				else
+					$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:"Indiquez un <b>email valide</b> !" }
+			Controller.uLog.on { type:"connexion", modal:true }
+		#$("input[name='pwd']").val("")
 		$("input[name='identifiant']").focus()

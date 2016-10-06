@@ -9,7 +9,7 @@ use SessionController as SC;
 
 class Logged extends User
 {
-	const	TIME_OUT = 5000; // durée d'inactivité avant déconnexion = 30min
+	const	TIME_OUT = 5400; // durée d'inactivité avant déconnexion = 90min
 
 	private static $_connectedUser=null;
 
@@ -58,6 +58,7 @@ class Logged extends User
 			}
 		}
 		EC::addError("Mot de passe ou identifiant invalide.");
+		EC::addError("id : ".$identifiant." pwd: ".$cryptedPwd);
 		return null;
 	}
 
@@ -120,7 +121,7 @@ class Logged extends User
 			else {
 				$this->isConnected= ( ((time()-$this->lastTime)<self::TIME_OUT) && ($this->ip == $_SERVER['REMOTE_ADDR']) && ($this->id !== null));
 				if (!$this->isConnected) {
-					EC::addError(time()."-".$this->lastTile+"<?>".self::TIME_OUT." et ".$this->ip." =? ".$_SERVER['REMOTE_ADDR']." et ".$this->id);
+					EC::addError(time()."-".$this->lastTime+"<?>".self::TIME_OUT." et ".$this->ip." =? ".$_SERVER['REMOTE_ADDR']." et ".$this->id);
 				}
 			}
 		}
@@ -128,7 +129,8 @@ class Logged extends User
 		return ($this->isConnected === true);
 	}
 
-	public function ownerOf($forceRefresh = false){
+	public function ownerOf($forceRefresh = false)
+	{
 		if (($this->_ownerOf === null) || ($forceRefresh)) {
 			if ($this->isProf()) {
 				$this->_ownerOf = Classe::getList(array('ownerIs' => $this->id, 'primaryKey' => 'id'));
@@ -140,7 +142,8 @@ class Logged extends User
 		return $this->_ownerOf;
 	}
 
-	public function isOwnerOf($idClasse){
+	public function isOwnerOf($idClasse)
+	{
 		return array_key_exists($idClasse, $this->ownerOf());
 	}
 

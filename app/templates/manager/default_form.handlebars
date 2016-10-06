@@ -1,0 +1,13 @@
+<h4>{{#if glyph}}<span class="glyphicon {{ glyph }}"></span> {{/if}}{{{ title }}}</h4>
+<form class="form-horizontal" id="{{idForm}}" role="form">
+{{{html}}}
+</div>
+{{#each otherButtons}}
+	<button type="button" class="btn btn-default" id="{{this.id}}">{{this.text}}</button>
+{{/each}}
+{{#if links.cancel}}
+<a href="#{{links.cancel}}" class="btn btn-default" role="button">Annuler</a>
+{{/if}}
+<button type="submit" class="btn btn-primary">Valider</button>
+</div>
+</form>

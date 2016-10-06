@@ -13,8 +13,11 @@ Exercice.liste.push
 		droite = Droite2D.par2Pts A,B
 		goodEq = droite.reduiteTex()
 		xAtex = A.x.tex()
+		yAtex = A.y.tex()
+		der = droite.m().tex()
+		data.values = { a:xAtex, y:yAtex, der:der}
 		[
-			new BEnonce {zones:[{body:"enonce", html:"<p>On considère une fonction une fonction $f$ dérivable sur $\\mathbb{R}$ et $\\mathcal{C}$ sa courbe représentative dans un repère.</p><p>On sait que $f\\left(#{xAtex}\\right) = #{A.y.tex()}$ et $f'\\left(#{xAtex}\\right) = #{droite.m().tex()}$.</p><p>Donnez l'équation de la tangente $\\mathcal{T}$ à la courbe $\\mathcal{C}$ en $x=#{xAtex}$."}]}
+			new BEnonce {zones:[{body:"enonce", html:"<p>On considère une fonction une fonction $f$ dérivable sur $\\mathbb{R}$ et $\\mathcal{C}$ sa courbe représentative dans un repère.</p><p>On sait que $f\\left(#{xAtex}\\right) = #{yAtex}$ et $f'\\left(#{xAtex}\\right) = #{der}$.</p><p>Donnez l'équation de la tangente $\\mathcal{T}$ à la courbe $\\mathcal{C}$ en $x=#{xAtex}$."}]}
 			new BListe {
 				data:data
 				bareme:100
@@ -23,3 +26,13 @@ Exercice.liste.push
 				aide:oHelp.derivee.tangente
 			}
 		]
+	tex: (data, slide) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		{
+			title:@title
+			content:Handlebars.templates["tex_enumerate"] {
+				pre: "Dans le(s) cas suivant(s), on considère une fonction $f$ et sa courbe. Pour une certaine valeur $a$, on donne $f(a)$ et $f'(a)$. Donnez la tangente à la courbe au point d'abscisse $a$."
+				items: ("$a=#{item.values.a}$, $f(a)=#{item.values.y}$ et $f'(a)=#{item.values.der}$" for item in data)
+				large:slide is true
+			}
+		}

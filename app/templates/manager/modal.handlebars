@@ -13,7 +13,11 @@
 		<button type="button" class="btn btn-default" id="{{this.id}}">{{this.text}}</button>
 	{{/each}}
 	{{#if idForm}}
+	{{#if links.cancel}}
+	<a href="#{{links.cancel}}" class="btn btn-default" role="button" data-dismiss="modal">Annuler</a>
+	{{else}}
 	<button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+	{{/if}}
 	<button type="submit" class="btn btn-primary">Valider</button>
 	{{else}}
 	<button type="button" class="btn btn-default" data-dismiss="modal">Fermer</button>

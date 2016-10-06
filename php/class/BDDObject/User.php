@@ -19,7 +19,6 @@ class User
 	protected $id=null;
 	protected $idClasse = null; // 0 est équivalent à pas de classe
 	protected $classe = null;
-	protected $pseudo = '';
 	protected $rank = self::RANK_DISCONNECTED;
 	protected $nom = 'Disconnected';
 	protected $prenom ='';
@@ -36,7 +35,6 @@ class User
 	{
 		if(isset($options['id'])) $this->id = (integer) $options['id'];
 		if(isset($options['idClasse'])) $this->idClasse = (integer) $options['idClasse'];
-		if(USE_PSEUDO && isset($options['pseudo'])) $this->pseudo = $options['pseudo'];
 		if(isset($options['nom'])) $this->nom = $options['nom'];
 		if(isset($options['prenom'])) $this->prenom = $options['prenom'];
 		if(isset($options['email'])) $this->email = $options['email'];
@@ -47,7 +45,6 @@ class User
 		if(isset($options['locked'])) $this->locked = (boolean)$options['locked'];
 		if (isset($options['userToCopy'])) {
 			$modele = $otions['userToCopy'];
-			if (USE_PSEUDO) $this->pseudo = $modele->pseudo;
 			$this->nom = $modele->nom;
 			$this->prenom = $modele->prenom;
 			$this->email = $modele->email;
@@ -65,19 +62,11 @@ class User
 		// $params['ranks'] indique les rangs à garder sous forme d'un tableau
 		require_once BDD_CONFIG;
 		try {
-			if (USE_PSEUDO) {
-				// on utilise le champ pseudo
-				if (isset($params['ranks'])) return DB::query("SELECT u.id, idClasse, c.nom AS nomClasse, pseudo, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE rank IN %ls ORDER BY u.date DESC",$params['ranks']);
-				elseif (isset($params['classe'])) return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, pseudo, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE idClasse=%i",$params['classe']);
-				elseif (isset($params['classes'])) return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, pseudo, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE idClasse IN %ls",$params['classes']);
-				else return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, pseudo, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id)");
-			} else {
-				// on n'utilise pas le champ pseudo
-				if (isset($params['ranks'])) return DB::query("SELECT u.id, idClasse, c.nom AS nomClasse, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE rank IN %ls ORDER BY u.date DESC",$params['ranks']);
-				elseif (isset($params['classe'])) return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE idClasse=%i",$params['classe']);
-				elseif (isset($params['classes'])) return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE idClasse IN %ls",$params['classes']);
-				else return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id)");
-			}
+			// on n'utilise pas le champ pseudo
+			if (isset($params['ranks'])) return DB::query("SELECT u.id, idClasse, c.nom AS nomClasse, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE rank IN %ls ORDER BY u.date DESC",$params['ranks']);
+			elseif (isset($params['classe'])) return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE idClasse=%i",$params['classe']);
+			elseif (isset($params['classes'])) return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id) WHERE idClasse IN %ls",$params['classes']);
+			else return DB::query("SELECT u.id, c.nom AS nomClasse, idClasse, u.nom, prenom, email, rank, u.date, u.locked FROM (".PREFIX_BDD."users u LEFT JOIN ".PREFIX_BDD."classes c ON u.idClasse = c.id)");
 		} catch(MeekroDBException $e) {
 			if (BDD_DEBUG_ON) return array('error'=>true, 'message'=>"#User/getList : ".$e->getMessage());
 			return array('error'=>true, 'message'=>'Erreur BDD');
@@ -101,11 +90,7 @@ class User
 		// Pas trouvé dans la session, il faut chercher en bdd
 		require_once BDD_CONFIG;
 		try {
-			if (USE_PSEUDO) {
-				$bdd_result=DB::queryFirstRow("SELECT id, idClasse, pseudo, nom, prenom, email, rank, date, locked FROM ".PREFIX_BDD."users WHERE id=%s", $idUser);
-			} else {
-				$bdd_result=DB::queryFirstRow("SELECT id, idClasse, nom, prenom, email, rank, date, locked FROM ".PREFIX_BDD."users WHERE id=%s", $idUser);
-			}
+			$bdd_result=DB::queryFirstRow("SELECT id, idClasse, nom, prenom, email, rank, date, locked FROM ".PREFIX_BDD."users WHERE id=%s", $idUser);
 			if ($bdd_result === null) return null;
 
 			if ($returnObject || self::SAVE_IN_SESSION) {
@@ -129,11 +114,6 @@ class User
 		return self::search($id, true);
 	}
 
-	public static function checkPseudo($pseudo)
-	{
-		return (is_string($pseudo) && (strlen($pseudo)>=PSEUDO_MIN_SIZE) && (strlen($pseudo)<=PSEUDO_MAX_SIZE));
-	}
-
 	public static function checkPwd($pwd)
 	{
 		return true;
@@ -147,12 +127,10 @@ class User
 
 	public static function identifiantExists($identifiant)
 	{
-		// On a choisi un identifiant unique : email ou pseudo, selon la valeur de USE_PSEUDO
 		require_once BDD_CONFIG;
 		try {
 			// Vérification que l'identifiant
-			if (USE_PSEUDO) $results = DB::query("SELECT id FROM ".PREFIX_BDD."users WHERE pseudo=%s",$identifiant);
-			else $results = DB::query("SELECT id FROM ".PREFIX_BDD."users WHERE email=%s",$identifiant);
+			$results = DB::query("SELECT id FROM ".PREFIX_BDD."users WHERE email=%s",$identifiant);
 			if (DB::count()>0) return $results[0]["id"];
 		} catch(MeekroDBException $e) {
 			EC::addBDDError($e->getMessage());
@@ -181,8 +159,7 @@ class User
 
 	public function identifiant()
 	{
-		if (USE_PSEUDO) return $this->pseudo;
-		else return $this->email;
+		return $this->email;
 	}
 
 	public function getName()
@@ -242,7 +219,7 @@ class User
 		if ($this->isEleve()) {
 			try {
 				// Suppression de toutes les notes liées
-				DB::delete(PREFIX_BDD.'assocUE', 'idUser=%i', $this->id);
+				DB::query("DELETE ".PREFIX_BDD."assocUE FROM ".PREFIX_BDD."assocUE LEFT JOIN ".PREFIX_BDD."assocUF ON (".PREFIX_BDD."assocUF.id = ".PREFIX_BDD."assocUE.aUF) WHERE ".PREFIX_BDD."assocUF.idUser = %i", $this->id);
 				// Suppression de tous les devoirs liés
 				DB::delete(PREFIX_BDD.'assocUF', 'idUser=%i', $this->id);
 			} catch(MeekroDBException $e) {
@@ -264,11 +241,6 @@ class User
 	{
 		// $force permet de passer les tests
 		if (!$force) {
-			if ((USE_PSEUDO) && (!self::checkPseudo($this->pseudo))) {
-				EC::addError("Pseudo invalide.");
-				return null;
-			}
-
 			if (!self::checkEMail($this->email)) {
 				EC::addError("EMail invalide.");
 				return null;
@@ -277,7 +249,7 @@ class User
 		require_once BDD_CONFIG;
 		try {
 			// Vérification que l'identifiant n'existe pas déjà
-			if ((USE_PSEUDO) && (!$force) && (self::identifiantExists($this->identifiant()!==false ))) {
+			if ((!$force) && (self::identifiantExists($this->identifiant())!==false )) {
 				EC::addError("L'identifiant existe déjà.");
 				return null;
 			}
@@ -304,27 +276,12 @@ class User
 				EC::addError("EMail invalide.");
 				return false;
 			}
-			if ((!USE_PSEUDO)&&(self::identifiantExists($params['email'])!==false)) {
+			if ( self::identifiantExists($this->identifiant())!==false ) {
 				EC::addError("L'EMail existe déjà.");
 				return false;
 			}
-			if ($this->isRoot()&&(!USE_PSEUDO)) {
-				EC::addError("L'EMail du root ne peut être changé.");
-				return false;
-			}
-		}
-
-		if (isset($params['pseudo'])&&($params['pseudo']!==$this->pseudo)){
-			if (!self::checkPseudo($params['pseudo'])) {
-				EC::addError("Pseudo invalide.");
-				return false;
-			}
-			if (USE_PSEUDO && (self::identifiantExists($params['pseudo'])!==false)) {
-				EC::addError("Le pseudo existe déjà.");
-				return false;
-			}
 			if ($this->isRoot()) {
-				EC::addError("Le pseudo du root ne peut être changé.");
+				EC::addError("L'EMail du root ne peut être changé.");
 				return false;
 			}
 		}
@@ -334,10 +291,6 @@ class User
 			# locked empêche la modification du nom et du prénom
 			if(isset($params['nom'])) { $this->nom = $params['nom']; $bddModif=true; }
 			if(isset($params['prenom'])) { $this->prenom = $params['prenom']; $bddModif=true; }
-			if(isset($params['pseudo']) && ($params['pseudo']!==$this->pseudo)&&USE_PSEUDO) {
-				$this->pseudo = $params['pseudo'];
-				$bddModif=true;
-			}
 		}
 		if(isset($params['rank'])) { $this->rank = $params['rank']; $bddModif=true; }
 		if(isset($params['email'])) { $this->email = $params['email']; $bddModif=true; }
@@ -377,15 +330,12 @@ class User
 
 	public function isSameAs($key)
 	{
-		return ( ($this->id ===$key) ||
-			(USE_PSEUDO && ($this->pseudo === $key)) ||
-			(!USE_PSEUDO && ($this->email === $key)));
+		return ( ($this->id ===$key) || ($this->email === $key) );
 	}
 
 	public function toArray($notForBDDUpdate = true)
 	{
 		$answer=array('nom'=>$this->nom, 'prenom'=>$this->prenom, 'email'=>$this->email, 'rank'=>$this->rank, 'date'=>$this->date, 'locked'=>$this->locked);
-		if (USE_PSEUDO) $answer['pseudo'] = $this->pseudo;
 		if ($this->_cryptedPwd !== null) $answer['pwd']=$this->_cryptedPwd;
 		if ($this->id !== null) $answer['id']=$this->id;
 		if ($this->idClasse !== null) $answer['idClasse'] = $this->idClasse;
@@ -401,7 +351,7 @@ class User
 		if ($this->isEleve()) {
 			require_once BDD_CONFIG;
 			try{
-				return DB::query("SELECT id,idFiche, actif, date FROM ".PREFIX_BDD."assocUF WHERE idUser=%i ORDER BY idFiche",$this->id);
+				return DB::query("SELECT a.id,a.idFiche, a.actif, a.date FROM (".PREFIX_BDD."assocUF a JOIN ".PREFIX_BDD."fiches f ON f.id = a.idFiche) WHERE idUser=%i AND f.visible=1 ORDER BY idFiche",$this->id);
 			} catch(MeekroDBException $e) {
 				EC::addBDDError($e->getMessage(), "User/assocUF");
 				return array();

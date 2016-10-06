@@ -1,6 +1,10 @@
+{{#if reconnexion}}
+<div class="alert alert-danger" role="alert">Vous devez vous reconnecter.</div>
+<br>
+{{/if}}
 <div class="input-group">
 	<span class="input-group-addon">Email</span>
-	<input type="text" class="form-control" name="identifiant" placeholder="Entrez un email">
+	<input type="text" class="form-control" name="identifiant" placeholder="Entrez un email" {{#if identifiant}}value="{{identifiant}}"{{/if}}>
 </div>
 <br>
 <div class="input-group">

@@ -1,7 +1,7 @@
 
 # Classe de fonctions servant à manipuler les objets de la classe math
 class @NumberManager
-	@parse: (expression,params) -> Parser.parse expression, Tools.merge({type:NumberObject}, params)
+	@parse: (expression,params) -> Parser.parse expression, Tools.merge({type:"number"}, params)
 	@makeNumber: (value,params) ->
 		# On génère un NumberObject
 		# params sert surtout au parsing
@@ -16,8 +16,10 @@ class @NumberManager
 			else new RealNumber()
 	@makeNaN: -> new RealNumber()
 	@makeProduct: (ops) -> MultiplyNumber.makeMult ops
+	@makeDiv: (num, den) -> MultiplyNumber.makeDiv num,den
 	@makeSum: (ops) -> PlusNumber.makePlus ops
 	@makeSymbol: (symbolName) -> SymbolNumber.makeSymbol(symbolName)
+	@makeFunction: (fct,operand) -> FunctionNumber.make(fct,operand)
 	@makeI: -> new ComplexeNumber(0,1)
 	@pi: -> SymbolNumber.pi()
 	@setSymbolValue: (symbolName, value) ->
@@ -177,6 +179,7 @@ class @NumberManager
 		if typeof testOut is "undefined" then tab.splice(indice,1)
 		out
 	@aleaPoly: (degre,variable="x") ->
+		# devrait prévoir un option de développement
 		coeffs = (Proba.aleaEntreBornes(-10,10) for i in [1..degre])
 		dominantCoeff = Proba.aleaEntreBornes(1,10)*Proba.aleaSign()
 		variable=@makeSymbol(variable)

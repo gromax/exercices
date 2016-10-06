@@ -1,5 +1,15 @@
 
 class @Proba
+	@alea: (input) ->
+		# produit un nombre aléatoire dont la valeur dépend du type de paramètre
+		switch
+			when input is null then 1
+			when typeof input is "number" then input
+			when (mn=input.min)? and (mx=input.max)?
+				if input.real isnt true then Math.floor((Math.random() * (mx+1-mn)) + mn)
+				else (Math.random() * (mx-mn)) + mn
+			when Tools.typeIsArray(input) then input[ Math.floor((Math.random() * input.length) ) ]
+			else 1
 	@aleaEntreBornes: (a,b,sign=false) ->
 		if sign then Math.floor((Math.random() * (b+1-a)) + a)*(Math.floor(Math.random()*2)-.5)*2
 		else Math.floor((Math.random() * (b+1-a)) + a)

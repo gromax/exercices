@@ -22,7 +22,7 @@
 	<td align="right">
 	<div class="btn-group" role="group">
 {{!Bouton d'édition}}
-	<button type="button" class="btn btn-default btn-sm" name="editButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Modifier"><span class="glyphicon glyphicon-pencil"></span></button>
+	<a href="#classe:{{ item.id }}/edit" class="btn btn-default btn-sm" role="button"><span class="glyphicon glyphicon-pencil" data-toggle="tooltip" data-placement="top" title="Modifier"></span></a>
 {{!Bouton suppression}}
 	<button type="button" class="btn btn-default btn-sm" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="glyphicon glyphicon-trash"></span></button>
 	</div>

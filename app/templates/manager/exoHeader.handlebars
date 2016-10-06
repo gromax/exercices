@@ -6,6 +6,7 @@
 			{{#if showReload}} <button class="btn btn-default" type="button" data-toggle="tooltip" data-placement="bottom" title="Recommencer" id="again_{{divId}}" href="#"><span class="glyphicon glyphicon-repeat"></span></button>{{/if}}
 			{{#if linkNext}}<a class="btn btn-default" role="button" href="#{{linkNext}}"><span class="glyphicon glyphicon-chevron-right"></span></a>{{/if}}
 			{{#if showOptions}}<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#{{ showOptions }}" title="Options"><span class="glyphicon glyphicon-cog"></span></button>{{/if}}
+			{{#if showDebug}}<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#{{ showDebug }}" title="Debug"><span class="glyphicon glyphicon-wrench"></span></button>{{/if}}
 		</div>
 
 		{{#if todo}}<small data-toggle="tooltip" data-placement="bottom" title="Vous devez faire au moins {{todo}} fois cet exercice."><span name="doneCounter">{{ done }}</span>/{{ todo }}</small>{{/if}}

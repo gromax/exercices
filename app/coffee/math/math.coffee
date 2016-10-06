@@ -8,6 +8,7 @@ class MObject
 	toClone: -> new MObject()
 	toPolynome: (variable="x") -> (new Polynome(variable)).setInvalid()
 	developp: (infos=null) -> @
+	derivate: (variable) -> new MObject()
 #----------Numbers---------
 class NumberObject extends MObject
 	_plus: true
@@ -170,34 +171,23 @@ class PlusNumber extends NumberObject
 			@operands[i] = operand.simplify(infos)
 		@_plus = true
 		@absorb_sousAdd()
-		# On recherche les paires de Nombres qui peuvent se coupler
-		new_operands = []
-		flagAddNotStarted = true
-		sn = new RealNumber(0)
-		while op = @operands.pop()
-			if op instanceof SimpleNumber
-				if flagAddNotStarted then sn = sn.amSimple(op, false, null)
-				else sn = sn.amSimple(op, false, infos)
-				flagAddNotStarted = false
-			else new_operands.unshift(op)
-		if not sn.isNul() then new_operands.unshift(sn.simplify(infos))
-		@operands = new_operands
-		# On fait une recherche des blocs ayant la même signature
-		@operands.sort (a,b) -> signatures_comparaison(a,b)
+
 		i=0
-		while (i<@operands.length-1) and ((sign=@operands[i].signature()) isnt "N/A")
-			if sign isnt "1"
-				flagRegroupement = false
-				while (i<@operands.length-1) and (sign is @operands[i+1].signature())
-					flagRegroupement = true
-					@operands[i] = @operands[i].md(@operands[i].extractFactor().amSimple(@operands[i+1].extractFactor(),false), false)
-					@operands.splice(i+1,1)
-				if flagRegroupement
-					infos?.set("ADD_REGROUPEMENT")
-					if @operands[i].isNul()
-						@operands.splice(i,1)
-						i-- # Pour compenser le i++ à suivre
-			i++
+		while i<@operands.length
+			sign_i = @operands[i].signature()
+			if sign_i isnt "N/A"
+				j=i+1
+				while j<@operands.length
+					sign_j = @operands[j].signature()
+					if sign_i is sign_j
+						if sign_i is "1" then @operands[i] = @operands[i].amSimple(@operands[j], false, infos)
+						else
+							@operands[i] = @operands[i].md(@operands[i].extractFactor().amSimple(@operands[j].extractFactor(),false), false)
+							infos?.set("ADD_REGROUPEMENT")
+						@operands.splice(j,1)
+					else j++
+			if @operands[i].isNul() then @operands.splice(i,1)
+			else i++
 		if @operands.length is 0 then return new RealNumber(0)
 		if @operands.length is 1
 			if @_plus then return @operands[0]
@@ -366,7 +356,7 @@ class MultiplyNumber extends NumberObject
 			flag_devloppementSuccessfull = true
 		if flag_devloppementSuccessfull then @contractNumbersAndSymbols()
 		###
-		@numerator.sort (a,b) -> signatures_comparaison(a,b)
+		#@numerator.sort (a,b) -> signatures_comparaison(a,b)
 		if @denominator.length is 0
 			if @numerator.length is 0 then return new RealNumber(1)
 			if @numerator.length is 1 then return @numerator.pop()
@@ -567,7 +557,7 @@ class MultiplyNumber extends NumberObject
 			else
 				base = base.md(operand.extractFactor(), false)
 				i++
-		if not base.simplify(infos).isOne() then @numerator.unshift(base)
+		if not (base=base.simplify(infos)).isOne() then @numerator.unshift(base)
 		@
 	developp_special: (operands, operB, infos) ->
 		# On doit préciser operB pour permettre d'absorber les éventuels sous mults qui apparaîtraient
@@ -628,6 +618,7 @@ class PowerNumber extends NumberObject
 		@_base = base
 		@_exposant = exposant
 	@make: (base, exposant) ->
+		if base is "e" then return FunctionNumber.make("exp",exposant)
 		if (typeof base is "undefined") or not (base instanceof NumberObject) then base = new RealNumber(base)
 		switch
 			when (typeof exposant isnt "undefined") and (exposant instanceof NumberObject) then exp = exposant
@@ -1027,6 +1018,18 @@ class FunctionNumber extends NumberObject
 			needBraces: false
 			calc: (x) -> Math.sin x
 		}
+		ln: {
+			tex:"\\ln"
+			alias: "ln"
+			needBraces: false
+			calc: (x) -> Math.log x
+		}
+		exp: {
+			tex:"e^"
+			alias: "exp"
+			needBraces: true
+			calc: (x) -> Math.exp x
+		}
 	}
 	constructor: (functionName, @_operand) ->
 		# Le constructor n'est jamais appelé directement, seulement via make
@@ -1075,7 +1078,7 @@ class FunctionNumber extends NumberObject
 		out.approx(decimals)
 	isFunctionOf: (symbol) -> @_operand.isFunctionOf(symbol)
 	degre: (variable) -> if @isFunctionOf(variable) then Infinity else 0
-	toClone: () -> (new FunctionNumber(@_function.alias, @_operand)).setPlus(@_plus)
+	toClone: () -> (new FunctionNumber(@_function.alias, @_operand.toClone() )).setPlus(@_plus)
 	assignValueToSymbol: () ->
 		@_operand = @_operand.assignValueToSymbol(arguments)
 		@
@@ -1089,12 +1092,14 @@ class FunctionNumber extends NumberObject
 		(new Polynome(variable)).addMonome(0,@)
 	derivate: (variable) ->
 		if not @_operand.isFunctionOf(variable) then return new RealNumber 0
-		@op = @_operand.derivate variable
-		if not @_plus then @op.opposite()
+		op = @_operand.derivate variable
+		if not @_plus then op.opposite()
 		switch @_function.alias
-			when "cos" then return @op.opposite().md(FunctionNumber.sin(@_operand.toClone()),false).simplify()
-			when "sin" then return @op.md(FunctionNumber.cos(@_operand.toClone()),false).simplify()
-			when "sqrt" then return @op.md(new RealNumber(2).md(FunctionNumber.sqrt(@_operand.toClone()) ),true).simplify()
+			when "cos" then return op.opposite().md(FunctionNumber.sin(@_operand.toClone()),false).simplify()
+			when "sin" then return op.md(FunctionNumber.cos(@_operand.toClone()),false).simplify()
+			when "sqrt" then return op.md(new RealNumber(2).md(FunctionNumber.sqrt(@_operand.toClone()) ),true).simplify()
+			when "ln" then return op.md(@_operand.toClone(),true).simplify()
+			when "exp" then return op.md(@toClone(),false).simplify()
 		new RealNumber()
 class SimpleNumber extends NumberObject
 	am: (operand, minus, infos=null) ->

@@ -155,7 +155,9 @@ class Brique extends BaseBrique
 					output.approximation = true
 					@data.note += output.bareme = bareme*config.p_approx
 					output.ok = true
-				else config.custom?(output)
+				else
+					config.custom?(output)
+					@data.note += output.bareme
 		output
 	helper_disp_inputs: (title,text,inputs_list,aide,touches) ->
 		# params :

@@ -23,3 +23,16 @@ Exercice.liste.push
 				aide: oHelp.proba.binomiale.calculette
 			}
 		]
+	tex: (data, slide) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		out = []
+		for itData in data
+			out.push {
+				title:@title
+				content:Handlebars.templates["tex_enumerate"] {
+					pre:"La variable $X$ suit la loi binomiale de paramètres : $n=#{itData.inputs.n}$ et $p=#{itData.inputs.p.toStr(2)}$."
+					items: ["Donnez $p(X=#{itData.inputs.k})$ à $0,001$ près.", "Donnez $p(X\\leqslant #{itData.inputs.k})$"]
+					large:slide is true
+				}
+			}
+		out

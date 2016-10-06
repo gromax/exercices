@@ -81,6 +81,7 @@ class @Exercice
 					]
 			}
 		@data = { options:Exercice.read_options(params.oEF?.options or params.options, @model.options)}
+	note: -> @data.noteObject
 	init: (obj) ->
 		note = null
 		inputs = {}

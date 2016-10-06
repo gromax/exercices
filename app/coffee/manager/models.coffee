@@ -20,6 +20,14 @@ class SimpleModel
 		@parent = parent
 		@
 	equals: (other) -> (other?.id is @id)
+	currentDate: ->
+		date = new Date()
+		day = String date.getDate()
+		if day.length is 1 then day = "0"+day
+		month = String(date.getMonth()+1)
+		if month.length is 1 then month = "0"+month
+		"#{date.getFullYear()}-#{month}-#{day}"
+
 class MExercice extends SimpleModel
 	_glyph: "glyphicon-edi"
 	tex_exists:false
@@ -61,8 +69,15 @@ class Model extends SimpleModel
 			$.post("./action.php?action=#{@_name}Save", @pending_save, @saveCB, "json")
 	saveCB: (data) =>
 		if data.error
-			Controller.errorMessagesList data.messages, @enteteForMessages(), @_glyph
-			@pending_save = null
+			if data.unlogged
+				Controller.uLog.on {
+					type:"connexion"
+					cb:()=>$.post("./action.php?action=#{@_name}Save", @pending_save, @saveCB, "json")
+				}
+				new VConnexion { reconnexion:true }
+			else
+				Controller.errorMessagesList data.messages, @enteteForMessages(), @_glyph
+				@pending_save = null
 		else
 			if data.id? then @pending_save.id = data.id
 			@set @pending_save
@@ -89,7 +104,7 @@ class MUser extends Model
 	defaultValues: -> { pseudo:"", nom: "", prenom:"", email:"", rank:"Off", locked:false }
 	toString: -> "@#{@id} :[#{@nom} #{@prenom}]"
 	fullName: (reverse=false) -> if reverse then @prenom+" "+@nom else @nom+" "+@prenom
-	identifiant:-> if USE_PSEUDO then @pseudo else @email
+	identifiant:-> if @isRoot then "root" else @email
 	parse: ->
 		if @id? then @id = Number @id
 		if @idClasse? then @idClasse = Number @idClasse
@@ -194,7 +209,8 @@ class @MLog extends MUser
 		if data.success
 			@log data.logged, data
 			@triggerEvent "connexion"
-		else Controller.notyMessage "Identifiant ou mot de passe incorrect", "error"
+		else
+			Controller.notyMessage "Identifiant ou mot de passe incorrect", "error"
 	init: (local)->
 		if local then @initCB { uLog:{ nom:"Disconnected", prenom:"", email:"", rank:"Off", date:"",locked:false},users:[],classes:[],fiches:[],messages:[] }
 		else $.post("./action.php?action=getData", {}, @initCB, "json")
@@ -366,6 +382,7 @@ class MExam extends Model
 		else @idFiche = @parent?.parent?.id
 		if typeof @data is "string" then @data = JSON.parse @data
 		if @date? then @dateFr = @date.replace /(\d{4})-(\d{2})-(\d{2})/, "$3/$2/$1"
+		else @date = @currentDate()
 		@locked = (@locked is "1") or (@locked is true)
 		@
 	bddJSON: (mods) ->

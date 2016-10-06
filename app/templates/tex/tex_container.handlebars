@@ -1,5 +1,5 @@
 \documentclass[11pt]{article}
-\title{Exercices - n{{id}} }
+\title{Exercices - id : {{id}} }
 
 \usepackage{etex}
 \usepackage[french]{babel}
@@ -42,17 +42,16 @@
 \newcommand{\D}{\mathcal{D}}
 \newcommand{\R}{\mathbb{R}}
 \begin{document}
+\raggedcolumns
 \begin{multicols}{2}
 {{#each items}}
 \exercice{ {{this.title}} }
 
 {{# if this.content}}{{{this.content}}}{{/if}}
-{{# if this.contents}}
-{{#each this.contents}}
+{{# if this.contents}}{{#each this.contents}}
 {{{this}}}
 
-{{/each}}
-{{/if}}
+{{/each}}{{/if}}
 
 {{/each}}
 \end{multicols}

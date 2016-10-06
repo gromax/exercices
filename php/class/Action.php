@@ -21,6 +21,14 @@ class Action
 		else return array("error"=>true);
 	}
 
+	protected function logged()
+	{
+		if ($uLog === null) $uLog = Logged::getConnectedUser();
+		# On teste seulement si l'utilisateur est connecté
+		# sans remettre à jour son time
+		return array( "logged"=>$uLog->connexionOk());
+	}
+
 	protected function reinitMDP()
 	{
 		$key = getPost('key');
@@ -51,11 +59,11 @@ class Action
 	{
 		$identifiant=getPost('identifiant');
 		$cryptedPwd=getPost('cryptedPwd','');
-		$dataFetch = getPost("dataFetch",true);
+		$dataFetch = getPost("dataFetch","true");
 		if ($identifiant !== null) Logged::tryConnexion($identifiant, $cryptedPwd);
 		$uLog = Logged::getConnectedUser();
 		$success = $uLog->connexionOk();
-		if ($success && $dataFetch) $data = $this->getData($uLog);
+		if ($success && ($dataFetch=="true")) $data = $this->getData($uLog);
 		else $data = array();
 		return array_merge( array("success"=>$success, "logged"=>$uLog->toArray(), "messages"=>EC::messages()), $data);
 	}

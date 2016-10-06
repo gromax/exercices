@@ -4,18 +4,19 @@ Exercice.liste.push
 	title:"Développer une expression"
 	description:"Une expression est donnée, il faut la développer."
 	keyWords:["Algèbre", "fonction"]
+	options: {
+		a:{ tag:"Difficulté" , options:["Alea", "Facile", "Facile avec fraction", "Moyen", "Moyen avec fraction"] , def:0 }
+	}
 	init: (data) ->
-		# Debug_old_version
-		if data.inputs.poly?
-			data.inputs.p = data.inputs.poly
-			data.inputs.poly = undefined
-		if data.answers.P?
-			data.answers.Ps = data.answers.P
-			data.answers.P = undefined
-		# Fin Debug
 		if data.inputs.p? then poly = NumberManager.makeNumber data.inputs.p
 		else
-			poly = NumberManager.makeSum([@aleaMult(0),@aleaMult(2)])
+			if data.options.a.value is 0 then a = Proba.aleaEntreBornes(1,3)
+			else a = data.options.a.value
+			switch a
+				when 2 then poly = NumberManager.makeSum([@aleaMult(0,false),@aleaMult(2,true)])
+				when 3 then poly = NumberManager.makeSum([@aleaMult(2,false),@aleaMult(2,false)])
+				when 4 then poly = NumberManager.makeSum([@aleaMult(2,false),@aleaMult(2,true)])
+				else poly = NumberManager.makeSum([@aleaMult(0,false),@aleaMult(2,false)])
 			data.inputs.p = String poly
 		data.polyTex = polyTex = poly.tex()
 		polyObj = poly.toPolynome()
@@ -100,7 +101,7 @@ Exercice.liste.push
 							$("ul[name='liste']",@container).append Handlebars.templates.listItem ({text:"$P(x)=#{it}$"} for it in @data.list)
 			}
 		]
-	aleaMult:(degreTotal)->
+	aleaMult:(degreTotal,fraction)->
 		# On cherche à obtenir un produit d'expressions dont le produit dont le degre est degreTotal
 		if degreTotal is 0 then output = NumberManager.makeNumber Proba.aleaEntreBornes(1,50)
 		else
@@ -119,10 +120,13 @@ Exercice.liste.push
 					expr_array.push new_poly
 			output = NumberManager.makeProduct expr_array
 		if Proba.aleaEntreBornes(1,3) is 3 then output.opposite()
+		if fraction
+			deno = NumberManager.makeNumber Proba.aleaEntreBornes(2,9)
+			output = NumberManager.makeDiv output, deno
 		output
 	tex: (data,slide) ->
 		if not Tools.typeIsArray(data) then data = [ data ]
 		{
 			title:"Développer"
-			content:Handlebars.templates["tex_enumerate"] { items: ({title:"$P_{#{i}}(x) = #{itemData.polyTex}$"} for item,i in data), large:slide is true }
+			content:Handlebars.templates["tex_enumerate"] { items: ("$P_{#{i}}(x) = #{item.polyTex}$" for item,i in data), large:slide is true }
 		}

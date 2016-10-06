@@ -31,6 +31,7 @@ Un exemple
 ###
 
 class @Controller
+	@lastTime:null
 	@uLog:null
 	@showMessages:true
 	@divIdCounter:0
@@ -64,34 +65,51 @@ class @Controller
 		}
 		@uLog.setLocal(local)
 		@uLog.init(local)
+		@lastTime = (new Date()).getTime()
 	@initRoutes: (user) ->
 		switch
 			when user.isAdmin then @routes = [
-				{
+				{# deconnexion
 					regex:/// ^deconnexion$ ///i
 					exec:(m)->
 						Controller.uLog.deconnexion { cb: ()-> new VHome {} }
 						@setAriane()
 				}
-				{
+				{# comptes
 					regex:/// ^comptes$ ///i
 					exec:(m)->
 						@setAriane [{text:"Liste des utilisateurs"}]
 						new VUsersList {}
 				}
-				{
+				{# classes
 					regex:/// ^classes$ ///i
 					exec:(m)->
 						@setAriane [{text:"Liste des classes"}]
 						new VClassesList { links:{ classe:"eleves-de-la-classe:"} }
 				}
-				{ # aussi prof et élève et local
+				{ # classe:id/edit - aussi prof
+					regex:/// ^classe:([0-9]+)/edit$ ///i
+					exec:(m)->
+						idClasse = Number m[1]
+						classe=Controller.uLog.classes.get idClasse
+						if classe?
+							@setAriane [
+								{link:"classes", text:"Liste des classes"}
+								{text:"Modification de la classe : "+classe.nom}
+							]
+							new VClasseMod {
+								item:classe
+								container:"#mainContent"
+								links: { cancel:"classes" }
+							}
+				}
+				{ # exercices - aussi prof et élève et local
 					regex:/// ^exercices$ ///i
 					exec:(m)->
 						@setAriane [{text:"Liste des exercices"}]
 						new VExercicesList {}
 				}
-				{ # aussi prof et élève et local
+				{ # tester-exercice:id - aussi prof et élève et local
 					regex:/// ^tester-exercice:([0-9]+)$ ///i
 					exec:(m)->
 						@setAriane [
@@ -100,13 +118,13 @@ class @Controller
 						]
 						new VExercice { idE:Number m[1] }
 				}
-				{
+				{ # devoirs
 					regex:/// ^devoirs$ ///i
 					exec:(m)->
 						@setAriane [{text:"Liste des devoirs"}]
 						new VFichesList { links:{devoir:"devoir:", notes:"notes-devoir:"} }
 				}
-				{ # aussi prof
+				{ # devoir:id - aussi prof
 					regex:/// ^devoir:([0-9]+)$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])
@@ -121,7 +139,23 @@ class @Controller
 							}
 						}
 				}
-				{ # aussi prof
+				{ # devoir:id/edit - aussi prof
+					regex:/// ^devoir:([0-9]+)/edit$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						fiche?.load { type:"load", cb:(fiche)->
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{text:"Modification du devoir : #{fiche.nom}"}
+							]
+							new VFicheMod {
+								item:fiche
+								container: "#mainContent"
+								links: { cancel:"devoirs" }
+							}
+						}
+				}
+				{ # devoir:id/exam - aussi prof
 					regex:/// ^devoir:([0-9]+)/exams$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])
@@ -136,7 +170,7 @@ class @Controller
 							}
 						}
 				}
-				{ # aussi prof
+				{ # devoir:id/exam:id/exo:id - aussi prof
 					regex:/// ^devoir:([0-9]+)/exam:([0-9]+)/exo:([0-9]+)$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])
@@ -152,10 +186,10 @@ class @Controller
 							if examInfos isnt null
 								if examInfos.next then linkNext = "devoir:#{m[1]}/exam:#{m[2]}/exo:#{indice+1}" else linkNext = null
 								if examInfos.prev then linkPrev = "devoir:#{m[1]}/exam:#{m[2]}/exo:#{indice-1}" else linkPrev = null
-								new VExercice { examInfos:examInfos, linkNext:linkNext, linkPrev:linkPrev }
+								new VExercice { examInfos:examInfos, linkNext:linkNext, linkPrev:linkPrev, canModif:exam.locked is false }
 						}
 				}
-				{ # aussi prof - Est-il encore d'actualité ???
+				{ # devoir:id/ajout-exercice - aussi prof - Est-il encore d'actualité ???
 					regex:/// ^devoir:([0-9]+)/ajout-exercice$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])
@@ -170,7 +204,7 @@ class @Controller
 							}
 						}
 				}
-				{ # aussi prof
+				{ # devoir:id/tester-exercice:id - aussi prof
 					regex:/// ^devoir:([0-9]+)/tester-exercice:([0-9]+)$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])
@@ -185,7 +219,7 @@ class @Controller
 								new VExercice { oEF:oEF }
 						}
 				}
-				{ # aussi prof (avec "vos devoirs")
+				{ # notes-devoir:id - aussi prof (avec "vos devoirs")
 					regex:/// ^notes-devoir:([0-9]+)$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])
@@ -204,7 +238,7 @@ class @Controller
 							}
 						}
 				}
-				{ # aussi prof (avec "vos devoirs")
+				{ # notes-devoir:id/ajout-eleve - aussi prof (avec "vos devoirs")
 					regex:/// ^notes-devoir:([0-9]+)/ajout-eleve$ ///i
 					exec:(m)->
 						fiche = Controller.uLog.fiches.get(Number m[1])
@@ -218,7 +252,7 @@ class @Controller
 							new VUserChoice { fiche:fiche }
 						}
 				}
-				{ # aussi prof (avec "vos devoirs")
+				{ # notes-devoir:id/eleve:id - aussi prof (avec "vos devoirs")
 					# Liste des exercices pour un devoir et un élève (donc pour un aUF)
 					# C'est un parcours depuis le devoir
 					# Il est utile d'avoir tous les élèves du devoir afin de permettre un parcours entre élèves
@@ -242,7 +276,7 @@ class @Controller
 							}
 						}
 				}
-				{ # aussi prof (avec "vos devoirs")
+				{ # note-devoir:id/eleve:id/exercice:id - aussi prof (avec "vos devoirs")
 					# Liste des notes pour un exercice donné dans un aUF
 					# C'est un parcours depuis le devoir
 					# Il est utile d'avoir tous les élèves du devoir afin de permettre un parcours entre élèves
@@ -267,11 +301,11 @@ class @Controller
 								aUF:aUF
 								filtre:{aEF:oEF?.id, aUF:aUF}
 								user:eleve
-								link:"notes-devoir:#{fiche.id}/eleve:#{aUF}/note:"
+								links:{ notes:"notes-devoir:#{fiche.id}/eleve:#{aUF}/note:" }
 							}
 						}
 				}
-				{ # aussi prof (avec "vos devoirs")
+				{ # note-devoir:id/eleve:id/note:id - aussi prof (avec "vos devoirs")
 					# Une note dans un exercice dans un aUF
 					# C'est un parcours depuis le devoir
 					# Il est utile d'avoir tous les élèves du devoir afin de permettre un parcours entre élèves
@@ -298,7 +332,7 @@ class @Controller
 							}
 						}
 				}
-				{ # aussi prof (avec "vos classes")
+				{ # eleves-de-la-classe:id - aussi prof (avec "vos classes")
 					regex:/// ^eleves-de-la-classe:([0-9]+)$ ///i
 					exec:(m)->
 						idClasse = Number m[1]
@@ -311,7 +345,7 @@ class @Controller
 							]
 							new VUsersList { filtre: {idClasse: classe.id} }
 				}
-				{ # aussi prof (avec "vos classes")
+				{ # notes-eleve:id - aussi prof (avec "vos classes")
 					# Liste des devoirs d'un élève, avec les notes
 					regex:/// ^notes-eleve:([0-9]+)$ ///i
 					exec:(m)->
@@ -330,7 +364,7 @@ class @Controller
 							}
 						}
 				}
-				{ # aussi prof (avec "vos élèves")
+				{ # notes-eleve:id/devoir:id - aussi prof (avec "vos élèves")
 					# Liste des exercices pour un devoir et un élève (donc pour un aUF)
 					# C'est un parcours depuis l'élève
 					# Il est utile d'avoir tous les devoirs de l'élève afin de permettre un parcours entre devoirs
@@ -352,7 +386,7 @@ class @Controller
 							}
 						}
 				}
-				{ # aussi prof (avec "vos élèves")
+				{ # notes-eleve:id/devoir:id/exercice:id - aussi prof (avec "vos élèves")
 					# Liste des notes pour un exercice donné dans un aUF
 					# C'est un parcours depuis l'élève
 					# Il est utile d'avoir tous les devoirs de l'élève afin de permettre un parcours entre devoirs
@@ -377,7 +411,7 @@ class @Controller
 								aUF:aUF
 								filtre:{aEF:oEF?.id, aUF:aUF}
 								user:user
-								links:"notes-eleve:#{user.id}/devoir:#{aUF}/note:"
+								links:{ notes:"notes-eleve:#{user.id}/devoir:#{aUF}/note:" }
 							}
 						}
 				}
@@ -623,7 +657,7 @@ class @Controller
 					exec:(m)->
 						Controller.uLog.on { type:"connexion", cb: ()-> new VHome {} }
 						@setAriane()
-						new VConnexion {}
+						new VConnexion { container:"#mainContent" }
 				}
 				{
 					regex:/// ^rejoindre-une-classe:([0-9]+)$ ///i
@@ -668,7 +702,16 @@ class @Controller
 				route.exec?.apply(@,[m])
 				routeFound = true
 				break
+		if (@uLog isnt null) and (not @uLog.isOff) and (uri.toLowerCase() isnt "deconnexion")
+			currentTime = (new Date()).getTime()
+			delta = currentTime - @lastTime
+			if delta>60000
+				$.post("./action.php?action=logged", { }, @updateLoggedTime, "json")
+
 		unless routeFound then @defaultView()
+	@updateLoggedTime: (data) =>
+		if data.logged then @lastTime = (new Date()).getTime()
+		else new VConnexion { reconnexion:true }
 	@errorMessagesList: (liste, entete, glyph) ->
 		if liste?.length >0
 			for message in liste

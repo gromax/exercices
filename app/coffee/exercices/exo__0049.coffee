@@ -15,7 +15,7 @@ Exercice.liste.push
 			poly = Polynome.parse data.inputs.poly
 		polyTex = poly.tex()+"+c"
 		derivee = poly.derivate()
-		deriveeTex = derivee.tex()
+		deriveeTex = data.f = derivee.tex()
 		poly = poly.toNumberObject().am(NumberManager.makeSymbol("c"),false)
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>Soit $f(x) = #{deriveeTex}$</p><p>Donnez l'expression générale de $F$, fonction primitive de $f$ sur $\\mathbb{R}$.</p><p><b>Attention :</b> : Utilisez la lettre $c$ pour la constante faisant la généralité de $F$.</p>"}]}
@@ -40,3 +40,9 @@ Exercice.liste.push
 				#aide: oHelp.derivee.basics
 			}
 		]
+	tex: (data, slide) ->
+		if not Tools.typeIsArray(data) then data = [ data ]
+		{
+			title:@title
+			content:Handlebars.templates["tex_enumerate"] { items: ("$x \\mapsto #{item.f}$" for item in data), large:slide is true }
+		}
