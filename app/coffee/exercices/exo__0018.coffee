@@ -9,12 +9,9 @@ Exercice.liste.push
 		max = 10
 		inp = data.inputs
 		ans = data.answers
-		A = data.A = Vector.makeRandom "A", inp, {ext:[[-max, max], [1,max]]}
-		B = data.B = Vector.makeRandom "B", inp, {ext:[[-max, max], [-max,-1]]}
-		# Les deux points ne doivent pas avoir la même abscisse
-		while A.sameAs B,"x"
-			B = Vector.makeRandom "B", inp, { overwrite:true, ext:[[-max, max], [-max,-1]]}
-		droite = data.droite = Droite2D.par2Pts A,B
+		A = data.A = mM.alea.vector({ name:"A", def:data.inputs, values:[{min:-max, max:max}, {min:1, max:max}] }).save(data.inputs)
+		B = data.B = mM.alea.vector({ name:"B", def:data.inputs, values:[{min:-max, max:max}, {min:-max, max:-1}], forbidden:[ {axe:"x", coords:A} ] }).save(data.inputs)
+		droite = data.droite = mM.droite.par2pts A,B
 		# Liste des points à tracer
 		pts = [
 			{name:"A", user:{x:ans.xA, y:ans.yA}, def:{x:-max+1, y:max-1}}
@@ -66,6 +63,6 @@ Exercice.liste.push
 					x0 = @data.droite.float_x(0)
 					@config.graphContainer.graph.create('line',[[-@config.max,y1],[x0,0]], {strokeColor:'blue',strokeWidth:2,fixed:true, straightLast:false})
 					@config.graphContainer.graph.create('line',[[x0,0],[@config.max,y2]], {strokeColor:'blue',strokeWidth:2,fixed:true, straightFirst:false})
-					@config.graphContainer.graph.create('line',[[@data.A.x.toNumber(),@data.A.y.toNumber()],[@data.B.x.toNumber(),@data.B.y.toNumber()]], {strokeColor:'blue',strokeWidth:1,fixed:true,dash:2})
+					@config.graphContainer.graph.create('line',mM.float([[@data.A.x,@data.A.y],[@data.B.x,@data.B.y]]), {strokeColor:'blue',strokeWidth:1,fixed:true,dash:2})
 			}
 		]

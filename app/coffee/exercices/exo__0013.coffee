@@ -7,12 +7,9 @@ Exercice.liste.push
 	template:"2cols"
 	init: (data) ->
 		max = 10
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
-		# Les deux points ne doivent pas avoir la même abscisse
-		while A.sameAs B,"x"
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
-		droite = data.droite = Droite2D.par2Pts A,B
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[ {axe:"x", coords:A} ] }).save(data.inputs)
+		droite = data.droite = mM.droite.par2pts A,B
 		graphContainer = new BGraph {
 			params: {axis:true, grid:true, boundingbox:[-max,max,max,-max]}
 			zone:"gauche"
@@ -42,7 +39,7 @@ Exercice.liste.push
 					d = @data.droite.float_distance(x,y)
 					if d<@config.dmax
 						# Le point est assez près
-						output = { user: p.name+"(#{x.toStr 2};#{y.toStr 2})" }
+						output = { user: p.name+"(#{numToStr x, 2};#{numToStr y, 2})" }
 						unless d is 0 then output.approx = true
 					else
 						output = { good: p.name }

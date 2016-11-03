@@ -5,17 +5,12 @@ Exercice.liste.push
 	description:"Résoudre une équation de forme premier degré : $a\\cdot x+b=0$."
 	keyWords:["Affine","Algèbre","Équation","Seconde"]
 	init: (data) ->
-		deno = Proba.aleaEntreBornes 1,5
-		A = Vector.makeRandom "A", data.inputs, {deno:deno}
-		B = Vector.makeRandom "B", data.inputs
-		# Les deux points ne doivent pas être confondus
-		while A.sameAs B,"x"
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
-		x = NumberManager.makeSymbol("x")
-		data.mg = membreGauche = x.toClone().md(A.x,false).am(A.y,false).simplify().tex()
-		data.md = membreDroite = x.md(B.x,false).am(B.y,false).simplify().tex()
+		A = mM.alea.vector({ name:"A", def:data.inputs, values:[ { values:{min:-30, max:30}, denominator:{min:1, max:5} } ] }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[A] }).save(data.inputs)
+		data.mg = membreGauche = mM.exec(["x", A.x, "*", A.y, "+"], {simplify:true}).tex()
+		data.md = membreDroite = mM.exec(["x", B.x, "*", B.y, "+"], {simplify:true}).tex()
 		xCoeff = A.x.toClone().am(B.x,true)
-		solutions = [B.y.toClone().am(A.y,true).md(xCoeff,true).simplify()]
+		solutions = [ mM.exec([B.y, A.y, "-", A.x, B.x, "-", "/"], {simplify:true}) ]
 		[
 			new BEnonce {title:"Énoncé", zones:[{body:"enonce", html:"<p>On considère l'équation : $#{ membreGauche }= #{ membreDroite }$.</p><p>Vous devez donner la ou les solutions de cette équations, si elles existent.</p><p><i>S'il n'y a pas de solution, écrivez $\\varnothing$. s'il y a plusieurs solutions, séparez-les avec ;</i></p>"}]}
 			new BSolutions {
@@ -25,7 +20,7 @@ Exercice.liste.push
 			}
 		]
 	tex: (data,slide) ->
-		if not Tools.typeIsArray(data) then data = [ data ]
+		if not isArray(data) then data = [ data ]
 		{
 			title:"Équations du premier degré."
 			contents:[

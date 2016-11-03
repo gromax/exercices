@@ -5,21 +5,15 @@ Exercice.liste.push
 	description: "Trois points A,B et C sont donnés. Il faut trouver l'angle $\\widehat{BAC}$."
 	keyWords:["Géométrie", "Complexe", "Première"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
-		C = Vector.makeRandom "C", data.inputs
-		# A et B ne doivent pas être confondus
-		while A.sameAs B
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
-		# A et C ne doivent pas être confondus
-		while A.sameAs C
-			C = Vector.makeRandom "C", data.inputs, { overwrite:true }
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[A] }).save(data.inputs)
+		C = mM.alea.vector({ name:"C", def:data.inputs, forbidden:[A] }).save(data.inputs)
 		zA = A.affixe()
 		zB = B.affixe()
 		zC = C.affixe()
-		zAB = zB.toClone().am(zA,true)
-		zAC = zC.toClone().am(zA,true)
-		z = zAB.toClone().conjugue().md(zAC,false)
+		zAB = mM.exec [zB, zA, "-"], {simplify:true}
+		zAC = mM.exec [zC, zA, "-"], {simplify:true}
+		z = mM.exec [zAB, "conjugue", zAC, "*"], {simplify:true}
 		ang = z.arg(false)
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On donne $A$ d'affixe $z_A=#{zA.tex()}$, $B$ d'affixe $z_B=#{zB.tex()}$ et $C$ d'affixe $z_C=#{zC.tex()}$.</p><p>On notera $z_1$ l'affixe de $\\overrightarrow{AC}$ et $z_2$ l'affixe de $\\overrightarrow{AB}$"}]}

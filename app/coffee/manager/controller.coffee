@@ -1,5 +1,4 @@
 
-
 today = () ->
 	d= new Date()
 	d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()
@@ -124,6 +123,23 @@ class @Controller
 						@setAriane [{text:"Liste des devoirs"}]
 						new VFichesList { links:{devoir:"devoir:", notes:"notes-devoir:"} }
 				}
+				{ # devoirs/add - aussi prof
+					regex:/// ^devoirs/add$ ///i
+					exec:(m)->
+						@setAriane [
+							{link:"devoirs", text:"Liste des devoirs"}
+							{text:"Création d'un devoir"}
+						]
+						Controller.uLog.fiches.on {type:"add", obj:@, cb:(view, item)->
+							pushUrlInHistory "#devoirs"
+							Controller.load "#devoirs"
+						}
+						new VFicheMod {
+							container: "#mainContent"
+							links: { cancel:"devoirs" }
+						}
+				}
+
 				{ # devoir:id - aussi prof
 					regex:/// ^devoir:([0-9]+)$ ///i
 					exec:(m)->

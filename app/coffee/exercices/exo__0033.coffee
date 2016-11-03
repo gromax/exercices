@@ -7,23 +7,25 @@ Exercice.liste.push
 	init: (data) ->
 		inp = data.inputs
 		if inp.a? then a = Number inp.a
-		else a = inp.a = Proba.aleaEntreBornes 3,5
-		a = NumberManager.makeNumber a
+		else a = inp.a = mM.alea.real { min:1, max:5 }
 		if inp.b? then b= Number inp.b
-		else b = inp.b = a - Proba.aleaEntreBornes 1,5
-		b = NumberManager.makeNumber b
-		if inp.ang1? then ang1= Number inp.ang1
-		else ang1 = inp.ang1 = Proba.aleaEntreBornes(1,6)*30*Proba.aleaSign()
-		ang1 = Trigo.degToRad ang1
-		if inp.ang2? then ang2= Number inp.ang2
-		else ang2 = inp.ang2 = Proba.aleaEntreBornes(1,6)*30*Proba.aleaSign()
-		ang2 = Trigo.degToRad ang2
-		x = NumberManager.makeSymbol("x")
-		membreGaucheTex = x.toClone().md(a,false).am(ang1,false).simplify().tex()
-		membreDroiteTex = x.md(b,false).am(ang2,false).simplify().am(Trigo.pi("2k"),false).tex()
-		xCoeff = a.toClone().am(b,true)
-		modulo = Trigo.pi(NumberManager.makeNumber(2).md(xCoeff.abs(),true)).simplify()
-		good_solutions = [ang2.toClone().am(ang1,true).md(xCoeff,true).developp().simplify().setModulo(modulo)]
+		else b = inp.b = mM.alea.real { min:1, max:5, no:[a] }
+		a = mM.toNumber a
+		b = mM.toNumber b
+		if inp.ang1? then ang1= mM.toNumber inp.ang1
+		else
+			ang1 = mM.alea.number { values:{min:1, max:6}, sign:true, coeff:30}
+			inp.ang1 = String ang1
+		ang1 = mM.trigo.degToRad ang1
+		if inp.ang2? then ang2= mM.toNumber inp.ang2
+		else
+			ang2 = mM.alea.number { values:{min:1, max:6}, sign:true, coeff:30 }
+			inp.ang2 = String ang2
+		ang2 = mM.trigo.degToRad ang2
+
+		membreGaucheTex = mM.exec([ "x", a, "*", ang1, "+"], {simplify:true}).tex()
+		membreDroiteTex = mM.exec([ "x", b, "*", ang2, "+", 2, "#", "pi", "*", "*", "+"], {simplify:true}).tex()
+
 		[
 			new BEnonce { zones:[{
 				body:"enonce"
@@ -33,7 +35,7 @@ Exercice.liste.push
 				data:data
 				bareme:100
 				touches:["pi"]
-				solutions:good_solutions
+				solutions:[ mM.exec([ang2, ang1, "-", 2, "#", "pi", "*", "*", "+", a, b, "-", "/"], { simplify:true, developp:true, modulo:true}) ]
 				moduloKey:"k"
 			}
 		]

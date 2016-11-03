@@ -5,12 +5,9 @@ Exercice.liste.push
 	description:"Dans un repère orthonormé, calculer la distance entre deux points."
 	keyWords:["Géométrie", "Repère", "Seconde"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
-		# Les deux points ne doivent pas être confondus
-		while A.sameAs B
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
-		gAB = A.toClone().am(B,true).norme()
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[A] }).save(data.inputs)
+		gAB = A.toClone().minus(B).norme()
 		[
 			new BEnonce {
 				zones:[

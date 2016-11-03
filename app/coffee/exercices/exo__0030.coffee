@@ -9,31 +9,31 @@ Exercice.liste.push
 		items=[]
 		inp = data.inputs
 		if inp.q1? then q1 = Number inp.q1
-		else q1 = inp.q1 = Proba.aleaEntreBornes(1,10,true)
+		else q1 = inp.q1 = mM.alea.real( { values:{min:1, max:10}, sign:true } )
 		if inp.q2? then q2 = Number inp.q2
-		else q2 = inp.q2 = Proba.aleaEntreBornes(1,10,true)
+		else q2 = inp.q2 = mM.alea.real( { values:{min:1, max:10}, sign:true } )
 		if inp.u1? then u1 = Number inp.u1
-		else u1 = inp.u1 = Proba.aleaEntreBornes(1,10,true)
+		else u1 = inp.u1 = mM.alea.real( { values:{min:1, max:10}, sign:true } )
 		if inp.u2? then u2 = Number inp.u2
-		else u2 = inp.u2 = Proba.aleaEntreBornes(1,10,true)
+		else u2 = inp.u2 = mM.alea.real( { values:{min:1, max:10}, sign:true } )
 		# u1 et q1 sont le premier terme et la raison pour une paire de suites arithmétique - géométrique. u2 et q2 pour une deuxième paire
 		# La première suite est arithmétique
-		u=Suite.arithmetique("u",u1,q1,0)
-		items.push { a:"u_n=#{u.tex_expl()}", b:"u_{n+1}=#{u.tex_rec()}", c:u.u_nMin.tex()}
+		u=mM.suite.arithmetique { premierTerme:{ valeur:u1, rang:0 }, raison:q1 }
+		items.push { a:"u_n=#{u.explicite().tex()}", b:"u_{n+1}=#{u.recurence().tex()}", c:u.calc(0).tex()}
 		# Le seconde est une suite géométrique
-		u=Suite.geometrique("u",u1,q1,0)
-		items.push { a:"u_n=#{u.tex_expl()}", b:"u_{n+1}=#{u.tex_rec()}", c:u.u_nMin.tex()}
+		u=mM.suite.geometrique { premierTerme:{ valeur:u1, rang:0}, raison:q1}
+		items.push { a:"u_n=#{u.explicite().tex()}", b:"u_{n+1}=#{u.recurence().tex()}", c:u.calc(0).tex()}
 		# La troisième est arithmétique
-		u=Suite.arithmetique("u",u2,q2,0)
-		items.push { a:"u_n=#{u.tex_expl()}", b:"u_{n+1}=#{u.tex_rec()}", c:u.u_nMin.tex()}
+		u=mM.suite.arithmetique { premierTerme:{ valeur:u2, rang:0 }, raison:q2 }
+		items.push { a:"u_n=#{u.explicite().tex()}", b:"u_{n+1}=#{u.recurence().tex()}", c:u.calc(0).tex()}
 		# La quatrième est géométrique
-		u=Suite.geometrique("u",u2,q2,0)
-		items.push { a:"u_n=#{u.tex_expl()}", b:"u_{n+1}=#{u.tex_rec()}", c:u.u_nMin.tex()}
+		u=mM.suite.geometrique { premierTerme:{ valeur:u2, rang:0 }, raison:q2 }
+		items.push { a:"u_n=#{u.explicite().tex()}", b:"u_{n+1}=#{u.recurence().tex()}", c:u.calc(0).tex()}
 		o = h_random_order(items.length,inp.o)
 		inp.o = o.join("")
 		# On affecte le rang, ce qui revient à affecter les couleurs
 		item.rank = o[i] for item,i in items
-		l_gauche = Tools.arrayShuffle ({title:"$"+item.a+"$", color:colors(item.rank).html} for item in items)
+		l_gauche = arrayShuffle ({title:"$"+item.a+"$", color:colors(item.rank).html} for item in items)
 		l_droite = ({title:"$#{item.b}$ et $u_0=#{item.c}$", rank:item.rank} for item in items)
 		[
 			new BEnonce { zones:[{body:"enonce", html:"<p>À gauche, des suites données explicitement. À droite elles sont données par récurence.", "Associez-les en utilisant les boutons de couleurs à droite.</p>"}]}

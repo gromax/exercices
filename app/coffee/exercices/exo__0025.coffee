@@ -7,20 +7,20 @@ Exercice.liste.push
 	init: (data) ->
 		inp = data.inputs
 		h_init("n",inp,20,100)
-		if (typeof inp.p is "undefined") then inp.p = Proba.aleaEntreBornes(1,19)/100
+		if (typeof inp.p is "undefined") then inp.p = mM.alea.real({min:1, max:19})/100
 		else inp.p = Number inp.p
 		# Tableau pour l'étape 2
 		{Xlow,Xhigh} = Proba.binomial_IF(inp.n,inp.p)
-		Xdeb = Math.max(Xlow-Proba.aleaEntreBornes(1,3),0)
-		Xfin = Math.min(Xlow+Proba.aleaEntreBornes(1,3),Xhigh)
-		Xdeb2 = Math.max(Xhigh-Proba.aleaEntreBornes(1,3),Xlow)
-		Xfin2 = Math.min(Xhigh+Proba.aleaEntreBornes(1,3),inp.n)
+		Xdeb = Math.max(Xlow-mM.alea.real({min:1, max:3}),0)
+		Xfin = Math.min(Xlow+mM.alea.real({min:1, max:3}),Xhigh)
+		Xdeb2 = Math.max(Xhigh-mM.alea.real({min:1, max:3}),Xlow)
+		Xfin2 = Math.min(Xhigh+mM.alea.real({min:1, max:3}),inp.n)
 		if Xdeb2<=Xfin then k_values = [Xdeb..Xfin2]
 		else k_values = [Xdeb..Xfin].concat [Xdeb2..Xfin2]
-		p_values = (Proba.binomial_rep(inp.n,inp.p,k).toStr(3) for k in k_values)
+		p_values = ( numToStr(Proba.binomial_rep(inp.n,inp.p,k),3) for k in k_values)
 		flow=Xlow/inp.n
 		fhigh=Xhigh/inp.n
-		IF = (new Ensemble()).init true, flow.round(2), true, fhigh.round(2)
+		IF = mM.ensemble.intervalle "[", fixNumber(flow,2), fixNumber(fhigh,2), "]"
 		[
 			new BEnonce { zones:[
 				{
@@ -29,7 +29,7 @@ Exercice.liste.push
 				}
 				{
 					well:"schema"
-					html:"<ul><li><b>Épreuve élémentaire :</b> Prélever un tuyau.</li><li><b>Succès :</b> Le tuyau est poreux.</li><li><b>Probabilité du succès :</b> $p=#{inp.p.toStr(2)}$</li><li>L'expérience est répétée $n=#{inp.n}$ fois de façon indépendante (production assez importante). $X$ est le nombre de succès (tuyaux poreux). On peut donc dire que $X$ suit une loi binomiale $\\mathcal{B}(#{inp.n} ; #{inp.p.toStr(2)})$.</li></ul>"
+					html:"<ul><li><b>Épreuve élémentaire :</b> Prélever un tuyau.</li><li><b>Succès :</b> Le tuyau est poreux.</li><li><b>Probabilité du succès :</b> $p=#{numToStr inp.p, 2}$</li><li>L'expérience est répétée $n=#{inp.n}$ fois de façon indépendante (production assez importante). $X$ est le nombre de succès (tuyaux poreux). On peut donc dire que $X$ suit une loi binomiale $\\mathcal{B}(#{inp.n} ; #{numToStr inp.p, 2})$.</li></ul>"
 				}
 			]}
 			new BListe {

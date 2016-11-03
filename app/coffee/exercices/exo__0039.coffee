@@ -11,7 +11,7 @@ Exercice.liste.push
 		inp = data.inputs
 		# Les paraboles sont définies par sommet et point
 		liste = [{cano:true, convexe:true}, {cano:true, convexe:false}, {cano:false, convexe:true}, {cano:false, convexe:false}]
-		Tools.arrayShuffle(liste)
+		arrayShuffle(liste)
 		tabs = []
 		for cas, i in liste
 			if (typeof inp["xA"+i] isnt "undefined") and (typeof inp["yA"+i] isnt "undefined") and (typeof inp["xB"+i] isnt "undefined") and (typeof inp["yB"+i] isnt "undefined") and (typeof inp["c"+i] isnt "undefined")
@@ -23,18 +23,16 @@ Exercice.liste.push
 			else
 				# On tire au hasard 4 pts et on calcule la fonction correspondante
 				# En tenant compte du cas présent
-				xA = inp["xA"+i] = xB = Tools.aleaEntreBornes(-max,max)
-				xB = inp["xB"+i] = Tools.aleaEntreBornes(-max,max) while (xA is xB)
+				xA = inp["xA"+i] = xB = mM.alea.real { min:-max, max:max }
+				xB = inp["xB"+i] = mM.alea.real({ min:-max, max:max }) while (xA is xB)
 				if cas.convexe
-					yA = inp["yA"+i] = Proba.aleaEntreBornes(1,max-1)
-					yB = inp["yB"+i] = Proba.aleaEntreBornes(-max,yA-1)
+					yA = inp["yA"+i] = mM.alea.real { min:1, max:max-1 }
+					yB = inp["yB"+i] = mM.alea.real { min:-max, max:yA-1 }
 				else
-					yA = inp["yA"+i] = Proba.aleaEntreBornes(-max+1,-1)
-					yB = inp["yB"+i] = Proba.aleaEntreBornes(yA+1,max)
+					yA = inp["yA"+i] = mM.alea.real { min:-max+1, max:-1 }
+					yB = inp["yB"+i] = mM.alea.real { min:yA+1, max:max }
 				cano = inp["c"+i] = cas.cano
-			poly = Polynome.make([-xA, 1]).puissance(2)
-			fact = NumberManager.makeNumber({numerator:yB-yA, denominator:poly.toNumber(xB)}).simplify()
-			poly = poly.mult(fact).addMonome(0,yA)
+			poly = mM.exec [ yB, yA, "-", xB, xA, "-", 2, "^", "/", "x", xA, "-", 2, "^", "*", yA, "+" ], { simplify:true, developp:not cano }
 			item = { rank:i, title: "$x \\mapsto "+poly.tex({canonique:cano})+"$" }
 			tabX = ["$-\\infty$", "$#{xA}$", "$+\\infty$"]
 			if yB>yA then variations = "+/$+\\infty$,-/$#{yA}$,+/$+\\infty$"
@@ -75,7 +73,7 @@ Exercice.liste.push
 			}
 		]
 	tex: (data,slide) ->
-		if not Tools.typeIsArray(data) then data = [ data ]
+		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData in data
 			if slide is true
@@ -89,6 +87,6 @@ Exercice.liste.push
 			else
 				out.push {
 					title:"Associer tableaux et fonctions"
-					contents: (tab.tex() for tab in itemData.tabs).concat(Handlebars.templates["tex_enumerate"] { items:(item.title for item in itemData.items)})
+					contents: (tab.tex( { color:false } ) for tab in itemData.tabs).concat(Handlebars.templates["tex_enumerate"] { items:(item.title for item in itemData.items)})
 				}
 		out

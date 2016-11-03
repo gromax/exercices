@@ -5,11 +5,8 @@ Exercice.liste.push
 	description: "Calculer les coordonnées du milieu d'un segment."
 	keyWords:["Géométrie", "Repère", "Seconde"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
-		# Les deux points ne doivent pas être confondus
-		while A.sameAs B
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[A] }).save(data.inputs)
 		gM = A.milieu(B,"M")
 		[
 			new BEnonce {

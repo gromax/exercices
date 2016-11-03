@@ -6,20 +6,18 @@ Exercice.liste.push
 	keyWords:["Géométrie", "Trigonométrie", "Seconde"]
 	init: (data) ->
 		inp = data.inputs
-		if inp.r? then r = NumberManager.makeNumber inp.r
+		if inp.r? then r = mM.toNumber inp.r
 		else
-			deno = Proba.aleaEntreBornes 2,6
-			num = Proba.aleaEntreBornes(1,2*deno)*Proba.aleaSign()
-			inp.r = num+"/"+deno
-			r = NumberManager.makeNumber {numerator:num, denominator:deno}
-		gRtD = NumberManager.makeNumber(180).md(r,false).simplify()
-		r = r.md(Trigo.pi(),false).simplify()
+			r = mM.alea.number { values:{min:1, max:12, sign:true}, denominator:{min:2, max:6} }
+			inp.r = String r
+		r = mM.exec [r, "pi", "*"], {simplify:true}
+		gRtD = mM.trigo.radToDeg r
 
-		if inp.d? then d = NumberManager.makeNumber inp.d
+		if inp.d? then d = mM.toNumber inp.d
 		else
-			inp.d = (Proba.aleaEntreBornes 1,25)*15
-			d = NumberManager.makeNumber inp.d
-		gDtR = Trigo.degToRad d
+			d = mM.alea.number { min:1, max:25, coeff:15 }
+			inp.d = String d
+		gDtR = mM.trigo.degToRad d
 		[
 			new BEnonce { zones:[{
 				body:"enonce"

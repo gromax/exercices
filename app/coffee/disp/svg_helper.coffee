@@ -1,6 +1,6 @@
 
 # Helper SVG
-class @SVG
+class SVG
 	constructor: (div, width, height) ->
 		@node = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
 		@node.style.width = width+"px"

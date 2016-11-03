@@ -8,18 +8,11 @@ Exercice.liste.push
 		# Debug_old_version
 		if data.inputs.p? then data.inputs.p = data.inputs.p.replace "x", "n"
 		# Fin debug
-		if data.inputs.p? then poly = NumberManager.makeNumber(data.inputs.p).toPolynome("n")
+		if data.inputs.p? then poly = mM.toNumber(data.inputs.p)
 		else
-			a = Proba.aleaEntreBornes(1,3,true)
-			b = Proba.aleaEntreBornes(1,10,true)
-			c = Proba.aleaEntreBornes(1,20,true)
-			poly = Polynome.make([c,b,a], "n")
+			poly = mM.alea.poly { variable:"n", degre:2, coeffDom:{ min:1, max:3, sign:true}, values: { min:1, max:20, sign:true} }
 			data.inputs.p = String poly
-			console.log data.inputs.p
-		u0=poly.toNumber(0)
-		u1=poly.toNumber(1)
-		u2=poly.toNumber(2)
-		u10=poly.toNumber(10)
+		[u0, u1, u2, u10] = mM.float(poly, [ {n:0}, {n:1}, {n:2}, {n:10} ])
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On considère la suite $(u_n)$ définie par $u_n = #{poly.tex()}$ pour $n\\geqslant 0$.</p><p>On demande de calculer les termes suivants :</p>"}]}
 			new BListe {

@@ -6,10 +6,12 @@ Exercice.liste.push
 	keyWords:["Géométrie", "Trigonométrie", "Seconde"]
 	init: (data) ->
 		inp = data.inputs
-		if inp.d? then inp.d = Number inp.d
-		else inp.d = Proba.aleaEntreBornes(6,20)*50
-		ang = Trigo.degToRad inp.d
-		p = Trigo.mesurePrincipale ang
+		if inp.d? then d = mM.toNumber inp.d
+		else
+			d = mM.alea.number { min:6, max:20, coeff:50 }
+			inp.d = String d
+		ang = mM.trigo.degToRad d
+		p = mM.trigo.principale ang
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On donne l'angle $\\alpha = #{ang.tex()}$ en radians. Vous devez donner la mesure principale de cet angle.</p>"}]}
 			new BListe {

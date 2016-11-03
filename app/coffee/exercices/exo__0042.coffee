@@ -7,17 +7,17 @@ Exercice.liste.push
 	init: (data) ->
 		inp = data.inputs
 		if inp.a? then a = Number inp.a
-		else a = inp.a = Proba.aleaEntreBornes(40,90,true)/100
+		else a = inp.a = mM.alea.real({min:40, max:90, sign:true})/100
 		if inp.b? then b = Number inp.b
-		else b = inp.b = Proba.aleaEntreBornes(1,20)
+		else b = inp.b = mM.alea.real { min:1, max:20 }
 		if inp.u0? then u0 = Number inp.u0
-		else u0 = inp.u0 = Proba.aleaEntreBornes(0,20)
-		u1=a*u0+b
-		u2=a*u1+b
-		u3=a*u2+b
-		u10=u3
-		u10=a*u10+b for i in [4..10]
-		formule=NumberManager.makeNumber(a).md(NumberManager.makeSymbol("u_n",false)).am(NumberManager.makeNumber(b),false).tex()
+		else u0 = inp.u0 = mM.alea.real { min:0, max:20 }
+		u = mM.suite.arithmeticogeometrique { premierTerme:{ valeur:u0, rang:0 }, r:b, q:a }
+		u1 = u.calc(1)
+		u2 = u.calc(2)
+		u3= u.calc(3)
+		u10= u.calc(10)
+		formule= u.recurence().tex()
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On considère la suite $(u_n)$ définie par $u_0=#{u0}$ et $u_{n+1}= #{formule}$ pour $n\\geqslant 0$.</p><p>On demande de calculer les termes suivants à $0,01$ près :</p>"}]}
 			new BListe {

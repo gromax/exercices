@@ -12,16 +12,15 @@ Exercice.liste.push
 		polys = []
 		# Les paraboles sont définies par sommet et point
 		for i in [0..4]
-			A = Vector.makeRandom "A"+i, data.inputs, { ext:[[-max,max]] }
-			B = Vector.makeRandom "B"+i, data.inputs, { ext:[[-max,max]] }
-			f = h_init("f"+i,data.inputs,1,3)
-			while A.sameAs(B,"x") or A.sameAs(B,"y")
-				B = Vector.makeRandom "B"+i, data.inputs, { overwrite:true, ext:[[-max,max]] }
-			poly = Polynome.make([A.x.toClone().opposite(), 1]).puissance(2)
-			fact = B.y.toClone().am(A.y,true).md(poly.calc(B.x),true)
-			poly = poly.mult(fact).addMonome(0,A.y).simplify()
+			A = mM.alea.vector({ name:"A#{i}", def:data.inputs, values:[{min:-max, max:max}] }).save(data.inputs)
+			B = mM.alea.vector({ name:"B#{i}", def:data.inputs, values:[{min:-max, max:max}], forbidden:[ {axe:"x", coords:A}, {axe:"y", coords:A} ] }).save(data.inputs)
+			if data.inputs["f"+i]? then f = Number data.inputs["f"+i]
+			else
+				if cano = mM.alea.dice(1,3) then f = 1 else f = 0
+				data.inputs["f"+i] = String f
+			poly = mM.exec [ B.y, A.y, "-", B.x, A.x, "-", 2, "^", "/", "x", A.x, "-", 2, "^", "*", A.y, "+" ], { simplify:true, developp:f isnt 1 }
 			color = colors(i)
-			item = { color:color.html, rank:i, title: "$x \\mapsto #{poly.tex({canonique:f is 1})}$" }
+			item = { color:color.html, rank:i, title: "$x \\mapsto #{poly.tex()}$" }
 			polys.push { obj:poly, color:color }
 			data.polys  = polys
 			items.push item
@@ -46,7 +45,7 @@ Exercice.liste.push
 				customInit:->
 					for poly in @config.polys
 						@graph.create('functiongraph', [
-							(x) -> @getAttribute('poly').toNumber(x)
+							(x) -> mM.float(@getAttribute('poly'), {x:x})
 							-@config.max, @config.max], {strokeColor:poly.color.html, strokeWidth:4, fixed:true, poly:poly.obj })
 			}
 			new BChoice {
@@ -59,11 +58,11 @@ Exercice.liste.push
 			}
 		]
 	tex: (data,slide) ->
-		if not Tools.typeIsArray(data) then data = [ data ]
+		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData,i in data
 			courbes = ( { color:item.color.tex, expr:item.obj.toClone().simplify().toString().replace(/,/g,'.').replace(/x/g,'(\\x)') } for item in itemData.polys )
-			Tools.arrayShuffle itemData.items
+			arrayShuffle itemData.items
 			questions = Handlebars.templates["tex_enumerate"] { items:( item.title for item in itemData.items ) }
 			graphique = Handlebars.templates["tex_courbes"] { index:i+1, max:@max, courbes:courbes, scale:.6*@max/6 }
 			if slide is true

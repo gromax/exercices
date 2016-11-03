@@ -1,47 +1,4 @@
 
-# helpers functions
-colors = (id) ->
-	switch id
-		when 0 then { tex:"red", html:"#ff0000" }
-		when 1 then { tex:"JungleGreen", html:"#347c2c" }
-		when 2 then { tex:"Violet", html:"#8d38c9" }
-		when 3 then { tex:"Orange", html:"#ffa500" }
-		when 4 then { tex:"blue", html:"#0000ff" }
-		when 5 then { tex:"gray", html:"#808080" }
-		when 6 then { tex:"Thistle", html:"#d2b9d3" }
-		when 7 then { tex:"Mahogany", html:"#c04000" }
-		when 8 then { tex:"yellow", html:"#ffff00" }
-		when 9 then { tex:"CornflowerBlue", html:"#6495ed" }
-		else { tex:"black", html:"#000000" }
-
-h_ineqSymb = ["<", ">", "\\leqslant", "\\geqslant"]
-h_genId = () -> Math.floor(Math.random() * 10000)
-h_init = (inpName,saveObj,_min,_max, force=false) ->
-	# prend inp s'il est défini, sinon un entier alea entre _min et _max
-	if (not force) and (saveObj[inpName])? then saveObj[inpName] = Number saveObj[inpName]
-	else saveObj[inpName] = Proba.aleaEntreBornes(_min,_max)
-h_random_order = (n,def) ->
-	# Donne un tableau [1..n] mais ordonné au hasard
-	# Si def est donné, sous forme de texte, on prend default
-	if def?
-		# default doit être un string
-		(Number c for c in def)
-	else
-		Tools.arrayShuffle([0..n-1])
-h_clone = (obj) ->
-	if (typeof obj isnt "object") or (obj is null) then return obj
-	out = {}
-	out[key] = h_clone(obj[key]) for key of obj
-	out
-
-# helper handlebar
-#Handlebars.registerHelper 'colorListItem', (color)->
-#	switch color
-#		when "error" then "list-group-item-danger"
-#		when "good" then "list-group-item-success"
-#		when "info" then "list-group-item-info"
-#		else ""
-
 class @Exercice
 	@liste: [] # Liste qui se complète avec les fichiers exercices
 	@getModel: (idExo) ->
@@ -64,7 +21,7 @@ class @Exercice
 		# aUF : id de l'association d'un élève avec un devoir
 		# options : transmis directement
 		# model : transmis directement
-		config = Tools.merge { divId:0 },params
+		config = mergeObj { divId:0 },params
 		@divId = config.divId
 		@oEF = config.oEF
 		@aUF = config.aUF

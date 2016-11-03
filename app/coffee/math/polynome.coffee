@@ -1,52 +1,19 @@
 
-class @Polynome
-	_isValidPolynome: true
-	constructor: (variable) ->
-		# Les monomes seront des objets {coeff:NumberObject, power:integer>=0}
-		@_monomes = []
-		if typeof variable is "string" then @_variable = variable
-		else @_variable = "x"
-	getVariable: () -> @_variable
-	@parse: (expression, variable="x") -> Parser.parse(expression, {type:"number"}).toPolynome(variable)
-	@generate_width_roots: (a, roots, variable) ->
-		if not typeIsArray(roots) then roots = []
-		a = NumberManager.makeNumber a # Si a déjà le bn format, il est inchangé
-		coeffs = [a]
-		for xi in roots
-			xi = NumberManager.makeNumber(xi)
-			degre = coeffs.length
-			coeffs[degre] = coeffs[degre-1].toClone()
-			indice = degre-1
-			while indice >0
-				if typeof coeffs[indice-1] is "undefined" then coeffs[indice] = coeffs[indice].md(xi, false).opposite()
-				else coeffs[indice] = coeffs[indice-1].toClone().am(coeffs[indice].md(xi, false), true)
-				indice--
-			coeffs[0] = coeffs[0].md(xi, false).opposite()
-		oPoly = new Polynome variable
-		oPoly.addMonome power, coeff for coeff,power in coeffs
-		oPoly
-	@lagrangian: (liste, variable) ->
+PolynomeMaker = {
+	invalid: (variable) -> (new Polynome(variable)).setInvalid()
+	lagrangian: (liste, variable) ->
 		# Génère le polynome passant par les points dont les couples yi = f(xi) sont spécifiés
 		oPoly = new Polynome(variable)
-		if not typeIsArray(liste) then return oPoly.setInvalid()
-		# On vérifie que le tableau a bien le bon format
-		indice=0
-		while indice<liste.length
-			if (typeof liste[indice].x is "undefined") or (typeof liste[indice].y is "undefined") then liste.splice(i,1)
-			else
-				liste[indice].x = NumberManager.makeNumber(liste[indice].x)
-				liste[indice].y = NumberManager.makeNumber(liste[indice].y)
-				indice++
 		if liste.length is 0 then return oPoly # Polynôme identiquement nul
 		if liste.length is 1 # Polynôme constant
-			return oPoly.addMonome(0,NumberManager.makeNumber(liste[0].y))
+			return oPoly.addMonome(0,liste[0].y)
 		arrPoly_0 = @lagrange_base(0,liste)
 		for i in [1..liste.length-1]
 			arrPoly_i = @lagrange_base(i,liste)
 			arrPoly_0[j] = coeff.am arrPoly_i[j], false for coeff, j in arrPoly_0
 		oPoly.addMonome(power, coeff) for coeff, power in arrPoly_0
 		oPoly
-	@lagrange_base: (index, liste) ->
+	lagrange_base: (index, liste) ->
 		# on considère que la fonction est toujours envoyé d'un contexte ok
 		# et donc on ne revérifie pas la liste
 		if liste.length is 0 then return [new RealNumber(0)]
@@ -68,13 +35,37 @@ class @Polynome
 				coeffs[0] = coeffs[0].opposite().md(xi, false)
 		coeffs[i] = coeff.md(y0,false).md(dx,true).simplify() for coeff, i in coeffs
 		coeffs
-	@make: (monomes, variable='x') ->
-		if not typeIsArray(monomes) then return (new Polynome(variable)).setInvalid()
+	width_roots: (a, roots, variable) ->
+		coeffs = [a]
+		for xi in roots
+			degre = coeffs.length
+			coeffs[degre] = coeffs[degre-1].toClone()
+			indice = degre-1
+			while indice >0
+				if typeof coeffs[indice-1] is "undefined" then coeffs[indice] = coeffs[indice].md(xi, false).opposite()
+				else coeffs[indice] = coeffs[indice-1].toClone().am(coeffs[indice].md(xi, false), true)
+				indice--
+			coeffs[0] = coeffs[0].md(xi, false).opposite()
+		oPoly = new Polynome variable
+		oPoly.addMonome power, coeff for coeff,power in coeffs
+		oPoly
+	widthCoeffs: (monomes, variable) ->
 		poly = new Polynome(variable)
 		poly.addMonome(power,coeff) for coeff,power in monomes
 		poly
+	parse: (expression, variable="x") -> Parser.parse(expression, {type:"number"}).toPolynome(variable)
+}
+
+class Polynome
+	_isValidPolynome: true
+	constructor: (variable) ->
+		# Les monomes seront des objets {coeff:NumberObject, power:integer>=0}
+		@_monomes = []
+		if typeof variable is "string" then @_variable = variable
+		else @_variable = "x"
+	getVariable: () -> @_variable
 	toString: () ->
-		if @.isNul() then return "0"
+		if @isNul() then return "0"
 		arrOut = []
 		for monome in @_monomes
 			cs = monome.coeff.compositeString(false)
@@ -205,9 +196,9 @@ class @Polynome
 		if (@_monomes.length is 1) and (@_monomes[0].power is 0) then return @_monomes[0].coeff
 		undefined
 	puissance: (exposant) ->
-		if (exposant instanceof NumberObject) then exposant = exposant.toNumber()
+		if (exposant instanceof NumberObject) then exposant = exposant.floatify().float()
 		if not isInteger(exposant) or (exposant<0) then return @setInvalid()
-		output = (new Polynome(@_variable)).addMonome(0,1)
+		output = (new Polynome(@_variable)).addMonome(0,new RealNumber(1))
 		for i in [1..exposant]
 			output = output.mult(@)
 		output
@@ -217,9 +208,12 @@ class @Polynome
 	assignValueToSymbol: (liste) ->
 		monome.coeff = monome.coeff.assignValueToSymbol(liste) for monome in @_monomes
 		@
-	floatify: (x_value, decimals) ->
+	floatify: (symbols) ->
 		if not @_isValidPolynome then return new RealNumber()
-		if x_value instanceof NumberObject then x = x_value.floatify()
+		x_value = symbols?[@_variable]
+		if x_value instanceof NumberObject
+			if x_value.isFunctionOf(@_variable) then return new RealNumber()
+			x = x_value.floatify(symbols)
 		else x = new RealNumber(x_value)
 		total = new RealNumber(0)
 		# On trie par ordre croissant de puissance
@@ -230,11 +224,11 @@ class @Polynome
 			while power < monome.power
 				xp = xp.md(x,false)
 				power++
-			total = total.am(monome.coeff.floatify().md(xp,false),false)
-		total.approx(decimals)
+			total = total.am(monome.coeff.floatify(symbols).md(xp,false),false)
+		total
 	calc: (x) ->
+		# x est un numberobject
 		if not @_isValidPolynome then return new RealNumber()
-		if not (x instanceof NumberObject) then x = NumberManager.makeNumber(x)
 		if x.isFunctionOf(@_variable) then return new RealNumber
 		@sort()
 		xpow = new RealNumber(1)
@@ -246,13 +240,6 @@ class @Polynome
 				power++
 			out = out.am(monome.coeff.toClone().md(xpow,false),false)
 		out.simplify()
-	toNumber: (x_value, decimals) ->
-		if not @_isValidPolynome then return NaN
-		if typeof x_value isnt "number" then return @floatify(x_value).toNumber()
-		total = 0
-		total += monome.coeff.toNumber()*Math.pow(x_value, monome.power) for monome in @_monomes
-		if typeof decimals is "undefined" then return total
-		Number(total.toFixed(decimals))
 	isFunctionOf: (symbolName) ->
 		if @_variable is symbolName then return true
 		for monome in @_monomes
@@ -270,12 +257,12 @@ class @Polynome
 			if a.power>=b.power then return -1
 			1
 		@
-	module: () ->
+	module: (symbols) ->
 		module = new RealNumber(0)
 		coeffDegreMax = null
 		degre = -1
 		for monome in @_monomes
-			coeffFloatified = monome.coeff.floatify().abs()
+			coeffFloatified = monome.coeff.floatify(null,symbols).abs()
 			module = module.am coeffFloatified, false
 			if monome.power>degre
 				degre = monome.power
@@ -313,14 +300,11 @@ class @Polynome
 	addMonome: (power, coeff, minus = false) ->
 		if not @isValid() then return @
 		if not isInteger(power) or (power<0) then return @
-		if coeff instanceof NumberObject then coeff = coeff.toClone()
-		else coeff = NumberManager.makeNumber(coeff)
 		unless coeff.isFunctionOf(@_variable) # On ne peut pas insérrer un coeff dépendant de "x"
-			if minus then coeff = coeff.toClone().opposite()
 			rank = @getRank(power)
 			if typeof rank isnt "undefined"
-				@_monomes[rank].coeff = @_monomes[rank].coeff.am coeff,false
-			else @_monomes.push({power:power, coeff:coeff})
+				@_monomes[rank].coeff = @_monomes[rank].coeff.am coeff,minus
+			else @_monomes.push({power:power, coeff:if minus then coeff.toClone().opposite() else coeff.toClone() })
 			@cleanUpperZeros()
 	setInvalid: () ->
 		if not @_isValidPolynome
@@ -341,10 +325,8 @@ class @Polynome
 		# offset : décalage pour résoudre P(x)=0
 		# Dans le cas où des coefficients dépendraient de symboles, il faudrait faire précéder le calcul d'un assignValueToSymbol
 		if not @_isValidPolynome or not @isReal() then return undefined
-		# renommer en makeSimpleNumber
-		# et creer un toNumbr dans NumberManager
-		A = @toNumber(a) - offset
-		B = @toNumber(b) - offset
+		A = @floatify({x:a}).float() - offset
+		B = @floatify({x:b}).float() - offset
 		if A is 0 then return a
 		if B is 0 then return b
 		if A*B > 0 then return undefined
@@ -353,7 +335,7 @@ class @Polynome
 		precision = Math.pow(10,-decimals)
 		while Math.abs(A-B) > precision
 			m = (a+b)/2
-			M = @toNumber(m) - offset
+			M = @floatify({x:m}).float() - offset
 			if M is 0 then return m
 			if A*M > 0
 				a = m
@@ -367,9 +349,9 @@ class @Polynome
 		# Permet de donner un majorant à la valeur d'éventuelles racines
 		# ce qui permet de borner dans le cas de recherches entre + et - infini
 		# offset : dans le cas d'une recherche de solution de P(x)=offset
-		coeffs = []
+		coeffs = [ -offset ]
 		for monome in @_monomes
-			coeff = monome.coeff.toNumber()
+			coeff = monome.coeff.floatify().float()
 			if coeffs[monome.power]? then coeffs[monome.power]+=coeff
 			else coeffs[monome.power] = coeff
 		coeffDominant = 0
@@ -386,14 +368,12 @@ class @Polynome
 		if not @_isValidPolynome or not @isReal() then return null
 		# On cherche les racines de la dérivée afin de définir les bons intervalles
 		if @degre() is 0 then return []
-		majorant = @majorant_racines()
-		if typeof borne_inf isnt "number" then borne_inf = NumberManager.makeNumber(borne_inf).toNumber()
-		borne_inf = Math.max(borne_inf,-majorant)
-		if typeof borne_sup isnt "number" then borne_sup = NumberManager.makeNumber(borne_sup).toNumber()
-		borne_sup = Math.min(borne_sup,majorant)
+		majorant = @majorant_racines(offset)
+		if borne_inf? then borne_inf = Math.max(borne_inf,-majorant) else borne_inf = - majorant
+		if borne_sup? then borne_sup = Math.min(borne_sup,majorant) else borne_sup = majorant
 		if @degre() is 1
 			@sort()
-			x = -@_monomes[0].coeff.toNumber()/@_monomes[1].coeff.toNumber()
+			x = -@_monomes[0].coeff.floatify().float()/@_monomes[1].coeff.floatify().float()
 			if (x>=borne_inf) and (x<=borne_sup) then return [x]
 			else return []
 		racines_derivee = @derivate().solve_numeric(borne_inf, borne_sup, decimals)
@@ -406,11 +386,10 @@ class @Polynome
 				if typeof x isnt "undefined" then solutions.push(x)
 				a = b
 		solutions
-	solveExact: (value=0,imag=false) ->
+	solveExact: (value,imag) ->
 		# On résout poly = value
 		# Dans le cas de coefficients dépendant d'un symbole, delta.isNegative revoie false et alors on envisage les deux racines, même si le delta est une expression ne pouvant être que négative
 		if @degre() is 2
-			value = NumberManager.makeNumber(value)
 			a = @getCoeff(2)
 			b = @getCoeff(1)
 			c = @getCoeff(0).toClone().am(value,true)
@@ -421,10 +400,10 @@ class @Polynome
 					neg = true
 					delta.opposite()
 				else return []
-			x0 = b.toClone().opposite().md(NumberManager.makeNumber(2).md(a, false), true).simplify()
+			x0 = b.toClone().opposite().md((new RealNumber(2)).md(a, false), true).simplify()
 			if delta.isNul() then return [x0]
-			sq = delta.sqrt().md(NumberManager.makeNumber(2).md(a, false), true)
-			if neg then sq = sq.md(NumberManager.makeI(),false)
+			sq = delta.sqrt().md((new RealNumber(2)).md(a, false), true)
+			if neg then sq = sq.md(new ComplexeNumber(0,1), false)
 			return [x0.toClone().am(sq, true).simplify(), x0.toClone().am(sq, false).simplify()]
 	discriminant: () ->
 		if @degre() isnt 2 then return new RealNumber()

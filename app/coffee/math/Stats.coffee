@@ -9,14 +9,14 @@ class @SerieStat
 	_S2:null
 	constructor: (liste) ->
 		@serie = []
-		if Tools.typeIsArray(liste)
+		if isArray(liste)
 			for item in liste
 				if typeof item is "number" then @serie.push { value:item, effectif:1 }
 				else @serie.push item
 		else if typeof liste is "object"
 			values = liste.values
 			effectifs = liste.effectifs
-			if Tools.typeIsArray(values) and Tools.typeIsArray(effectifs)
+			if isArray(values) and isArray(effectifs)
 				ne = effectifs.length
 				for value,i in values
 					if (i<ne) then @serie.push { value:value, effectif:effectifs[i] }
@@ -152,47 +152,17 @@ class @SerieStat
 			if item.effectif is 1 then liste.push String(item.value)
 			else liste.push item.value+"|"+item.effectif
 		liste.join(";")
-	###
-	stringRegroup: (n)->
-		# Afin de créer des exos, on prévoit de regrouper en n valeurs différentes, maximum
-		# en répprochant les valeurs les plus proches
-		@dists = []
-		@sort()
-		i=0
-		while i<@serie.length-1
-			@dists[i] = Math.abs(@serie[i+1]-@serie[i])
-			i++
-		@dists.sort (a,b)->
-			if a>=b then return -1
-			1
-		# On a les distances dans l'ordre décroissant.
-		# Puisqu'on ne veut que n valeurs max, on va considérer que les n-1 plus grandes
-		# distances constituent une vraie différence et que les suivantes doivent être colmatées.
-		if n>@dists.length then return @
-		D0 = @dists[n-1]
-		# Une différence de D0 ou moins n'en est pas une.
-		if D0 is 0 then return @
-		i=0
-		item = {sum: @serie[0], eff:1 }
-		nouvelleSerie = [ item ]
-		while i<@serie.length-1
-			if Math.abs(@serie[i+1]-@serie[i])<=D0
-				# Cette différence doit être annulée
-				item.sum += @serie[i+1]
-				item.eff += 1
-			else
-				item = {sum: @serie[i+1], eff:1 }
-				nouvelleSerie.push item
-		@serie = (item.sum/item.eff for item in nouvelleSerie)
-		@
-	###
 	approx: (delta) ->
 		@refresh()
 		@serie = ( Math.round(item.value/delta)*delta for item in @serie )
 		@countEffectifs()
 		@
-	toStr: (decimals) ->
-		({ value:item.value.toStr(decimals), effectif:item.effectif, ECC:item.ECC } for item in @serie)
+	toStringArray: (decimals) ->
+		({
+			value: if decimals? then item.value.toFixed(decimals).replace(".", ",") else String(item.value)
+			effectif:item.effectif
+			ECC:item.ECC
+			} for item in @serie)
 	getEffectifs: (values) ->
 		# renvoie les effectifs pour une table de valeurs
 		i=0

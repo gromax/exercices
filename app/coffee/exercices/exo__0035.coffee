@@ -7,25 +7,31 @@ Exercice.liste.push
 	init: (data) ->
 		inp = data.inputs
 		if inp.a? then a= Number inp.a
-		else inp.a = a = Proba.aleaEntreBornes 2,5
-		a = NumberManager.makeNumber a
-		if inp.ang1? then ang1= Number inp.ang1
-		else inp.ang1 = ang1 = Proba.aleaEntreBornes(1,6)*30*Proba.aleaSign()
-		ang1 = Trigo.degToRad ang1
-		if inp.ang2? then ang2= Number inp.ang2
-		else inp.ang2 = ang2 = Proba.aleaEntreBornes(1,6)*30*Proba.aleaSign()
-		ang2 = Trigo.degToRad ang2
-		if typeof inp.type? then type=inp.type
-		else inp.type = type = Proba.aleaIn ["cos","sin"]
-		x = NumberManager.makeSymbol("x")
-		membreGauche = x.toClone().md(a,false).am(ang1,false).simplify().applyFunction(type).tex()
-		membreDroite = ang2.toClone().applyFunction(type).tex()
-		modulo = Trigo.pi(NumberManager.makeNumber(2).md(a,true)).simplify()
-		ang = ang2.toClone().am(ang1,true).md(a,true).simplify()
+		else
+			a = mM.alea.number { min:2, max:5 }
+			inp.a = String a
+		if inp.ang1? then ang1 = mM.toNumber inp.ang1
+		else
+			ang1 = mM.alea.number { min:1, max:6, sign:true, coeff:30 }
+			inp.ang1 = String ang1
+		ang1 = mM.trigo.degToRad ang1
+		if inp.ang2? then ang2 = mM.toNumber inp.ang2
+		else
+			ang2 = mM.alea.number { min:1, max:6, sign:true, coeff:30 }
+			inp.ang2 = String ang2
+		ang2 = mM.trigo.degToRad ang2
+		if inp.type? then type=inp.type
+		else inp.type = type = mM.alea.real ["cos","sin"]
+
+		membreGauche = mM.exec(["x", a, "*", ang1, "+", type], {simplify:true}).tex()
+		membreDroite = mM.exec([ang2, type]).tex()
+
+		modulo = mM.exec [2, "pi", "*", a, "/"], {simplify:true}
+		ang = mM.exec [ang2, ang1, "-", a, "/"], {simplify:true}
 		if type is "cos"
 			solutions = [ang.toClone().setModulo(modulo), ang.opposite().setModulo(modulo)]
 		else
-			solutions = [ang.toClone().setModulo(modulo), Trigo.mesurePrincipale(Trigo.pi().am(ang,true)).simplify().setModulo(modulo)]
+			solutions = [ang.toClone().setModulo(modulo), mM.trigo.principale(["pi", ang, "-"]).setModulo(modulo)]
 		[
 			new BEnonce { zones:[{
 				body:"enonce"

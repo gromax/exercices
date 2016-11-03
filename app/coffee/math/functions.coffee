@@ -1,19 +1,11 @@
 
 grecques = ["alpha", "beta", "delta", "psi", "pi", "theta", "phi", "xi", "rho", "epsilon", "omega", "nu", "mu", "gamma", "Alpha", "Beta", "Delta", "Psi", "Pi", "Theta", "Phi", "Xi", "Rho", "Epsilon", "Omega", "Nu", "Mu", "Gamma"]
+DECIMAL_SEPARATOR = ','
+DECIMAL_MAX_PRECISION = 10
+SOLVE_MAX_PRECISION = 14
+ERROR_MIN = 0.00000000000001
 
-String::pointToComma = -> @replace '.', ","
-String::commaToPoint = -> @replace ',', "."
-String::toFloat = -> parseFloat("0"+@commaToPoint())
-String::numberFormat = -> @toFloat().toStr()
-String::parse = (params) -> Parser.parse String(@), params
-Number::toStr = (decimals) ->
-	if typeof decimals is "undefined" then output = String(@)
-	else output = @toFixed(decimals)
-	return output.pointToComma()
-Number::toResolution = (resolution) -> Math.round(@/resolution)*resolution
-Number::round = (decimals) -> Number(@.toFixed(decimals))
-Number::isInteger = -> @ is Math.round(@)
-Number::toNumberObject = -> new RealNumber(@)
+
 
 isInteger = (number) ->
 	if (typeof number is "number") and (number is Math.round(number)) then return true
@@ -34,14 +26,35 @@ in_array = (_item, _array) ->
 	for item in _array
 		return true if item == _item
 	false
-typeIsArray = ( value ) ->
+isArray = ( value ) ->
 	value and
 		typeof value is 'object' and
 		value instanceof Array and
 		typeof value.length is 'number' and
 		typeof value.splice is 'function' and
 		not ( value.propertyIsEnumerable 'length' )
-arrayIntersect= (a, b) ->
+mergeObj = (objectA, objectB) ->
+	# cas où on transmet un tableau en argument 1
+	if isArray(objectA)
+		out = {}
+		while obj = objectA.shift()
+			if (typeof obj is "object") and (obj isnt null)
+				out[key] = val for key, val of obj
+		return out
+	else
+		# objectB overrides objectA
+		if (typeof objectA isnt "object") or (objectB is null) then objectA = {}
+		if (typeof objectB isnt "object") or (objectB is null) then return objectA
+		objectA[key] = val for key, val of objectB
+		if arguments.length>2
+			i=2
+			while i<arguments.length
+				o = arguments[i]
+				if (typeof o is "object") and (o isnt null)
+					objectA[key] = val for key, val of o
+				i++
+		return objectA
+arrayIntersect = (a, b) ->
 	# les tableaux doivent être triés
 	ai=0
 	bi=0
@@ -54,8 +67,8 @@ arrayIntersect= (a, b) ->
 			ai++
 			bi++
 	result
-extractSquarePart= (value) ->
-	if value instanceof NumberObject then value = value.toNumber()
+extractSquarePart = (value) ->
+	if value instanceof NumberObject then value = value.floatify().float()
 	if not isInteger(value) then return 1
 	if value is 0 then return 0
 	value = Math.abs(value)

@@ -5,14 +5,14 @@ Exercice.liste.push
 	description: "Faire les calculs de base avec les complexes."
 	keyWords:["Géométrie", "Complexe", "Première"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs }).save(data.inputs)
 		zA = A.affixe()
 		zB = B.affixe()
-		gSomme = zA.toClone().am(zB,false)
-		gProduit = zA.toClone().md(zB,false).simplify()
-		gInverse = zA.toClone().inverse().simplify()
-		gQuotient = zB.toClone().md(zA, true).simplify()
+		gSomme = mM.exec [zA, zB, "+"], {simplify:true}
+		gProduit = mM.exec [zA, zB, "*"], {simplify:true}
+		gInverse = mM.exec [zA, "^-1"], {simplify:true}
+		gQuotient = mM.exec [zB, zA, "/"], {simplify:true}
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On considère les deux nombres complexes : $z = #{zA.tex()}$ et $z' = #{zB.tex()}$.</p><p>Donnez les résultats des calculs suivants :</p>"}]}
 			new BListe {

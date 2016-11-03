@@ -5,21 +5,15 @@ Exercice.liste.push
 	description: "Quatre points A, B, D sont donnés. On sait que $ABCD$ est un parallélogramme. Il faut trouver l'aire de $ABCD$."
 	keyWords:["Géométrie", "Complexe", "Première"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
-		D = Vector.makeRandom "D", data.inputs
-		# A et B ne doivent pas être confondus
-		while A.sameAs B
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
-		# A et D ne doivent pas être confondus
-		while A.sameAs D
-			D = Vector.makeRandom "D", data.inputs, { overwrite:true }
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[A] }).save(data.inputs)
+		D = mM.alea.vector({ name:"D", def:data.inputs, forbidden:[A] }).save(data.inputs)
 		zA = A.affixe()
 		zB = B.affixe()
 		zD = D.affixe()
-		zAB = zB.toClone().am(zA,true)
-		zAD = zD.toClone().am(zA,true)
-		z = zAB.toClone().conjugue().md(zAD,false)
+		zAB = mM.exec [zB, zA, "-"], {simplify:true}
+		zAD = mM.exec [zD, zA, "-"], {simplify:true}
+		z = mM.exec [ zAB, "conjugue", zAD, "*"], {simplify:true}
 		aire = z.getImag().toClone().abs()
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On donne $A$ d'affixe $z_A=#{zA.tex()}$, $B$ d'affixe $z_B=#{zB.tex()}$ et $D$ d'affixe $z_D=#{zD.tex()}$.</p><p>Le point $C$ est tel que $ABCD$ est un parallélogramme (pas besoin de savoir l'affixe de $C$)</p><p>On notera $z_1$ l'affixe de $\\overrightarrow{AD}$ et $z_2$ l'affixe de $\\overrightarrow{AB}$"}]}

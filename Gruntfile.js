@@ -13,11 +13,11 @@ module.exports = function(grunt) {
     },
     concat: {
       js: {
-        src: ['app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/manager.js', 'dist/templates.hbs.js'],
+        src: ['app/scripts/functions.js', 'dist/math.js', 'dist/exercices.js', 'dist/disp.js', 'dist/manager.js', 'dist/templates.hbs.js'],
         dest: 'dist/main.js'
       },
       js_local: {
-        src: ['app/scripts/localConstantes.js','app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/manager.js', 'dist/templates.hbs.js'],
+        src: ['app/scripts/localConstantes.js','app/scripts/functions.js','dist/math.js','dist/exercices.js','dist/disp.js', 'dist/manager.js', 'dist/templates.hbs.js'],
         dest: 'dist/main.local.js'
       }
     },
@@ -76,11 +76,12 @@ module.exports = function(grunt) {
           join:true
         },
         files: {
-          'dist/exercices.js': ['app/coffee/exercices/exercice.coffee','app/coffee/exercices/briques.coffee','app/coffee/exercices/aide.coffee','app/coffee/exercices/gestClavier.coffee','app/coffee/exercices/exo__*.coffee'],
+          'dist/exercices.js': ['app/coffee/exercices/functions.coffee','app/coffee/exercices/exercice.coffee','app/coffee/exercices/briques.coffee','app/coffee/exercices/aide.coffee','app/coffee/exercices/gestClavier.coffee','app/coffee/exercices/exo__*.coffee'],
           'dist/manager.js': 'app/coffee/manager/*.coffee',
-          'dist/math.js': 'app/coffee/math/*.coffee'
+          'dist/math.js': ['app/coffee/math/functions.coffee','app/coffee/math/math.coffee','app/coffee/math/ensembleObject.coffee','app/coffee/math/tokens.coffee','app/coffee/math/parser.coffee','app/coffee/math/polynome.coffee','app/coffee/math/geometrie.coffee','app/coffee/math/proba.coffee','app/coffee/math/Stats.coffee','app/coffee/math/suite.coffee','app/coffee/math/trigo.coffee','app/coffee/math/erreur.coffee','app/coffee/math/myMath.coffee'],
+          'dist/disp.js': ['app/coffee/disp/functions.coffee', 'app/coffee/disp/svg_helper.coffee', 'app/coffee/disp/tabVar.coffee']
         }
-      }
+      },
     },
     watch: {
         less: {

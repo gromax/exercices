@@ -6,12 +6,12 @@ Exercice.liste.push
 	keyWords:["Statistiques","Ajustement","carré","TSTL","BTS"]
 	init: (data) ->
 		if (typeof data.inputs.table is "undefined")
-			N = Proba.aleaEntreBornes(7,11)
-			{min,max,ecart} = Proba.aleaIn [ {min:1, max:10, ecart:3}, {min:100, max:500, ecart:100}, {min:1000, max:9000, ecart:1000} ]
-			table_x = (Proba.aleaEntreBornes(min,max) for i in [1..N])
+			N = mM.alea.real { min:7, max:11 }
+			{min,max,ecart} = mM.alea.real [ {min:1, max:10, ecart:3}, {min:100, max:500, ecart:100}, {min:1000, max:9000, ecart:1000} ]
+			table_x = ( mM.alea.real( {min:min, max:max} ) for i in [1..N])
 			_a = Math.random()*2
 			_b = Math.random()*(min+max)/2
-			table_y = ((_a*x+_b).round(0) for x in table_x)
+			table_y = ( fixNumber(_a*x+_b,0) for x in table_x)
 			serie_x = new SerieStat table_x
 			serie_y = new SerieStat table_y
 			data.inputs.table = serie_x.storeInString()+"_"+serie_y.storeInString()
@@ -20,9 +20,6 @@ Exercice.liste.push
 			serie_x = new SerieStat tables[0]
 			serie_y = new SerieStat tables[1]
 		{ a, b, r } = serie_x.ajustement serie_y
-		console.log "sx : sum_x = "+serie_x.sum()+" sum_xx = "+ serie_x.sum_sq()+" moyenne = "+ serie_x.moyenne()+" variance = "+serie_x.variance()+" c_xy = "+serie_x.covariance(serie_y)+" sum_xy = "+serie_x.sum_xy(serie_y)
-		console.log a
-		console.log b
 		[
 			new BEnonce { zones:[
 				{body:"enonce", html:"<p>On considère la série statistique donnée par le tableau suivant :</p>"}

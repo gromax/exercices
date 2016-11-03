@@ -6,15 +6,15 @@ Exercice.liste.push
 	keyWords:["Analyse", "Suite", "Première"]
 	init: (data) ->
 		inp = data.inputs
-		if typeof inp.r is "undefined" then inp.r = Proba.aleaEntreBornes(15,50)/10
+		if typeof inp.r is "undefined" then inp.r = mM.alea.real({ min:15, max:50} )/10
 		else inp.r = Number inp.r
-		if typeof inp.c is "undefined" then inp.c = Proba.aleaEntreBornes(1,8)
+		if typeof inp.c is "undefined" then inp.c = mM.alea.real { min:1, max:8 }
 		else inp.c = Number inp.c
 		q = 1+inp.r/100 # Raison
 		c0=inp.c*1000 # Premier terme
 		n = Math.ceil(Math.log(2)/Math.log(q)) # Doublement
 		[
-			new BEnonce {zones:[{body:"enonce", html:"<p>Le 1 janvier 2010, on place la somme de #{c0} € sur un compte bancaire qui rapporte tous les ans #{inp.r.toStr()}% d'intérêts composés.", "Soit $(C_n)$ la suite représentant le capital sur le compte au 1 janvier de l'année 2010$+n$.</p>"}]}
+			new BEnonce {zones:[{body:"enonce", html:"<p>Le 1 janvier 2010, on place la somme de #{c0} € sur un compte bancaire qui rapporte tous les ans #{numToStr inp.r}% d'intérêts composés.", "Soit $(C_n)$ la suite représentant le capital sur le compte au 1 janvier de l'année 2010$+n$.</p>"}]}
 			new BListe {
 				data:data
 				bareme:50

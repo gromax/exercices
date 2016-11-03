@@ -5,8 +5,8 @@ Exercice.liste.push
 	description: "Calculer les coordonnées du vecteur entre deux points."
 	keyWords:["Géométrie", "Repère", "Vecteur", "Seconde"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs }).save(data.inputs)
 		gAB = B.toClone("\\overrightarrow{AB}").am(A, true).simplify()
 		[
 			new BEnonce { zones:[{

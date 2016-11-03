@@ -6,20 +6,20 @@ Exercice.liste.push
 	keyWords:["Statistiques","Médiane","Quartile","Seconde"]
 	init: (data) ->
 		if (typeof data.inputs.table is "undefined")
-			resolution = Proba.aleaIn([0.5, 1, 5, 10])
-			std = Proba.aleaEntreBornes(100,200)/100*resolution
-			moy = Proba.aleaEntreBornes(4,10)*std
-			min = moy.toResolution(resolution) - 5*resolution
-			max = moy.toResolution(resolution) + 5*resolution
-			N = Proba.aleaEntreBornes(50,200)
+			resolution = mM.alea.real [0.5, 1, 5, 10]
+			std = mM.alea.real({ min:100, max:200 })/100*resolution
+			moy = mM.alea.real({ min:4, max:10 })*std
+			min = quantifyNumber(moy,resolution) - 5*resolution
+			max = quantifyNumber(moy,resolution) + 5*resolution
+			N = mM.alea.real { min:50, max:200 }
 			table = (Proba.gaussianAlea(moy,std,{min:min, max:max, delta:resolution}) for i in [1..N])
 			serie = new SerieStat( table )
 			serie.countEffectifs()
 			data.inputs.table = serie.storeInString()
 		else
 			serie = new SerieStat(data.inputs.table)
-		values = (item.value for item in serie.toStr())
-		effectifs = (item.effectif for item in serie.toStr())
+		values = (item.value for item in serie.toStringArray())
+		effectifs = (item.effectif for item in serie.toStringArray())
 		[
 			new BEnonce { zones:[
 				{body:"enonce", html:"<p>On considère la série statistique donnée par le tableau suivant :</p>"}

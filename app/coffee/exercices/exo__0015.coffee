@@ -14,11 +14,9 @@ Exercice.liste.push
 		items = []
 		pts = []
 		for i in [0..N]
-			A = Vector.makeRandom "A"+i, data.inputs, { ext:[[-max,max]] }
-			B = Vector.makeRandom "B"+i, data.inputs, { ext:[[-max,max]] }
-			while A.sameAs B
-				B = Vector.makeRandom "B"+i, data.inputs, { overwrite:true, ext:[[-max,max]] }
-			item= { color:colors(i).html, rank:i, title:"$"+ Droite2D.par2Pts(A,B).reduiteTex()+"$" }
+			A = mM.alea.vector({ name:"A#{i}", def:data.inputs, values:[{min:-max, max:max}] }).save(data.inputs)
+			B = mM.alea.vector({ name:"B#{i}", def:data.inputs, values:[{min:-max, max:max}], forbidden:[ {axe:"x", coords:A} ] }).save(data.inputs)
+			item= { color:colors(i).html, rank:i, title:"$"+ mM.droite.par2pts(A,B).reduiteTex()+"$" }
 			pts.push [A,B,item.color]
 			items.push item
 		[

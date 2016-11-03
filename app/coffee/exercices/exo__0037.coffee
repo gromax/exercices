@@ -6,8 +6,8 @@ Exercice.liste.push
 	keyWords:["Dérivation","Trigonométrie","Première"]
 	init: (data) ->
 		inp = data.inputs
-		unless inp.f? then inp.f = "#{Proba.aleaEntreBornes(1,50)} #{Proba.aleaIn ["cos","sin"]}(#{Proba.aleaEntreBornes(1,20)*Proba.aleaSign()} t #{Proba.aleaIn ["+","-"]} #{Proba.aleaEntreBornes(0,30)})"
-		f = NumberManager.makeNumber(inp.f).simplify()
+		unless inp.f? then inp.f = "#{ mM.alea.real { min:1, max:50 } } #{ mM.alea.in ["cos","sin"] }(#{ mM.alea.real { min:0, max:30, sign:true } } t #{ mM.alea.in ["+","-"] } #{ mM.alea.real { min:0, max:30 } })"
+		f = mM.toNumber(inp.f).simplify()
 		fDer = f.derivate("t")
 		fTex = "f: t \\mapsto #{f.tex()}"
 		[

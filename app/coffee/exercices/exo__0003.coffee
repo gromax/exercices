@@ -5,11 +5,8 @@ Exercice.liste.push
 	description:"Calculer les coordonnées du symétrique d'un point par rapport à un autre point."
 	keyWords : ["Géométrie", "Repère", "Seconde"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
-		# Les deux points ne doivent pas être confondus
-		while A.sameAs B
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[A] }).save(data.inputs)
 		gAp = A.symetrique(B, "A'").simplify()
 
 		[

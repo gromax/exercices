@@ -8,31 +8,25 @@ Exercice.liste.push
 	max:10 # Définit la taille de la fenêtre graphique
 	init: (data) ->
 		max = @max
-		decimals = 3
+		decimals = 2
 		inp = data.inputs
 		# Initialisation du polynome
 		poly = null
 		if typeof inp.p isnt "undefined"
-			poly = NumberManager.makeNumber(inp.p).toPolynome("x")
+			poly = mM.polynome.parse inp.p, "x"
 			if not poly.isValid() then poly = null
 		if poly is null
 			# On crée un nouveau polynome
-			points = [
-				{x:-max, y:Proba.aleaEntreBornes(-40,40)/100*max},
-				{x:-max/2, y:Proba.aleaEntreBornes(-40,40)/100*max},
-				{x:0, y:Proba.aleaEntreBornes(-40,40)/100*max},
-				{x:max/2, y:Proba.aleaEntreBornes(-40,40)/100*max},
-				{x:max, y:Proba.aleaEntreBornes(-40,40)/100*max}
-			]
-			poly = Polynome.lagrangian(points, "x")
+			points = ( {x:x*max, y:mM.alea.real({min:-60, max:60})*max/100 } for x in [-1, -.5, 0, .5, 1] )
+			poly = mM.polynome.make { points:points, variable:"x"}
 			inp.p = String(poly)
 		# initialisation des images et antécédents à trouver
 		h_init("xi",inp,-max,max) # x dont on demandera l'image
-		yi = poly.toNumber(inp.xi,decimals)
 		h_init("xa",inp,-max,max) # x dont on calculera l'image afin de demander un antécédant
 		h_init("xa",inp,-max,max,true) while inp.xa is inp.xi
-		ya = poly.toNumber(inp.xa,decimals)
-		antecedents = poly.solve_numeric(-max,max,decimals,ya)
+		yi = mM.float poly, { x:inp.xi, decimals:decimals }
+		ya = mM.float poly, { x:inp.xa, decimals:decimals }
+		antecedents = mM.polynome.solve.numeric poly, { bornes:{min:-max, max:max}, decimals:decimals, y:ya }
 		data.values = { poly:poly, ya:ya, xi:inp.xi}
 		# Création de l'objet graphiques
 		graphContainer = new BGraph {
@@ -41,10 +35,10 @@ Exercice.liste.push
 			poly:poly
 			customInit: ()->
 				curve = @graph.create('functiongraph', [
-					(x) -> @getAttribute('poly').toNumber(x)
+					(x) -> mM.float @getAttribute('poly'), {x:x}
 					-max, max],{strokeWidth:3, poly:@config.poly})
-				@graph.create('point',[-max,@config.poly.toNumber(-max)],{fixed:true, fillColor:'blue', strokeColor:'blue', withlabel:false, size:4})
-				@graph.create('point',[max,@config.poly.toNumber(max)],{fixed:true, fillColor:'blue', strokeColor:'blue', withlabel:false, size:4})
+				@graph.create('point',[ -max, mM.float @config.poly, null, { x:-max} ],{fixed:true, fillColor:'blue', strokeColor:'blue', withlabel:false, size:4})
+				@graph.create('point',[ max, mM.float @config.poly, null, { x:max} ],{fixed:true, fillColor:'blue', strokeColor:'blue', withlabel:false, size:4})
 				@graph.create('glider',[-max/2,2,curve],{name:'M'})
 			fcts:{
 				solutions: (cor,inp,str_antecedents) ->
@@ -59,7 +53,7 @@ Exercice.liste.push
 					@graph.create('line',[[inp.xi,cor.yi],[0,cor.yi]], {color:'orange', straightFirst:false, straightLast:false, strokeWidth:2, dash:2, fixed:true})
 					if (inp.xi>0) then anchorX = 'right'
 					else anchorX = 'left'
-					@graph.create('text',[0,cor.yi,cor.yi.toStr()], {color:'orange', anchorX:anchorX, anchorY:'middle'})
+					@graph.create('text',[0,cor.yi,numToStr(cor.yi)], {color:'orange', anchorX:anchorX, anchorY:'middle'})
 			}
 		}
 
@@ -87,14 +81,14 @@ Exercice.liste.push
 						zones:[
 							{
 								body:"texte"
-								html:"Donnez l'image de #{inp.xi.toStr()} et un antécédent de #{cor.ya.toStr()} à ±#{@config.precision.toStr()}"
+								html:"Donnez l'image de #{numToStr inp.xi} et <b>un</b> antécédent de #{numToStr cor.ya} à ±#{numToStr @config.precision}"
 							}, {
 								body:"champ"
 								html:Handlebars.templates.std_form {
 									id:"form#{@divId}"
 									inputs:[
-										{tag:"Image de #{inp.xi.toStr()}", description:"Valeur décimale", name:"i", large:true}
-										{tag:"Antécédent de #{cor.ya.toStr()}", description:"Valeur décimale", name:"a", large:true}
+										{tag:"Image de #{numToStr inp.xi}", description:"Valeur décimale", name:"i", large:true}
+										{tag:"Antécédent de #{numToStr cor.ya}", description:"Valeur décimale", name:"a", large:true}
 									]
 								}
 							}
@@ -109,28 +103,28 @@ Exercice.liste.push
 				ver: () ->
 					cor = @config.good
 					inp = @data.inputs
-					str_antecedents = (x.toStr(1) for x in cor.antecedents)
+					str_antecedents = (numToStr(x,1) for x in cor.antecedents)
 
 					messages = []
 					# image
 					color="error"
-					message = "<b>Image de #{inp.xi.toStr()} :</b> Vous avez répondu <b>#{ @a.i.pointToComma() }</b>."
-					if Tools.isRealApproxIn([cor.yi],@a.i,@config.precision) isnt false
+					message = "<b>Image de #{numToStr inp.xi} :</b> Vous avez répondu <b>#{ pointToComma(@a.i) }</b>."
+					if isRealApproxIn([cor.yi],@a.i,@config.precision) isnt false
 						message+=" Bonne réponse."
 						color="ok"
 						@data.note += @bareme/2
 					else
-						message+=" La bonne réponse était #{cor.yi.toStr(1)}."
+						message+=" La bonne réponse était #{numToStr cor.yi, 1}."
 					messages.push { color:color, text:message+" La construction graphique est donnée en orange."}
 					# antecedent
 					color="error"
-					message = "<b>Antécédent de #{cor.ya.toStr()} :</b> Vous avez répondu <b>#{ @a.a.pointToComma() }</b>."
-					if Tools.isRealApproxIn(cor.antecedents,@a.a,@config.precision) isnt false
+					message = "<b>Antécédent de #{numToStr cor.ya} :</b> Vous avez répondu <b>#{ pointToComma(@a.a) }</b>."
+					if isRealApproxIn(cor.antecedents,@a.a,@config.precision) isnt false
 						color="ok"
 						message+=" Bonne réponse."
 						@data.note += @bareme/2
 					else
-						if cor.antecedents.length is 1 then message+= " La bonne était #{inp.xa.toStr(1)}."
+						if cor.antecedents.length is 1 then message+= " La bonne était #{numToStr inp.xa, 1}."
 						else message+= " Les bonnes réponses possibles étaient : <b>#{str_antecedents.join("</b> ; <b>")}</b>."
 					messages.push { color:color, text:message+" La construction graphique est donnée en vert."}
 					@container.html Handlebars.templates.std_panel {
@@ -145,7 +139,7 @@ Exercice.liste.push
 			}
 		]
 	tex: (data, slide) ->
-		if not Tools.typeIsArray(data) then data = [ data ]
+		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData,i in data
 			courbe = { color:"blue", expr:itemData.values.poly.toClone().simplify().toString().replace(/,/g,'.').replace(/x/g,'(\\x)') }

@@ -5,12 +5,9 @@ Exercice.liste.push
 	description:"On connaît deux valeurs d'une fonction affine. Il faut en déduire l'expression de la fonction."
 	keyWords:["Analyse","Fonction","Expression","Affine","Seconde"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
-		# Les deux abscisses doivent être différentes
-		while A.sameAs B,"x"
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
-		droite = Droite2D.par2Pts A,B
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[ {axe:"x", coords:A} ] }).save(data.inputs)
+		droite = mM.droite.par2pts A,B
 		[
 			new BEnonce {
 				zones:[
@@ -29,7 +26,7 @@ Exercice.liste.push
 						good:droite.m()
 						params:
 							custom:(output)->
-								if NumberManager.equal(output.goodObject.toClone().inverse(), output.userObject) then output.coeffDirecteur_inverse = true
+								if output.goodObject.toClone().inverse().equals(output.userObject) then output.coeffDirecteur_inverse = true
 							customTemplate:true
 					}
 					{

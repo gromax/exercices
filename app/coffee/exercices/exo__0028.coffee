@@ -49,7 +49,7 @@ Exercice.liste.push
 			}
 		]
 	tex: (data, slide) ->
-		if not Tools.typeIsArray(data) then data = [ data ]
+		if not isArray(data) then data = [ data ]
 		{
 			title:@title
 			content:Handlebars.templates["tex_enumerate"] { items: ("$x \\mapsto #{item.fct}$" for item in data), large:slide is true }

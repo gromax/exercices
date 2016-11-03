@@ -1,45 +1,42 @@
 
-class @Suite
+class Suite
 	nMin:0
 	u_nMin:null
-	recurence:null
-	exlplicite:null
+	recurence_def:null
+	exlplicite_def:null
 	nom:"u"
-	constructor: (@nom,nMin)->
+	constructor: (@nom,nMin,u_nMin,expl,recur)->
 		if nMin? then @nMin = nMin
-	@geometrique: (nom,premier,q,rangPremier) ->
-		u = new Suite(nom,rangPremier)
-		u.q = NumberManager.makeNumber(q)
-		u.u_nMin = NumberManager.makeNumber(premier)
-		u.recurence = (x) -> @q.toClone().md(x,false)
-		u.explicite = (x) -> @u_nMin.toClone().md(PowerNumber.make(@q.toClone(),x.am(new RealNumber(@nMin),true)),false )
-		u
-	@arithmetique: (nom,premier,r,rangPremier) ->
-		u = new Suite(nom,rangPremier)
-		u.r = NumberManager.makeNumber(r)
-		u.u_nMin = NumberManager.makeNumber(premier)
-		u.recurence = (x) -> x.toClone().am(@r,false)
-		u.explicite = (x) -> @u_nMin.toClone().am(MultiplyNumber.makeMult([x.am(new RealNumber(@nMin),true),@r.toClone()]),false )
-		u
-	@aritmeticogeometrique: (nom,premier,r,q,rangPremier) ->
-		q = NumberManager.makeNumber(q)
-		if q.toNumber() is 1  then return @arithmetique(nom,premier,r,rangPremier)
-		u = new Suite(nom,rangPremier)
-		u.r = NumberManager.makeNumber(r)
-		u.q = q
-		u.h = u.r.toClone().md(u.q.toClone().am(new RealNumber(1),true),true)
-		u.u_nMin = NumberManager.makeNumber(premier)
-		u.v_nMin = u.u_nMin.toClone().am(u.h,false)
-		u.recurence = (x) -> @q.toClone().md(x,false).am(@r,false)
-		u.explicite = (x) -> @v_nMin.toClone().md(PowerNumber.make(@q.toClone(),x.am(new RealNumber(@nMin),true)),false ).am(@h,false)
-		u
-	n: (x) ->
-		if x? then NumberManager.makeNumber(x)
-		else NumberManager.makeSymbol("n")
-	un: () -> NumberManager.makeSymbol(@nom+"_n")
-	tex_rec: () ->
-		if @recurence isnt null then @recurence(@un()).simplify().tex()
-		else "?"
-	tex_expl: () ->
-		if @explicite isnt null then @explicite(@n()).simplify().tex()
-		else "?"
+		if isArray(u_nMin) then @u_nMin = u_nMin else @u_nMin = []
+		if typeof expl is "function" then @explicite_def = expl
+		if typeof recur is "function" then @recurence_def = recur
+	set:(name,value)->
+		@[name] = value
+		@
+	calc:(n,forceRecur=false) ->
+		# n est un nombre
+		# forceRecur permet de forcer l'utilisation de la formerécurrente
+		if n<@nMin then return new RealNumber()
+		if n<@nMin+@u_nMin.length then return @u_nMin[n-@nMin].toClone()
+		if (not (forceRecur and (@recurence_def isnt null) )) and (@explicite_def isnt null) then return @explicite_def(new RealNumber n).simplify()
+		if @recurence_def isnt null
+			k = @recurence_def.length
+			if k>@u_nMin.length then return new RealNumber()
+			while (l=@u_nMin.length)<=n-@nMin
+				@u_nMin.push @recurence_def(@u_nMin[-k..]...).simplify()
+			return @u_nMin[n-@nMin]
+		return new RealNumber()
+	un: (i=0) ->
+		if i is 0 then SymbolNumber.makeSymbol("#{@nom}_n")
+		else SymbolNumber.makeSymbol("#{@nom}_{n+#{i}}")
+	recurence: (args) ->
+		if @recurence_def isnt null
+			k = @recurence_def.length
+			if (not isArray(args)) or (args.length<k) then args = ( @un(i) for i in [0..k-1] )
+			@recurence_def(args...).simplify()
+		else new NumberObject()
+	explicite: (x) ->
+		if typeof x is "number" then x = new RealNumber(x)
+		if not(x instanceof NumberObject) then x = SymbolNumber.makeSymbol("n")
+		if @explicite_def isnt null then @explicite_def(x).simplify()
+		else new NumberObject()

@@ -7,28 +7,34 @@ Exercice.liste.push
 	init: (data) ->
 		inp = data.inputs
 		# On définit le polynome par ses racines et a
-		if inp.a? then a=Number inp.a
-		else a=inp.a=Proba.aleaEntreBornes(1,5,true)
-		if inp.x1? then x1=Number inp.x1
-		else x1=inp.x1=Proba.aleaEntreBornes(-10,10)
-		if inp.x2? then x2=Number inp.x2
-		else x2=inp.x2=Proba.aleaEntreBornes(-10,10)
-		if inp.A? then A=Number inp.A # Pour résoudre f(x)=A
-		else A=inp.A=Proba.aleaIn([1,3,9,16,25])*Proba.aleaSign()
-		# on veut x1 != x2
-		x2=inp.x2=Proba.aleaEntreBornes(-50,50) while x2 is x1
-		poly = Polynome.generate_width_roots(a,[x1,x2],"x")
+		if inp.a? then a = mM.toNumber inp.a
+		else
+			a = mM.alea.number { min:1, max:5, sign:true }
+			inp.a = String a
+		if inp.x1? then x1 = mM.toNumber inp.x1
+		else
+			x1= mM.alea.number { min:-10, max:10 }
+			inp.x1 = String x1
+		if inp.x2? then x2 = mM.toNumber inp.x2
+		else
+			x2 = mM.alea.number { min:-10, max:10, no:[Number inp.x1]}
+			inp.x2 = String x2
+		if inp.A? then A = mM.toNumber inp.A # Pour résoudre f(x)=A
+		else
+			A = mM.alea.number { values:[1,3,9,16,25], sign:true }
+			inp.A = String A
+		poly = mM.exec [a, "x", x1, "-", "x", x2, "-", "*", "*"]
+		factoTex = poly.tex()
+		poly = poly.toPolynome("x")
 		# Les trois formes
 		normalTex = poly.tex()
 		canoniqueTex = poly.tex({canonique:true})
-		factoTex = NumberManager.makeNumber("#{a}*(x-#{x1})*(x-#{x2})").tex()
-		a = NumberManager.makeNumber(a)
-		sol1 = NumberManager.makeNumber(x1)
-		sol2 = NumberManager.makeNumber(x2)
-		xS = sol1.toClone().am(sol2,false).md(NumberManager.makeNumber(2),true)
+		factoTex = mM.exec([a, "x", x1, "-", "x", x2, "-", "*", "*"]).tex()
+		xS = mM.exec [x1, x2, "+", 2, "/"], {simplify:true}
 		yS = poly.calc xS
-		A = NumberManager.makeNumber(A).md(a,false).am(yS,false).simplify()
-		if A.isNul() then A=poly.calc(Proba.aleaEntreBornes(11,15))
+		A = mM.exec [A, a, "*", yS, "+"], { simplify: true }
+		if A.isNul() then A=poly.calc( mM.alea.real { min:11, max:15 } )
+		data.exam = { normale:normalTex, canonique:canoniqueTex, facto:factoTex, A:A.tex() }
 		[
 			new BEnonce { zones:[{
 				body:"enonce"
@@ -70,7 +76,7 @@ Exercice.liste.push
 				bareme:30
 				aKey:"racines"
 				title:"Solutions de $f(x)=0$"
-				solutions:[sol1,sol2]
+				solutions:[x1,x2]
 			}
 			new BSolutions {
 				data:data
@@ -78,6 +84,45 @@ Exercice.liste.push
 				aKey:"sols"
 				touches:["sqrt"]
 				title:"Solutions de $f(x)=#{A.tex()}$"
-				solutions:poly.solveExact(A,false)
+				solutions: mM.polynome.solve.exact poly, { y:A }
 			}
 		]
+	tex: (data,slide) ->
+		if not isArray(data) then data = [ data ]
+		out = []
+		for itemData in data
+			if slide is true
+				out.push {
+					title:"Choix de la meilleure forme"
+					contents: [
+						Handlebars.plain["tex_enumerate"] { contents:[
+							"On donne $f(x)$ sous trois formes :"
+							"\\[f(x) = #{itemData.exam.normale}\\]"
+							"\\[f(x) = #{itemData.exam.canonique}\\]"
+							"\\[f(x) = #{itemData.exam.facto}\\]"
+							]}
+						Handlebars.templates["tex_enumerate"] { pre:"Sans, ou avec peu de calcul, en utilisant la forme la plus adaptée, donnez :", items:[
+							"Les coordonnées du sommet $S$ de la courbe de $f$"
+							"Les solutions de $f(x) = 0$"
+							"Les solultions, si elles existent, de $f(x) = #{itemData.exam.A}$"
+							]}
+
+					]
+				}
+			else
+				out.push {
+					title:"Choix de la meilleure forme"
+					contents: [
+						"On donne $f(x)$ sous trois formes :"
+						"\\[f(x) = #{itemData.exam.normale}\\]"
+						"\\[f(x) = #{itemData.exam.canonique}\\]"
+						"\\[f(x) = #{itemData.exam.facto}\\]"
+
+						Handlebars.templates["tex_enumerate"] { pre:"Sans, ou avec peu de calcul, en utilisant la forme la plus adaptée, donnez :", items:[
+							"Les coordonnées du sommet $S$ de la courbe de $f$"
+							"Les solutions de $f(x) = 0$"
+							"Les solultions, si elles existent, de $f(x) = #{itemData.exam.A}$"
+							]}
+					]
+				}
+		out

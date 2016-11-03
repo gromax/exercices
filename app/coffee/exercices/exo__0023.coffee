@@ -5,12 +5,9 @@ Exercice.liste.push
 	description:"Pour $x$ donné, on donne $f(x)$ et $f'(x)$. Il faut en déduire l'équation de la tangente à la courbe à l'abscisse $x$."
 	keyWords:["Dérivation","Tangente","Équation","Première"]
 	init: (data) ->
-		A = Vector.makeRandom "A", data.inputs
-		B = Vector.makeRandom "B", data.inputs
-		# Les deux abscisses doivent être différentes
-		while A.sameAs B,"x"
-			B = Vector.makeRandom "B", data.inputs, { overwrite:true }
-		droite = Droite2D.par2Pts A,B
+		A = mM.alea.vector({ name:"A", def:data.inputs }).save(data.inputs)
+		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[ {axe:"x", coords:A} ] }).save(data.inputs)
+		droite = mM.droite.par2pts A,B
 		goodEq = droite.reduiteTex()
 		xAtex = A.x.tex()
 		yAtex = A.y.tex()
@@ -27,7 +24,7 @@ Exercice.liste.push
 			}
 		]
 	tex: (data, slide) ->
-		if not Tools.typeIsArray(data) then data = [ data ]
+		if not isArray(data) then data = [ data ]
 		{
 			title:@title
 			content:Handlebars.templates["tex_enumerate"] {

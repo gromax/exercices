@@ -7,14 +7,14 @@ Exercice.liste.push
 	init: (data) ->
 		i = data.inputs
 		if (typeof i.S isnt "undefined") and (typeof i.P isnt "undefined")
-			S = NumberManager.makeNumber(i.S)
-			P = NumberManager.makeNumber(i.P)
+			S = mM.toNumber i.S
+			P = mM.toNumber i.P
 		else
-			x1 = x2 = Proba.aleaEntreBornes(-40,40)
-			x2 = Proba.aleaEntreBornes(-40,40) while x2 is x1
-			S = data.S = NumberManager.makeNumber(i.S = x1+x2)
-			P = data.P = NumberManager.makeNumber(i.P = x1*x2)
-		poly = Polynome.make([P.toClone(), S.toClone().opposite(), 1])
+			x1 = x2 = mM.alea.real { min:-40, max:40 }
+			x2 = mM.alea.real { min:-40, max:40 } while x2 is x1
+			S = data.S = mM.toNumber(i.S = x1+x2)
+			P = data.P = mM.toNumber(i.P = x1*x2)
+		poly = mM.polynome.make { coeffs:[P.toClone(), S.toClone().opposite(), 1] }
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On cherche les valeurs de $x$ et $y$ telles que $x+y=#{S.tex()}$ et $x\\cdot y =#{P.tex()}$.</p>"}]}
 			new Brique {
@@ -29,7 +29,7 @@ Exercice.liste.push
 						zones:[
 							{
 								body:"champ"
-								html:Handlebars.std_form {
+								html:Handlebars.templates.std_form {
 									inputs:[{postTag:"$=0$", description:"Équation à résoudre", name:"poly"}]
 									clavier:[{name:"sqr-button", title:"carré", tag:"$x^2$"}]
 									help_target:@data.divId+"_aide"
@@ -78,6 +78,6 @@ Exercice.liste.push
 				bareme:60
 				touches:["sqrt"]
 				aide:oHelp.trinome.racines
-				solutions:poly.solveExact(0,false)
+				solutions:mM.ploynome.solve.exact poly, {y:0}
 			}
 		]

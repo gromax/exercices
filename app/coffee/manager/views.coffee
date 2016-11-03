@@ -13,8 +13,14 @@ class View
 	subViews:null
 	constructor: (params) ->
 		@divId = Controller.divIdCounter++
-		@config = Tools.mergeMulti h_push(@init_config(params),params)
+		@config = @mergeObjArr h_push(@init_config(params),params)
 		@display()
+	mergeObjArr: (arrayObjects) ->
+		out = {}
+		while obj = arrayObjects.shift()
+			if (typeof obj is "object") and (obj isnt null)
+				out[key] = val for key, val of obj
+		out
 	init_config:(params=null) -> [{ container:@_defaultContainer, divId:@divId }]
 	events: -> []
 	html: -> Handlebars.templates.erreur {}
@@ -321,7 +327,7 @@ class VFichesList extends VList
 			showId:Controller.uLog.isAdmin
 			showOwner:Controller.uLog.isAdmin
 			showModify:true
-			buttons:[{ name:"_add_button", title:"Ajouter une fiche"}]
+			buttons:[{ link:"devoirs/add", title:"Ajouter une fiche"}]
 		}
 	collection: -> Controller.uLog.fiches
 	activateAction: (id) ->
@@ -891,5 +897,4 @@ class VConnexion extends View
 				else
 					$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:"Indiquez un <b>email valide</b> !" }
 			Controller.uLog.on { type:"connexion", modal:true }
-		#$("input[name='pwd']").val("")
 		$("input[name='identifiant']").focus()

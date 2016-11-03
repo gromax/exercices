@@ -1,8 +1,19 @@
 # Brique de base
 class BaseBrique
 	default: () -> {}
+	mergeConf: (def,overrideObj) ->
+		if (typeof overrideObj isnt "object") or (overrideObj is null) then return def
+		def[key] = val for key, val of overrideObj
+		if arguments.length>2
+			i=2
+			while i<arguments.length
+				o = arguments[i]
+				if (typeof o is "object") and (o isnt null)
+					def[key] = val for key, val of o
+				i++
+		def
 	constructor: (params)->
-		@config = Tools.merge @default(), params
+		@config = @mergeConf @default(), params
 		# Fonctions custom
 		if @config.fcts?
 			@[fct]=@config.fcts[fct] for fct of @config.fcts
@@ -21,7 +32,7 @@ class BGraph extends BaseBrique
 		@graph = JXG.JSXGraph.initBoard(@divId,@config.params,keepaspectratio:true)
 		@config.customInit?.apply(@,[])
 	addPoint: (name, coords, def_coords, params) ->
-		conf = Tools.merge({ color:"blue", size:4, name:name, fixed:false, stapToGrid:false, showInfoBox:true },params)
+		conf = @mergeConf { color:"blue", size:4, name:name, fixed:false, stapToGrid:false, showInfoBox:true }, params
 		x = coords.x or def_coords?.x
 		y = coords.y or def_coords?.y
 		return @graph.create('point',[x,y], conf)
@@ -70,7 +81,7 @@ class Brique extends BaseBrique
 		# good = bonne valeur. Un NumberObject ou EnsembleObject
 		# bareme = nombres de points alloués à cette question (bareme total = 100)
 		# params = objet de paramètres dont les possibilités sont données ci-dessous
-		config = Tools.merge({
+		config = @mergeConf {
 			formes:null		# forme autorisées. Par ex : { racine:true, fraction:true } ou encore "FRACTION"
 			p_forme:0.5		# pondération pour une forme pas suffisemment simplifiée
 			tolerance:0		# Une approximation dans la tolérance est considérée comme juste et n'est pas signalée
@@ -82,21 +93,11 @@ class Brique extends BaseBrique
 			developp:false	# Indique s'il faut développer le résultat de l'utilisateur
 			toLowercase:false
 			cor_prefix:""
-		}, params)
+		}, params
 		# La bonne valeur peut-être un ensemble ou un number.
-		if good instanceof Ensemble then parse_type = "ensemble" else parse_type = "number"
+		if mM.isEnsemble(good) then parse_type = "ensemble" else parse_type = "number"
 		if user instanceof Parser then info=user # Cas où on fournirait un user déjà parsé
 		else info = new Parser user, { type:parse_type, developp:config.developp, toLowercase:config.toLowercase }
-		if good?
-			# On peut transmettre un tableau de nombres
-			if Tools.typeIsArray good # Ce n'est donc pas un ensemble
-				# on va chercher le plus proche
-				if good.length is 0 then good = null
-				else if good.length is 1 then good = good[0]
-				else good = NumberManager.searchClosest info.object, good
-			# Si c'est un nombre, on le transforme en objet
-			if typeof good is "number" then good = NumberManager.makeNumber good
-		else good=NumberManager.makeNaN() # Valeur par défaut
 		output = {
 			name:name							# nom de la réponse, correspond au champ de formulaire
 			tag: tag							# étiquette
@@ -110,7 +111,7 @@ class Brique extends BaseBrique
 			formeOk : true						# La forme est ok par défaut
 		}
 		# Dans le cas d'un number, output renverra également :
-		# - erreur = objet produit par la fonction NumberManager.erreur et contenant les infos :
+		# - erreur = objet produit par la fonction mM.erreur et contenant les infos :
 		# -- exact = true/false : valeur exacte
 		# -- float = true/false : valeur décimale
 		# -- approx_ok:true/false : approximation correctement faite
@@ -126,17 +127,17 @@ class Brique extends BaseBrique
 			# on ne vérifie pas la forme pour un ensemble (formeOk)
 			if output.ok then @data.note += output.bareme = bareme
 		else
-			erreur = output.erreur = NumberManager.erreur good, info.object
+			erreur = output.erreur = mM.erreur good, info.object
 			formeOk = output.formeOk = info.forme(config.formes)
 			switch
 				when config.arrondi isnt null
 					# On exige un arrondi.
 					# On envisage pas le cas d'un modulo, donc si l'utilisateur en a mis un, c'est faux
 					approx = Math.pow(10,config.arrondi)
-					output.resolution = approx.toStr()
+					output.resolution = numToStr approx
 					approx = approx/2
 					# On vérifie d'abord qu'on est juste au moins dans l'approx
-					output.good_arrondi = good.floatify().string_arrondi(config.arrondi)
+					output.good_arrondi = numToStr mM.float(good), -config.arrondi
 					if (erreur.exact or erreur.float and (erreur.ecart<=approx)) and not erreur.moduloError
 						# Maintenant on peut vérifier si l'utilisateur respecte le format
 						if not erreur.float or erreur.troncature or (erreur.p_user<config.arrondi)
@@ -202,7 +203,7 @@ class Brique extends BaseBrique
 		if help_zone isnt null then context.zones.push { help:help_zone, html:help_html}
 		if text?
 			# On transmet soit un simple texte, soit une structure plus complexe sous forme d'un tableau
-			if Tools.typeIsArray text then context.zones = text.concat(context.zones)
+			if isArray text then context.zones = text.concat(context.zones)
 			else context.zones.unshift { body:"texte", html:text }
 		@container.html Handlebars.templates.std_panel context
 		$("#form#{@divId}").on 'submit', (event) =>
@@ -227,7 +228,7 @@ class Brique extends BaseBrique
 		if inputs_list.length>0 then $("input[name='#{inputs_list[0].name}']",@container).focus()
 
 class BDiscriminant extends Brique
-	default: () -> { aKey:"delta" }
+	default: () -> { aKey:"delta", title:"Discriminant" }
 	go: -> (typeof @a[@config.aKey] isnt "undefined")
 	ask:->
 		@container.html Handlebars.templates.std_panel {
@@ -313,7 +314,7 @@ class BSolutions extends Brique
 	ask: ->
 		unless @config.touches? then @config.touches=[]
 		inputs_list = [{tag:"Solution(s)", description:"Solution(s)", name:@config.aKey, large:true, moduloKey:@config.moduloKey}]
-		@config.touches.unshift "empty-button"
+		@config.touches.unshift "empty"
 		text = "Vous devez donner la ou les solutions de cette équations, si elles existent. S'il n'y a pas de solution, écrivez $\\varnothing$. s'il y a plusieurs solutions, séparez-les avec ;"
 		@helper_disp_inputs(@config.title,text,inputs_list,@config.aide,@config.touches)
 	ver: ->
@@ -330,20 +331,20 @@ class BSolutions extends Brique
 			N = Math.max @config.solutions.length, users.length
 			if N is 0 then bareme = 0
 			else bareme = @bareme/N
-			sorted = NumberManager.tri users,@config.solutions
+			sorted = mM.tri users,@config.solutions
 			list=[]
 			goodValues = []
 			bads = []
 			for sol,i in sorted.closests
-				infoUser = new Parser users[i], {type:"number"}
-				list.push infoUser.tex
-				if sol?
-					verif = @verification @config.aKey,"", infoUser, sol,bareme,{formes:"RACINE"}
+				list.push sol.user.tex()
+				if sol.good?
+					infoUser = new Parser sol.user, {type:"number"}
+					verif = @verification @config.aKey,"", infoUser, sol.good,bareme,{formes:"RACINE"}
 					if verif.erreur.exact or verif.approximation then goodValues.push verif
 					else
 						bads.push infoUser.tex
-						sorted.lefts.push sol
-				else bads.push infoUser.tex
+						sorted.lefts.push sol.good
+				else bads.push sol.user.tex()
 			context = { users:list.join(" ; "), goodValues:goodValues, bads:bads.join(" ; "), lefts:(l.tex() for l in sorted.lefts).join(" ; "), goodIsEmpty:@config.solutions.length is 0 }
 		@container.html Handlebars.templates.std_panel {
 			title: @config.title+" : $\\mathcal{S}= #{solutionsTex}$"
@@ -353,7 +354,7 @@ class BSolutions extends Brique
 			}]
 		}
 class BEnsemble extends Brique
-	default: () ->  { aKey:"ensemble", title:"Ensemble solution", ensemble_solution:new Ensemble() }
+	default: () ->  { aKey:"ensemble", title:"Ensemble solution", ensemble_solution:mM.ensemble.vide() }
 	go: -> (typeof @a[@config.aKey] isnt "undefined")
 	ask: ->
 		@container.html Handlebars.templates.std_panel {
@@ -411,7 +412,7 @@ class BEnsemble extends Brique
 			}]
 		}))
 class BWichTab extends Brique
-	default: () ->  {tableaux:[], aKey:"tableau"}
+	default: () ->  {tableaux:[], aKey:"tableau", title:"Choisir un tableau"}
 	go: -> (typeof @a[@config.aKey] isnt "undefined")
 	ask: ->
 		@container.html Handlebars.templates.std_panel {title:"Choix du tableau", zones:[{body:"choixTableau"}]}
@@ -442,7 +443,7 @@ class BChoice extends Brique
 	go: -> (typeof @a[@config.aKey+"0"] isnt "undefined")
 	ask:(container,params) ->
 		@config.answersList = (-1 for i in [1..@config.liste.length]) # Tableau contenant la liste des réponses de l'utilisateur
-		Tools.arrayShuffle(@config.liste)
+		arrayShuffle(@config.liste)
 		@container.html Handlebars.templates.std_color_menu {title:@config.title, items:@config.liste, help_target:@config.aide }
 		$("form",@container).on 'submit', (event) =>
 			@a[@config.aKey+rank] = ans for ans, rank in @config.answersList

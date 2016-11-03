@@ -2,13 +2,25 @@
 class @Proba
 	@alea: (input) ->
 		# produit un nombre aléatoire dont la valeur dépend du type de paramètre
+		unless input? then return 1
 		switch
 			when input is null then 1
 			when typeof input is "number" then input
 			when (mn=input.min)? and (mx=input.max)?
-				if input.real isnt true then Math.floor((Math.random() * (mx+1-mn)) + mn)
-				else (Math.random() * (mx-mn)) + mn
-			when Tools.typeIsArray(input) then input[ Math.floor((Math.random() * input.length) ) ]
+				sign = if input.sign and (Math.random()<0.5) then -1 else 1
+				if isArray(input.no) and (input.no.length>0) # C'est un tableau de valeurs interdites
+					out = input.no[0]
+					j = 0 # compteur pour éviter un bug (si les conditions sont impossibles à remplir)
+					while (out in input.no) and (j<10)
+						if input.real isnt true then out = sign* Math.floor((Math.random() * (mx+1-mn)) + mn)
+						else out = sign*( (Math.random() * (mx-mn)) + mn )
+						j++
+				else
+					if input.real isnt true then out = sign* Math.floor((Math.random() * (mx+1-mn)) + mn)
+					else out = sign*( (Math.random() * (mx-mn)) + mn )
+				if input.coeff? then out *= @alea(input.coeff)
+				out
+			when isArray(input) then input[ Math.floor((Math.random() * input.length) ) ]
 			else 1
 	@aleaEntreBornes: (a,b,sign=false) ->
 		if sign then Math.floor((Math.random() * (b+1-a)) + a)*(Math.floor(Math.random()*2)-.5)*2
@@ -82,7 +94,7 @@ class @Proba
 		scaled_R
 	@phiinv: (y) -> Proba.erfinv(2*y-1)*Math.sqrt(2)
 	@gaussianAlea: (moy, std, params) ->
-		config = Tools.merge({min:Number.NEGATIVE_INFINITY, max:Number.POSITIVE_INFINITY, delta:0},params)
+		config = mergeObj {min:Number.NEGATIVE_INFINITY, max:Number.POSITIVE_INFINITY, delta:0},params
 		rd = Math.random()
 		if rd is 0 then return config.min
 		out = Proba.phiinv(rd)*std+moy

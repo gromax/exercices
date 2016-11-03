@@ -6,17 +6,11 @@ Exercice.liste.push
 	keyWords: ["Géométrie", "Repère", "Seconde"]
 	init: (data) ->
 		i=data.inputs
-		A = Vector.makeRandom "A", i
-		B = Vector.makeRandom "B", i
-		# Les deux points ne doivent pas être confondus
-		while A.sameAs B
-			B = Vector.makeRandom "B", i, { overwrite:true }
-		C = Vector.makeRandom "C", i
-		# Les trois points ne doivent pas être alignés
-		while A.aligned B, C
-			C = Vector.makeRandom "C", i, { overwrite:true }
-		data.good = A.toClone("D").am(B,true).am(C,false)
-		data.ABDC = B.toClone("D'").am(A,true).am(C,false)
+		A = mM.alea.vector({ name:"A", def:i }).save(i)
+		B = mM.alea.vector({ name:"B", def:i, forbidden:[A] }).save(i)
+		C = mM.alea.vector({ name:"C", def:i, forbidden:[{aligned:[A,B]}] }).save(i)
+		data.good = A.toClone("D").minus(B).plus(C)
+		data.ABDC = B.toClone("D'").minus(A).plus(C)
 		[
 			new BEnonce {
 				zones:[
@@ -31,7 +25,7 @@ Exercice.liste.push
 				ask: () ->
 					@helper_disp_inputs(@title,null,[{tag:"$x_D$", description:"Abscisse de D", name:"x"}, {tag:"$y_D$", description:"Ordonnée de D", name:"y"}],{template:"help", plg:true},null)
 				ver: () ->
-					uD = new Vector "D", {x:@a.x, y:@a.y}
+					uD = mM.vector "D", {x:@a.x, y:@a.y}
 					# message de correction par défaut
 					out = [
 						{ text: "Vous avez répondu $#{uD.texLine()}$." }

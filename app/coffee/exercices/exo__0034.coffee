@@ -7,21 +7,26 @@ Exercice.liste.push
 	init: (data) ->
 		inp = data.inputs
 		if inp.ang? then ang= Number inp.ang
-		else inp.ang = ang = Proba.aleaEntreBornes(1,12)*15*Proba.aleaSign()
+		else inp.ang = ang = 15*mM.alea.real { min:1, max:12, sign:true }
 		if inp.type? then type=inp.type # sin ou cos
-		else inp.type = type = Proba.aleaIn ["cos","sin"]
-		angRad = Trigo.degToRad ang
-		x = NumberManager.makeSymbol("x")
+		else inp.type = type = mM.alea.in ["cos","sin"]
+		angRad = mM.trigo.degToRad [ ang ]
 		if type is "cos"
-			membreGauche = Trigo.cosObject(x).tex()
-			membreDroite = Trigo.cosObject(angRad).tex()
-			if (Math.abs(ang) % 180) is 0 then solutions = [angRad.toClone().setModulo(Trigo.pi(2))]
-			else solutions = [angRad.toClone().setModulo(Trigo.pi(2)), angRad.opposite().setModulo(Trigo.pi(2))]
+			membreGauche = mM.exec([ "x", "cos"]).tex()
+			membreDroite = mM.exec([angRad, "cos"]).tex()
+			if (Math.abs(ang) % 180) is 0 then solutions = [ mM.exec([angRad, 2, "pi", "*", "modulo"]) ]
+			else solutions = [
+				mM.exec([ angRad, 2, "pi", "*", "modulo"])
+				mM.exec([ angRad, "*-", 2, "pi", "*", "modulo"])
+			]
 		else
-			membreGauche = Trigo.sinObject(x).tex()
-			membreDroite = Trigo.sinObject(angRad).tex()
-			if ((Math.abs(ang)+90)%180) is 0 then solutions = [angRad.toClone().setModulo(Trigo.pi(2))]
-			else solutions = [angRad.toClone().setModulo(Trigo.pi(2)), Trigo.mesurePrincipale(Trigo.pi().am(angRad,true)).simplify().setModulo(Trigo.pi(2))]
+			membreGauche = mM.exec([ "x", "sin"]).tex()
+			membreDroite = mM.exec([ angRad, "sin"]).tex()
+			if ((Math.abs(ang)+90)%180) is 0 then solutions = [ mM.exec([angRad, 2, "pi", "*", "modulo"]) ]
+			else solutions = [
+				mM.exec([angRad, 2, "pi", "*", "modulo"])
+				mM.exec(["pi", angRad, "-", 2, "#", "pi", "*", "*", "+"], {simplify:true, modulo:true})
+			]
 		[
 			new BEnonce { zones:[{
 				body:"enonce"

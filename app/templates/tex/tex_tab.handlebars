@@ -1,10 +1,10 @@
-\begin{tikzpicture}[color={{color}}]
+\begin{tikzpicture}[{{#if color}}color={{color}}{{/if}}]]]
 \tkzTabInit[lgt={{lgt}},espcl={{espcl}}, lw={{lw}}]{ {{entetes}} }{ {{x_list}} }
 {{#each lines}}
 	{{#if this.sign}}
 \tkzTabLine{ {{ this.values}} }
 	{{else}}
-\tkzTabVar[color= {{../color}} ]{ {{this.str}} }
+\tkzTabVar{ {{this.str}} }
 	{{/if}}
 {{/each}}
 \end{tikzpicture}

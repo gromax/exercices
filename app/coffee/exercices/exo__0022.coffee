@@ -8,15 +8,15 @@ Exercice.liste.push
 		a:{ tag:"Difficulté" , options:["Alea", "Facile", "Facile avec fraction", "Moyen", "Moyen avec fraction"] , def:0 }
 	}
 	init: (data) ->
-		if data.inputs.p? then poly = NumberManager.makeNumber data.inputs.p
+		if data.inputs.p? then poly = mM.toNumber data.inputs.p
 		else
-			if data.options.a.value is 0 then a = Proba.aleaEntreBornes(1,3)
+			if data.options.a.value is 0 then a = mM.alea.in [1,2,3]
 			else a = data.options.a.value
 			switch a
-				when 2 then poly = NumberManager.makeSum([@aleaMult(0,false),@aleaMult(2,true)])
-				when 3 then poly = NumberManager.makeSum([@aleaMult(2,false),@aleaMult(2,false)])
-				when 4 then poly = NumberManager.makeSum([@aleaMult(2,false),@aleaMult(2,true)])
-				else poly = NumberManager.makeSum([@aleaMult(0,false),@aleaMult(2,false)])
+				when 2 then poly = mM.exec [@aleaMult(0,false), @aleaMult(2,true), "+"]
+				when 3 then poly = mM.exec [@aleaMult(2,false), @aleaMult(2,false), "+"]
+				when 4 then poly = mM.exec [@aleaMult(2,false), @aleaMult(2,true), "+"]
+				else poly = mM.exec [@aleaMult(0,false), @aleaMult(2,false), "+"]
 			data.inputs.p = String poly
 		data.polyTex = polyTex = poly.tex()
 		polyObj = poly.toPolynome()
@@ -103,29 +103,29 @@ Exercice.liste.push
 		]
 	aleaMult:(degreTotal,fraction)->
 		# On cherche à obtenir un produit d'expressions dont le produit dont le degre est degreTotal
-		if degreTotal is 0 then output = NumberManager.makeNumber Proba.aleaEntreBornes(1,50)
+		expr_array = []
+		if degreTotal is 0 then expr_array.push mM.alea.number({min:1, max:50})
 		else
 			total = 0
-			expr_array = []
+			n = 0
 			while total<degreTotal
 				# On génère un polynome de degré aléatoire
-				new_degre = Proba.aleaEntreBornes(1,degreTotal-Math.max(total,1))
-				new_poly = NumberManager.aleaPoly new_degre
+				new_degre = mM.alea.real { min:1, max:degreTotal-Math.max(total,1) }
+				new_poly = mM.alea.poly { degre:new_degre, coeffDom:{min:1, max:10, sign:true}, values:{min:-10, max:10} }
 				# On envisage de mettre ce polynome au carré si cela passe :
-				if (total+2*new_degre<=degreTotal) and (Proba.aleaEntreBornes(1,3) is 3)
+				if (total+2*new_degre<=degreTotal) and mM.alea.dice(1,3)
 					total += new_degre*2
-					expr_array.push new_poly.pow(2)
+					expr_array.push(new_poly, 2, "^")
 				else
 					total+=new_degre
 					expr_array.push new_poly
-			output = NumberManager.makeProduct expr_array
-		if Proba.aleaEntreBornes(1,3) is 3 then output.opposite()
-		if fraction
-			deno = NumberManager.makeNumber Proba.aleaEntreBornes(2,9)
-			output = NumberManager.makeDiv output, deno
-		output
+				n += 1
+				if n>1 then expr_array.push("*")
+		if fraction then expr_array.push(mM.alea.number({min:2, max:9}), "/")
+		if mM.alea.dice(1,3) then expr_array.push "*-"
+		mM.exec expr_array
 	tex: (data,slide) ->
-		if not Tools.typeIsArray(data) then data = [ data ]
+		if not isArray(data) then data = [ data ]
 		{
 			title:"Développer"
 			content:Handlebars.templates["tex_enumerate"] { items: ("$P_{#{i}}(x) = #{item.polyTex}$" for item,i in data), large:slide is true }

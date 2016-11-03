@@ -6,10 +6,11 @@ Exercice.liste.push
 	keyWords:["Trigonométrie", "Première", "Radians", "Seconde"]
 	template:"2cols"
 	init: (data) ->
-		if data.inputs.deg? then deg = NumberManager.makeNumber data.inputs.deg
-		else deg = data.inputs.deg = Proba.aleaIn([30,45])*Proba.aleaSign()*Proba.aleaEntreBornes(3,8)
-		radNumber = deg*Math.PI/180
-		ang = Trigo.degToRad deg
+		if data.inputs.deg? then deg = mM.toNumber data.inputs.deg
+		else
+			deg = mM.alea.number { min:3, max:8, sign:true, coeff:[30,45] }
+			data.inputs.deg = String deg
+		ang = mM.trigo.degToRad deg
 		graphContainer = new BGraph {
 			params: {axis:true, grid:true, boundingbox:[-1.5,1.5,1.5,-1.5]}
 			zone:"gauche"

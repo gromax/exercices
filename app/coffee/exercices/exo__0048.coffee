@@ -26,18 +26,18 @@ Exercice.liste.push
 		inp = data.inputs
 		poly = null
 		if typeof inp.p isnt "undefined"
-			poly = NumberManager.makeNumber(inp.p).toPolynome("x")
+			poly = mM.toNumber(inp.p).toPolynome("x")
 			if not poly.isValid() then poly = null
 		if poly is null
 			# On crée un nouveau polynome
 			points = [
-				{x:-@max, y:Proba.aleaEntreBornes(-40,40)/100*@max},
-				{x:-@max/2, y:Proba.aleaEntreBornes(-40,40)/100*@max},
-				{x:0, y:Proba.aleaEntreBornes(-40,40)/100*@max},
-				{x:@max/2, y:Proba.aleaEntreBornes(-40,40)/100*@max},
-				{x:@max, y:Proba.aleaEntreBornes(-40,40)/100*@max}
+				{x:-@max, y:mM.alea.real({min:-40, max:40})/100*@max},
+				{x:-@max/2, y:mM.alea.real({min:-40, max:40})/100*@max},
+				{x:0, y:mM.alea.real({min:-40, max:40})/100*@max},
+				{x:@max/2, y:mM.alea.real({min:-40, max:40})/100*@max},
+				{x:@max, y:mM.alea.real({min:-40, max:40})/100*@max}
 			]
-			poly = Polynome.lagrangian(points, "x")
+			poly = mM.polynome.lagrangian { points:points, variable:"x" }
 			inp.p = String(poly)
 		# Calcul de la dérivée
 		polyDer = poly.derivate()
@@ -75,7 +75,7 @@ Exercice.liste.push
 				customInit:->
 					for poly in @config.polys
 						@graph.create('functiongraph', [
-							(x) -> @getAttribute('poly').toNumber(x)
+							(x) -> mM.float(@getAttribute('poly'), {x:x})
 							-@config.max, @config.max], {strokeColor:poly.color.html, strokeWidth:4, fixed:true, poly:poly.obj })
 			}
 			new BChoice {
@@ -88,7 +88,7 @@ Exercice.liste.push
 			}
 		]
 	tex: (data,slide) ->
-		if not Tools.typeIsArray(data) then data = [ data ]
+		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData,i in data
 			if itemData.options.a.value is 0

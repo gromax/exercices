@@ -30,7 +30,7 @@ class @TabVar
 		if (typeof params is "object") and params isnt null
 			config[key] = params[key] for key of params
 		if typeof line is "string" then line=line.split(',')
-		if not(typeIsArray(line)) then return
+		if not(isArray(line)) then return
 		line.push('?') while line.length<@x_list.length # On s'assure une longueur minimum
 		line.pop() while line.length>@x_list.length # On s'assure d'une longueur maximum
 		out = []
@@ -59,7 +59,7 @@ class @TabVar
 		if (typeof params is "object") and params isnt null
 			config[key] = params[key] for key of params
 		if typeof line is "string" then line=line.split(',')
-		if not(typeIsArray(line)) then return
+		if not(isArray(line)) then return
 		line.push('?') while line.length<2*@x_list.length-1 # On s'assure une longueur minimum
 		line.pop() while line.length>2*@x_list.length-1 # On s'assure d'une longueur maximum
 		@lines.push {type:"sign", sign:true, tag:config.tag, values:line, hauteur:Math.max(config.h,1)}
@@ -85,12 +85,6 @@ class @TabVar
 		x0 = @config.espace_gauche+@config.marge # Origine x pour les valeurs du tableau
 		for x,i in @x_list
 			@paper.text(x, x0+@config.espace_entre_valeurs*i, @config.hauteur_ligne/2, @config.espace_entre_valeurs,@config.hauteur_ligne,"center","center")
-			###
-			switch
-				when i is 0 then @paper.text(x, x0+@config.espace_entre_valeurs*i, @config.hauteur_ligne/2, @config.espace_entre_valeurs,@config.hauteur_ligne, "left", "center", {"padding-left":"5px"})
-				when i is @x_list.length-1 then @paper.text(x, x0+@config.espace_entre_valeurs*i, @config.hauteur_ligne/2, @config.espace_entre_valeurs,@config.hauteur_ligne, "right", "center", {"padding-right":"5px"})
-				else @paper.text(x, x0+@config.espace_entre_valeurs*i, @config.hauteur_ligne/2, @config.espace_entre_valeurs,@config.hauteur_ligne,"center","center")
-			###
 		lineY = 1	# Origine Y (en nombre de lignes) de la nouvelle ligne à afficher
 		for line in @lines
 			if line.type is "var" then @renderVarLine(line,lineY)
