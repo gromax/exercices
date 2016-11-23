@@ -1,0 +1,13 @@
+{{#if large}}\begin{Large}{{/if~}}
+{{{pre}}}
+
+\begin{center}
+\begin{tabular}{|*{ {{cols}} }{c|}}
+\hline
+{{#each lines}}
+{{#each this}}{{this}} {{#if @last}}\\ {{else}}& {{/if}}{{/each}}
+\hline
+{{/each}}
+\end{tabular}
+\end{center}
+{{~#if large}}\end{Large}{{/if}}

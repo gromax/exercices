@@ -1,0 +1,11 @@
+{{#if add}}<tr id="{{id}}">{{/if}}
+<td><span class="badge">{{ item.id }}</span></td>
+<td>{{ item.dateFr }}</td>
+<td>{{ item.identifiant }}</td>
+<td>{{ item.pwd }}</td>
+<td>{{#if item.success }}<span class="glyphicon glyphicon-ok-circle">{{else}}<span class="glyphicon glyphicon-ban-circle">{{/if}}</td>
+<td align="right">
+{{!Bouton suppression}}
+	<button type="button" class="btn btn-default btn-sm {{#if item.locked}}disabled{{/if}}" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="text-danger glyphicon glyphicon-trash"></span></button>
+</td>
+{{#if add}}</tr>{{/if}}

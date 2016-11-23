@@ -12,7 +12,7 @@ Exercice.liste.push
 			min = quantifyNumber(moy,resolution) - 5*resolution
 			max = quantifyNumber(moy,resolution) + 5*resolution
 			N = mM.alea.real { min:50, max:200 }
-			table = (Proba.gaussianAlea(moy,std,{min:min, max:max, delta:resolution}) for i in [1..N])
+			table = ( mM.alea.real { gaussian:{ moy:moy, std:std, min:min, max:max, delta:resolution } } for i in [1..N] )
 			serie = new SerieStat( table )
 			serie.countEffectifs()
 			data.inputs.table = serie.storeInString()
@@ -29,7 +29,39 @@ Exercice.liste.push
 				data:data
 				bareme:100
 				title:"Donnez les indicateurs statistiques de la série"
-				liste:[{tag:"$N$", name:"N", description:"Effectif total", good:serie.N()}, {tag:"Médiane", name:"mediane", description:"Médiane (à 0,1 près)", good:serie.mediane(), params:{arrondi:-1}}, {tag:"$q_1$", name:"q1", description:"Premier quartile (à 0,1 près)", good:serie.fractile(1,4), params:{arrondi:-1}}, {tag:"$q_3$", name:"q3", description:"Premier quartile (à 0,1 près)", good:serie.fractile(3,4), params:{arrondi:-1}}]
+				liste:[
+					{tag:"$N$", name:"N", description:"Effectif total", good:serie.N()}
+					{tag:"Médiane", name:"mediane", description:"Médiane (à 0,1 près)", good:serie.mediane(), params:{arrondi:-1}}
+					{tag:"$q_1$", name:"q1", description:"Premier quartile (à 0,1 près)", good:serie.fractile(1,4), params:{arrondi:-1}}
+					{tag:"$q_3$", name:"q3", description:"Premier quartile (à 0,1 près)", good:serie.fractile(3,4), params:{arrondi:-1}}
+				]
 				aide: oHelp.stats.N.concat(oHelp.stats.mediane, oHelp.stats.quartiles)
 			}
 		]
+	tex: (data, slide) ->
+		if not isArray(data) then data = [ data ]
+		out = []
+		for itData in data
+			serie = new SerieStat itData.inputs.table
+			xs = serie.getValues()
+			xs.unshift("$x_i$")
+			ns = serie.getEffectifs()
+			ns.unshift("$n_i$")
+			ennonce = Handlebars.templates["tex_tabular"] {
+				pre:"On considère la série statistique donnée par le tableau suivant :"
+				lines: [xs, ns]
+				cols: xs.length
+				large: slide is true
+			}
+			out.push {
+				title:@title
+				content: ennonce + Handlebars.templates["tex_enumerate"] {
+					items: [
+						"Donnez l'effectif total $N$"
+						"Donnez la médiane de la série, à $0,1$ près"
+						"Donnez les premier et troisième quartile, à $0,1$ près"
+					]
+					large:slide is true
+				}
+			}
+		out

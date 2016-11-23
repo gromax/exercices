@@ -2,8 +2,8 @@
 grecques = ["alpha", "beta", "delta", "psi", "pi", "theta", "phi", "xi", "rho", "epsilon", "omega", "nu", "mu", "gamma", "Alpha", "Beta", "Delta", "Psi", "Pi", "Theta", "Phi", "Xi", "Rho", "Epsilon", "Omega", "Nu", "Mu", "Gamma"]
 DECIMAL_SEPARATOR = ','
 DECIMAL_MAX_PRECISION = 10
-SOLVE_MAX_PRECISION = 14
-ERROR_MIN = 0.00000000000001
+SOLVE_MAX_PRECISION = 12
+ERROR_MIN = 0.000000000001
 
 
 
@@ -85,3 +85,4 @@ extractSquarePart = (value) ->
 		j += 4*i+4
 		i += 2
 	extract
+fixNumber = (num,decimals) -> Number(num.toFixed(decimals))

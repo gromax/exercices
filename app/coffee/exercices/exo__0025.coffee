@@ -10,14 +10,14 @@ Exercice.liste.push
 		if (typeof inp.p is "undefined") then inp.p = mM.alea.real({min:1, max:19})/100
 		else inp.p = Number inp.p
 		# Tableau pour l'étape 2
-		{Xlow,Xhigh} = Proba.binomial_IF(inp.n,inp.p)
+		{Xlow,Xhigh} = mM.intervalle_fluctuation.binomial(inp.n,inp.p)
 		Xdeb = Math.max(Xlow-mM.alea.real({min:1, max:3}),0)
 		Xfin = Math.min(Xlow+mM.alea.real({min:1, max:3}),Xhigh)
 		Xdeb2 = Math.max(Xhigh-mM.alea.real({min:1, max:3}),Xlow)
 		Xfin2 = Math.min(Xhigh+mM.alea.real({min:1, max:3}),inp.n)
 		if Xdeb2<=Xfin then k_values = [Xdeb..Xfin2]
 		else k_values = [Xdeb..Xfin].concat [Xdeb2..Xfin2]
-		p_values = ( numToStr(Proba.binomial_rep(inp.n,inp.p,k),3) for k in k_values)
+		p_values = ( numToStr( mM.repartition.binomial(k,{n:inp.n, p:inp.p}),3 ) for k in k_values)
 		flow=Xlow/inp.n
 		fhigh=Xhigh/inp.n
 		IF = mM.ensemble.intervalle "[", fixNumber(flow,2), fixNumber(fhigh,2), "]"

@@ -166,7 +166,8 @@ class @Parser
 		if isArray(authorized) then return (@forme author for author in authorized)
 		@simplificationList.sort()
 		# Attention, les tableaux doivent être triés pour l'utilisation de array_intersect
-		if arrayIntersect(@simplificationList, ["ADD_REGROUPEMENT", "ADD_SIMPLE", "DISTRIBUTION", "DIVISION_EXACTE", "EXPOSANT_DEVELOPP", "MULT_SIMPLE", "PUISSANCE"]).length>0 then return false
+		if arrayIntersect(@simplificationList, ["ADD_REGROUPEMENT", "ADD_SIMPLE", "DIVISION_EXACTE", "EXPOSANT_DEVELOPP", "MULT_SIMPLE", "PUISSANCE"]).length>0 then return false
+		if not authorized?.distribution and (authorized isnt "DISTRIBUTION") and ("DISTRIBUTION" in @simplificationList) then return false
 		if not authorized?.racine and (authorized isnt "RACINE") and ("RACINE" in @simplificationList) then return false
 		if not authorized?.fraction and (authorized isnt "FRACTION") and ("RATIO_REDUCTION" in @simplificationList) then return false
 		true

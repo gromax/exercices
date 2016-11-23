@@ -241,6 +241,7 @@ class VUsersList extends VList
 	init_config:(params=null)->
 		@push_action { name:"lockButton", fct_name:"lockAction" }, "button"
 		@push_action { name:"filtreClasseButton", fct_name:"filtreClasse" }, "button"
+		@push_action { name:"forgottenButton", fct_name:"forgottenAction" }, "button"
 		h_push super(), {
 			showEmail:true
 			showClasses:true
@@ -270,6 +271,21 @@ class VUsersList extends VList
 			Controller.uLog.setClasseFiltre Controller.uLog.classes.get(idClasse)
 		@renderItems()
 		@final()
+	forgottenAction: (idUser) ->
+		item = @collection().get idUser
+		identifiant = item?.email
+		emailRegEx = /// ^[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)*@[a-zA-Z0-9._-]{2,}\.[a-z]{2,4}$ ///i
+		if (identifiant?.match emailRegEx) and confirm("Envoyez un mail à #{item.nom} #{item.prenom} [#{identifiant}] ?")
+			Controller.uLog.on { type:"forgotten", cb:(data)=>
+				Controller.notyMessage "Un email vous a été envoyé.", "success"
+			}
+			Controller.uLog.forgotten identifiant
+class VConsList extends VList
+	_pagination:40
+	_template: "Con_parent"
+	_itemTemplate: "Con_item"
+	_glyph: "glyphicon-off"
+	collection: -> Controller.uLog.cons
 class VUserChoice extends VList
 	_template: "User_parent"
 	_itemTemplate: "User_item"
@@ -593,6 +609,17 @@ class VFicheMod extends VMod
 			title: if params.item? then "Modification d'un devoir" else "Création d'un devoir"
 		}
 	collection: -> Controller.uLog.fiches
+class VExamMod extends VMod
+	_template:"modExam"
+	_rules: {
+		"nom":{
+			"required": true,
+		}
+	}
+	init_config: (params=null) -> h_push super(), {
+			title: "Modification d'un devoir"
+		}
+	collection: -> Controller.uLog.exams
 class VExoFicheMod extends VMod
 	_template:"modFicheExo"
 	_rules: {
@@ -881,7 +908,9 @@ class VConnexion extends View
 			$("##{@formulaire}#{@divId}").validate {
 				rules: { "identifiant":{"required": true}, "pwd":{"required":true} },
 				submitHandler: () ->
-					Controller.uLog.connexion $("input[name='identifiant']").val(), $("input[name='pwd']").val()
+					pwd = $("input[name='pwd']").val()
+					if pwd is "" then Controller.notyMessage("BUG : Vous avez beau taper un mot de passe, il n'est pas envoyé... Essayez de réactualiser la page (touche F5 sur PC)","alert")
+					else Controller.uLog.connexion $("input[name='identifiant']").val(), $("input[name='pwd']").val()
 					false
 			}
 			$("#forgottenButton#{@divId}").on 'click', (event) =>

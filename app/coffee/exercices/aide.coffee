@@ -51,6 +51,9 @@ oHelp = {
 			"Le troisième quartile $Q_3$ est la valeur pour laquelle la <b>fréquence cumulée croissante</b> atteint ou dépsse 75%."
 			"<b>Attention :</b> $Q_1$ et $Q_3$ sont toujours des valeurs de la série. La calculatrice utilise une autre définition et peut parfois donner une valeur qui n'est pas dans la série (quand une FCC tombe juste sur 25% ou sur 75%). Dans ce cas, il faut prendre la valeur de la série juste inférieure à la valeur donnée par la calculatrice."
 		]
+		centre: [
+			"Le centre $G$ du nuage $M_i\\left(x_i;y_i\\right) a pour coordonnées $\\left(\\overline{x};\\overline{y}\\right)$"
+		]
 		ajustement: [
 			"Ces formules sont données à titre informatif. <b>Faites le calcul directement avec la calculatrice !</b>"
 			"L'ajustement affine de $y$ en $x$ nous donne une équation de la forme $y=ax+b$."

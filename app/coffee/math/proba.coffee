@@ -1,11 +1,13 @@
 
-class @Proba
+class Proba
 	@alea: (input) ->
 		# produit un nombre aléatoire dont la valeur dépend du type de paramètre
 		unless input? then return 1
 		switch
 			when input is null then 1
 			when typeof input is "number" then input
+			when (g = input.gaussian)?
+				@gaussianAlea g
 			when (mn=input.min)? and (mx=input.max)?
 				sign = if input.sign and (Math.random()<0.5) then -1 else 1
 				if isArray(input.no) and (input.no.length>0) # C'est un tableau de valeurs interdites
@@ -27,7 +29,7 @@ class @Proba
 		else Math.floor((Math.random() * (b+1-a)) + a)
 	@aleaIn: (liste) -> liste[ Math.floor((Math.random() * liste.length) ) ]
 	@aleaSign: -> (Math.floor(Math.random()*2)-.5)*2
-	@phi: (z,up=false) ->
+	@gaussianRepartition: (z,up=false) ->
 		# Renvoie la fonction Phi(z), loi normale centrée
 		# si up = true, c'est 1-Phi(z)
 		LOWER_TAIL_IS_ONE = 8.5		# I.e., Phi(8.5) = .999999999999+
@@ -59,6 +61,7 @@ class @Proba
 			else output = 0.0
 		if up then return output
 		else return 1-output
+	@gaussianDistribution: (x) -> 1/Math.sqrt(2*Math.PI)*Math.exp(-.5*x^2)
 	@erfc: (x) ->
 		z = Math.abs(x)
 		t = 1.0 / (0.5 * z + 1.0)
@@ -93,17 +96,19 @@ class @Proba
 		scaled_R = sign * primaryComp
 		scaled_R
 	@phiinv: (y) -> Proba.erfinv(2*y-1)*Math.sqrt(2)
-	@gaussianAlea: (moy, std, params) ->
-		config = mergeObj {min:Number.NEGATIVE_INFINITY, max:Number.POSITIVE_INFINITY, delta:0},params
+	@gaussianAlea: (params) ->
+		config = mergeObj { moy:0, std:1, min:Number.NEGATIVE_INFINITY, max:Number.POSITIVE_INFINITY, delta:0},params
 		rd = Math.random()
 		if rd is 0 then return config.min
-		out = Proba.phiinv(rd)*std+moy
+		out = Proba.phiinv(rd)*config.std+config.moy
 		if out<config.min then return config.min
 		if out>config.max then return config.max
 		if config.delta isnt 0 then out = Math.round(out/config.delta)*config.delta
 		out
 	@binomial_density: (n,p,k) ->
-		if (k>n) or (k<0) or (n<0) or (p<0) or (p>1) then return NaN
+		if (p<0) or (p>1) then return NaN
+		if (k>n) or (k<0) then return 0
+		if k isnt Math.floor(k) then return 0
 		q = 1-p
 		# Quelques cas triviaux
 		if k is 0 then return Math.pow(q,n)
@@ -139,13 +144,15 @@ class @Proba
 		result /= denominator.shift() while denominator.length>0
 		result
 	@binomial_rep: (n,p,k) ->
-		if (k>n) or (k<0) or (n<0) or (p<0) or (p>1) then return NaN
+		if (p<0) or (p>1) then return NaN
 		q = 1-p
 		# Quelques cas triviaux
+		if k>=n then return 1
+		if (k<0) then return 0
+		k = Math.floor k
 		if k is 0 then return Math.pow(q,n)
 		if k is 1 then return Math.pow(q,n-1)*(q+n*p)
 		if k is n-1 then return 1-Math.pow(p,n)
-		if k is n then return 1
 		# Cas général
 		u = 1
 		v = 1
@@ -162,32 +169,36 @@ class @Proba
 			r--
 			u *= q
 		u
-	@binomial_IF: (n,p) ->
+	@binomial_IF: (n,p,seuil) ->
+		if seuil>=1 then return { Xlow:0, Xhigh:n }
+		if seuil<0 then seuil = 0
+		_m = (1-seuil)/2
+		_M = (1+seuil/2)
 		esperance = n*p
 		std = Math.sqrt(n*p*(1-p))
 		low = Math.max Math.round(esperance-2*std), 0
 		high = Math.min Math.round(esperance+2*std), n
 		# recherche de la transition au-dessus de 2,5%
 		pk = @binomial_rep(n,p,low)
-		if pk is 0.025 then low++
+		if pk is _m then low++
 		else
 			k = low
-			asc = (pk<.025)
-			while (k>0) and (k<esperance) and (pk isnt 0.025) and ((pk<0.025) is asc)
+			asc = (pk<_m)
+			while (k>0) and (k<esperance) and (pk isnt _m) and ((pk<_m) is asc)
 				if asc then k++
 				else k--
 				pk = @binomial_rep(n,p,k)
-			if pk<=0.025 then low = k+1
+			if pk<=_m then low = k+1
 			else low = k
 		# recherche de la transition au-dessus de 97,5%
 		pk = @binomial_rep(n,p,high)
-		if pk isnt 0.975
+		if pk isnt _M
 			k = high
-			asc = (pk<.975)
-			while (k<n) and (k>esperance) and (pk isnt 0.975) and ((pk<0.975) is asc)
+			asc = (pk<_M)
+			while (k<n) and (k>esperance) and (pk isnt _M) and ((pk<_M) is asc)
 				if asc then k++
 				else k--
 				pk = @binomial_rep(n,p,k)
-			if pk<0.975 then high = k+1
+			if pk<_M then high = k+1
 			else high = k
 		return { Xlow:low, Xhigh:high }

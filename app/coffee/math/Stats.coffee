@@ -22,6 +22,7 @@ class @SerieStat
 					if (i<ne) then @serie.push { value:value, effectif:effectifs[i] }
 					else @serie.push { value:value, effectif:1 }
 		else if typeof liste is "string" then @makeFromString(liste)
+	transform:(fct) -> new SerieStat ( { value:fct(item.value), effectif:item.effectif} for item in @serie )
 	makeFromString: (liste) ->
 		table = liste.split(";")
 		@serie = []
@@ -104,13 +105,14 @@ class @SerieStat
 		if n is 0 then return NaN
 		@sum_xy(sy)/n-@moyenne()*sy.moyenne()
 	std: -> Math.sqrt(@variance())
-	ajustement: (sy) ->
+	ajustement: (sy,decimals) ->
 		cov = @covariance(sy)
 		v = @variance()
 		a = cov / v
 		b = sy.moyenne() - a*@moyenne()
 		r = cov / (@std()*sy.std())
-		{a:a, b:b, r:r}
+		if decimals? then { a:fixNumber(a,decimals), b:fixNumber(b,decimals), r:r }
+		else {a:a, b:b, r:r}
 	getRank: (rank) ->
 		N = @N()
 		if (rank>N) or (rank<=0) then return NaN

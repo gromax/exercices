@@ -15,6 +15,7 @@ final class Exam
 	private $idFiche=null;				// id de la fiche parente
 	private $date=null;					// Date de création
 	private $data = "";					// Données de la série
+	private $nom = "";					// Nom de l'exam
 	private $locked = false;			// Exam vérouillé
 
 	##################################### METHODES STATIQUES #####################################
@@ -23,6 +24,7 @@ final class Exam
 	{
 		if(isset($params['id'])) $this->id = (integer)$params['id'];
 		if(isset($params['idFiche'])) $this->idFiche = (integer)$params['idFiche'];
+		if(isset($params['nom'])) $this->nom = (string)$params['nom'];
 		if(isset($params['date'])) $this->date=$params['date'];
 		else $this->date=date('Y-m-d');
 		if(isset($params['data'])) $this->data = $params['data'];
@@ -34,9 +36,9 @@ final class Exam
 		require_once BDD_CONFIG;
 		try {
 			if (isset($params["idFiche"])) {
-				$bdd_result=DB::query("SELECT id, idFiche, date, data, locked FROM ".PREFIX_BDD."exams WHERE idFiche=%i ORDER BY date",$params["idFiche"]);
+				$bdd_result=DB::query("SELECT id, idFiche, nom, date, data, locked FROM ".PREFIX_BDD."exams WHERE idFiche=%i ORDER BY date",$params["idFiche"]);
 			} else {
-				$bdd_result=DB::query("SELECT id, idFiche, date, data, locked FROM ".PREFIX_BDD."exams ORDER BY date");
+				$bdd_result=DB::query("SELECT id, idFiche, nom, date, data, locked FROM ".PREFIX_BDD."exams ORDER BY date");
 			}
 		} catch(MeekroDBException $e) {
 			EC::addBDDError($e->getMessage(), "Exam/getList");
@@ -60,7 +62,7 @@ final class Exam
 
 		require_once BDD_CONFIG;
 		try {
-			$bdd_result=DB::queryFirstRow("SELECT id, idFiche, date, data, locked FROM ".PREFIX_BDD."exams WHERE id=%i", $id);
+			$bdd_result=DB::queryFirstRow("SELECT id, idFiche, nom, date, data, locked FROM ".PREFIX_BDD."exams WHERE id=%i", $id);
 			if ($bdd_result === null) {
 				EC::addError("Exam introuvable.");
 				return null;
@@ -87,7 +89,7 @@ final class Exam
 
 	public function __toString()
 	{
-		return 'Exam[#'.$this->id.']';
+		return 'Exam[#'.$this->id.'] : '.$this->nom;
 	}
 
 	public function getFiche()
@@ -132,6 +134,8 @@ final class Exam
 
 		if(isset($params['data'])) { $this->data = $params['data']; $bddModif=true; }
 		if(isset($params['locked'])) { $this->locked = (boolean) $params['locked']; $bddModif=true; }
+		if(isset($params['nom'])) { $this->nom = (string) $params['nom']; $bddModif=true; }
+
 
 		if (!$bddModif) {
 			EC::add("Aucune modification.");
@@ -158,7 +162,7 @@ final class Exam
 
 	public function toArray()
 	{
-		$answer=array("data"=>$this->data, "date"=>$this->date, "idFiche"=>$this->idFiche, "locked"=>$this->locked);
+		$answer=array("data"=>$this->data,"nom"=>$this->nom, "date"=>$this->date, "idFiche"=>$this->idFiche, "locked"=>$this->locked);
 		if ($this->id!=null) $answer['id']=$this->id;
 		return $answer;
 	}

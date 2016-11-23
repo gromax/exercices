@@ -1,13 +1,14 @@
 {{#if center}}\begin{center}{{/if}}
 {{#if multicols}}\begin{multicols}{ {{multicols}} }{{/if}}
+{{#if large}}\begin{Large}{{/if}}
 
 {{# if this.content}}{{{this.content}}}{{/if}}
 {{# if this.contents}}
 {{#each this.contents}}
 {{{this}}}
-
 {{/each}}
 {{/if}}
 
+{{#if large}}\end{Large}{{/if}}
 {{#if multicols}}\end{multicols}{{/if}}
 {{#if center}}\end{center}{{/if}}

@@ -94,7 +94,7 @@ class Brique extends BaseBrique
 			toLowercase:false
 			cor_prefix:""
 		}, params
-		# La bonne valeur peut-être un ensemble ou un number.
+		# La bonne valeur peut-être un ensemble ou un objet convertible en number ou même un tableau de number
 		if mM.isEnsemble(good) then parse_type = "ensemble" else parse_type = "number"
 		if user instanceof Parser then info=user # Cas où on fournirait un user déjà parsé
 		else info = new Parser user, { type:parse_type, developp:config.developp, toLowercase:config.toLowercase }
@@ -123,11 +123,17 @@ class Brique extends BaseBrique
 		# - mauvais_arrondi = true : La valeur donnée n'est pas un float ou erreur de troncature ou précision trop grande
 		# - approximation = true : Quand la réponse utilisateur est un float, approx correcte et dans la zone tolérée (mais éventuellement pénalisée) d'une approx
 		if parse_type is "ensemble"
+			output.goodObject = good								# Bonne réponse
+			if config.tex? then output.good = config.tex			# Le tex peut être fourni
+			else output.good = config.cor_prefix+good.tex()			# Sinon on calcule le tex
 			output.ok = good.isEqual(info.object,config.tolerance)
 			# on ne vérifie pas la forme pour un ensemble (formeOk)
 			if output.ok then @data.note += output.bareme = bareme
 		else
 			erreur = output.erreur = mM.erreur good, info.object
+			output.goodObject = erreur.good							# Bonne réponse
+			if config.tex? then output.good = config.tex			# Le tex peut être fourni
+			else output.good = config.cor_prefix+erreur.good.tex()	# Sinon on calcule le tex
 			formeOk = output.formeOk = info.forme(config.formes)
 			switch
 				when config.arrondi isnt null
@@ -138,7 +144,9 @@ class Brique extends BaseBrique
 					approx = approx/2
 					# On vérifie d'abord qu'on est juste au moins dans l'approx
 					output.good_arrondi = numToStr mM.float(good), -config.arrondi
-					if (erreur.exact or erreur.float and (erreur.ecart<=approx)) and not erreur.moduloError
+					# Une difficulté : Si la réponse attendue est ,4,10236 à 0,01. L'utilisateur répond 4,10 ou 4,1 ce qui est
+					# pris identique pour la machine et peut provoquer une erreur
+					if (erreur.exact or erreur.float and erreur.approx_ok and ((erreur.ordre<=config.arrondi) or (erreur.p_user<=config.arrondi))) and not erreur.moduloError
 						# Maintenant on peut vérifier si l'utilisateur respecte le format
 						if not erreur.float or erreur.troncature or (erreur.p_user<config.arrondi)
 							output.mauvais_arrondi = true

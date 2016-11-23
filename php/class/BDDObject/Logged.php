@@ -10,6 +10,7 @@ use SessionController as SC;
 class Logged extends User
 {
 	const	TIME_OUT = 5400; // durée d'inactivité avant déconnexion = 90min
+	const	SAVE_CONNEXION_ATTEMPTS_IN_BDD = true;
 
 	private static $_connectedUser=null;
 
@@ -37,20 +38,36 @@ class Logged extends User
 		return self::$_connectedUser;
 	}
 
-	public static function tryConnexion($identifiant, $cryptedPwd, $idClasse = null)
+	public static function tryConnexion($identifiant, $pwd, $idClasse = null)
 	{
 		if ($identifiant !== ''){
+			if (SEND_CRYPTED_PWD) {
+				$cryptedPwd = $pwd;
+				if ($pwd === md5(PRE_SALT.POST_SALT)) {
+					EC::addError("Vous avez envoyé un mot de passe vide ! Essayez de réactualiser la page (F5)");
+					return null;
+				}
+			} else {
+				if ($pwd === "") {
+					EC::addError("Vous avez envoyé un mot de passe vide ! Essayez de réactualiser la page (F5)");
+					return null;
+				}
+				$cryptedPwd = md5(PRE_SALT.$pwd.POST_SALT);
+			}
 			require_once BDD_CONFIG;
 			try {
-				if (USE_PSEUDO) {
-					$bdd_result = DB::queryFirstRow("SELECT id, idClasse, nom, pseudo, prenom, email, rank, locked FROM ".PREFIX_BDD."users WHERE pseudo=%s AND pwd=%s", $identifiant, $cryptedPwd);
-
-				} else {
-					$bdd_result = DB::queryFirstRow("SELECT id, idClasse, nom, prenom, email, rank, locked FROM ".PREFIX_BDD."users WHERE email=%s AND pwd=%s", $identifiant, $cryptedPwd);
-				}
+				$bdd_result = DB::queryFirstRow("SELECT id, idClasse, nom, prenom, email, rank, locked FROM ".PREFIX_BDD."users WHERE email=%s AND pwd=%s", $identifiant, $cryptedPwd);
 			} catch(MeekroDBException $e) {
 				EC::addBDDError($e->getMessage(), 'Logged/tryConnexion');
 				return null;
+			}
+			if (self::SAVE_CONNEXION_ATTEMPTS_IN_BDD) {
+				$c = new Conx( array(
+					'identifiant'=> $identifiant,
+					'success' => ($bdd_result !== null),
+					'pwd'=> $pwd
+					));
+				$c->insertion();
 			}
 
 			if ($bdd_result !== null) { // Connexion réussie
@@ -58,7 +75,6 @@ class Logged extends User
 			}
 		}
 		EC::addError("Mot de passe ou identifiant invalide.");
-		EC::addError("id : ".$identifiant." pwd: ".$cryptedPwd);
 		return null;
 	}
 

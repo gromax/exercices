@@ -10,6 +10,7 @@ use BDDObject\Exam;
 use BDDObject\ExoFiche;
 use BDDObject\Note;
 use BDDObject\AssoUF;
+use BDDObject\Conx;
 
 class Action
 {
@@ -58,9 +59,9 @@ class Action
 	protected function connexion()
 	{
 		$identifiant=getPost('identifiant');
-		$cryptedPwd=getPost('cryptedPwd','');
+		$pwd=getPost('pwd','');
 		$dataFetch = getPost("dataFetch","true");
-		if ($identifiant !== null) Logged::tryConnexion($identifiant, $cryptedPwd);
+		if ($identifiant !== null) Logged::tryConnexion($identifiant, $pwd);
 		$uLog = Logged::getConnectedUser();
 		$success = $uLog->connexionOk();
 		if ($success && ($dataFetch=="true")) $data = $this->getData($uLog);
@@ -232,7 +233,8 @@ class Action
 	protected function fichesList()
 	{
 		$uLog =Logged::getConnectedUser();
-		if (!$uLog->connexionOk()) return Fiche::getList(array("eleve"=> $uLog->getId() ));
+		if (!$uLog->connexionOk()) return array( "error"=>true);
+		if ($uLog->isEleve()) return Fiche::getList(array("eleve"=> $uLog->getId() ));
 		if ($uLog->isAdmin()) return Fiche::getList();
 		if ($uLog->isProf()) return Fiche::getList(array("owner"=> $uLog->getId() ));
 		return array();
@@ -248,7 +250,12 @@ class Action
 		return Classe::getList(array('forJoin'=> true ));
 	}
 
-
+	protected function consList()
+	{
+		$uLog =Logged::getConnectedUser();
+		if ($uLog->isAdmin()) return Conx::getList();
+		return array( "error"=>true);
+	}
 
 //-----------------Save objects--------------------
 
@@ -394,7 +401,7 @@ class Action
 				$fiche = Fiche::getObject($idFiche);
 				if ($fiche===null) EC::addError("Devoir introuvable.");
 				elseif ($uLog->isAdmin() || $fiche->isOwnedBy($uLog)) {
-					$exam = new Exam(extractFromPost(array("data"=>null, "idFiche"=>null )));
+					$exam = new Exam(extractFromPost(array("data"=>null, "nom"=>null, "idFiche"=>null )));
 					$id = $exam->insertion();
 					if ($id !== null) return array("success"=>true, "exam"=>$exam->toArray(), "id"=>$id, "messages"=>EC::messages());
 				} else EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
@@ -404,7 +411,7 @@ class Action
 				else {
 					$fiche = $exam->getFiche();
 					if ($uLog->isAdmin() || $fiche->isOwnedBy($uLog)) {
-						$exam->update(extractFromPost(array('data'=>null, 'locked'=>null)));
+						$exam->update(extractFromPost(array('data'=>null, 'nom'=>null, 'locked'=>null)));
 						return array("success"=>true, "exam"=>$exam->toArray(), "messages"=>EC::messages());
 					} else EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
 				}
@@ -623,6 +630,25 @@ class Action
 					if ($oUF->delete()) return array("success"=>true, "messages"=>EC::messages());
 				} else {
 					EC::addError("Vous n'êtes pas autorisé à effectuer cette action.");
+				}
+			}
+		}
+		return array("error"=>true, "messages"=>EC::messages(), "unlogged"=>$unlogged);
+	}
+
+	protected function conDelete()
+	{
+		$uLog=Logged::getConnectedUser();
+		if (($unlogged = !$uLog->connexionOk()) || !$uLog->isAdmin()) EC::addError("Connexion admin requise.");
+		else {
+			$id = getPost("id");
+			if ($id===null) EC::addError("Paramètres manquants.");
+			else {
+				$oCon = Conx::getObject($id);
+				if ($oCon===null) {
+					EC::addError("Objet introuvable.");
+				} else {
+					if ($oCon->delete()) return array("success"=>true, "messages"=>EC::messages());
 				}
 			}
 		}

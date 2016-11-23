@@ -182,7 +182,25 @@ class @Controller
 							]
 							new VExamsList {
 								fiche: fiche
-								links: { test:"devoir:#{m[1]}/exam:" }
+								links: { test:"devoir:#{m[1]}/exam:", edit:"devoir:#{m[1]}/exam:" }
+							}
+						}
+				}
+				{ # exam:id/edit - aussi prof
+					regex:/// ^devoir:([0-9]+)/exam:([0-9]+)/edit$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						fiche?.load { type:"load", cb:(fiche)->
+							exam = fiche.exams.get(Number m[2])
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{link:"devoir:#{m[1]}/exams", text:"Examens du devoir : #{fiche.nom}"}
+								{text:"Modification de l'exam : #{exam?.nom}"}
+							]
+							new VExamMod {
+								item:exam
+								container: "#mainContent"
+								links: { cancel:"devoir:#{m[1]}/exams" }
 							}
 						}
 				}
@@ -457,6 +475,18 @@ class @Controller
 								links:{ notes:"notes-eleve:#{user.id}/devoir:#{aUF}/note:" }
 							}
 						}
+				}
+				{
+					regex:/// ^connexions$ ///i
+					exec:(m)->
+						unless Controller.uLog.cons then Controller.uLog.cons = new CCons()
+						Controller.uLog.cons.on { type:"fetch", cb:()->
+							Controller.setAriane [
+								{text:"Liste des connexions"}
+							]
+							new VConsList { }
+						}
+						Controller.uLog.cons.fetch()
 				}
 			]
 			when user.isProf then @routes = [

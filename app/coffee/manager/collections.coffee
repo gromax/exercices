@@ -216,3 +216,9 @@ class CAssoUF extends Collection
 			if A<B then 1
 			else -1
 		@
+
+class CCons extends Collection
+	name:"cons"
+	constructor: (liste)->
+		@model = MCon
+		super(liste)

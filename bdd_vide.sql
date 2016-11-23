@@ -98,6 +98,21 @@ CREATE TABLE `exo_classes` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `exo_exams`
+--
+
+CREATE TABLE `exo_exams` (
+  `id` int(11) NOT NULL,
+  `idFiche` int(11) NOT NULL,
+  `nom` text NOT NULL,
+  `date` date NOT NULL,
+  `data` text NOT NULL,
+  `locked` tinyint(1) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `exo_fiches`
 --
 
@@ -183,6 +198,12 @@ ALTER TABLE `exo_assocUE`
 -- Indexes for table `exo_classes`
 --
 ALTER TABLE `exo_classes`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `exo_exams`
+--
+ALTER TABLE `exo_exams`
   ADD PRIMARY KEY (`id`);
 
 --

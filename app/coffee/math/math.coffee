@@ -150,6 +150,7 @@ class NumberObject extends MObject
 		if d<ERROR_MIN then d = 0
 		d
 	equals: (b,symbols) -> @floatify(symbols).am(b.floatify(symbols),true).isNul()
+	facto: (regex) -> null
 class PlusNumber extends NumberObject
 	constructor: ->
 		@operands = []
@@ -205,9 +206,7 @@ class PlusNumber extends NumberObject
 			if @operands[i].isNul() then @operands.splice(i,1)
 			else i++
 		if @operands.length is 0 then return new RealNumber(0)
-		if @operands.length is 1
-			if @_plus then return @operands[0]
-			else return @operands[0].opposite()
+		if @operands.length is 1 then return @operands[0]
 		@
 	am: (operand, minus, infos=null) ->
 		if minus then @operands.push(operand.toClone().opposite())
@@ -303,6 +302,16 @@ class PlusNumber extends NumberObject
 			if (operand instanceof PlusNumber) and operand._plus
 				@operands[i..i]=operand.operands
 		@
+	facto:(regex) ->
+		out = []
+		factor = null
+		for op in @operands
+			f = op.facto(regex)
+			if f is null then return null
+			if factor is null then factor = f[1]
+			out.push f[0]
+		if factor is null then return null
+		[@constructor.makePlus(out), factor]
 class MultiplyNumber extends NumberObject
 	constructor: ->
 		@_signature = null
@@ -631,6 +640,16 @@ class MultiplyNumber extends NumberObject
 				else return { error:true }
 		# normalement on n'atteint pas ce niveau
 		return { base:@, error:true }
+	facto: (regex) ->
+		i=0
+		while i<@numerator.length
+			f = @numerator[i].facto(regex)
+			if f isnt null
+				out = @toClone()
+				out.numerator[i] = f[0]
+				return [ out, f[1] ]
+			i++
+		return null
 class PowerNumber extends NumberObject
 	# constructor est private. Passer par make
 	constructor: (base, exposant) ->
@@ -823,7 +842,7 @@ class SymbolNumber extends NumberObject
 		if @_exposant is 1 then return new RealNumber(@_exposant)
 		out = @toClone()
 		out._exposant--
-		return ou.md new RealNumber(@_exposant), false
+		return out.md new RealNumber(@_exposant), false
 	extractModulo: (variable) ->
 		if variable isnt @_name then return { base:@, error:false }
 		if @_exposant isnt 1 then return { error:true }
@@ -1133,6 +1152,9 @@ class FunctionNumber extends NumberObject
 			when "ln" then return op.md(@_operand.toClone(),true).simplify()
 			when "exp" then return op.md(@toClone(),false).simplify()
 		new RealNumber()
+	facto: (regex) ->
+		if @toString().match(regex) isnt null then [new RealNumber(1), @toClone()]
+		else null
 #----------Nombres simples-------
 # Les simples ne contiennent pas de fonction ou de symboles
 class SimpleNumber extends NumberObject
@@ -1785,12 +1807,7 @@ class RealNumber extends FloatNumber
 		p=0
 		v = Math.abs(@_value)
 		r = Math.floor v
-		if (v-r) is 0
-			while ((v-r) is 0) and (p<20)
-				v=v/10
-				r=Math.floor v
-				p++
-		else
+		if (v-r) isnt 0
 			# Il y a des chiffres après la virgule
 			regex = /// ^([0-9]+)[.,]?([0-9]*)$ ///i
 			m = (String v).match regex

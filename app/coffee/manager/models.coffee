@@ -179,7 +179,7 @@ class MUser extends Model
 			@_noteUF = config.oUF.moyenne()
 			if oUF_pasnote then @_noteUF = null
 		else @_noteUF = null
-class @MLog extends MUser
+class MLog extends MUser
 	initialized: false
 	classes:null
 	users:null
@@ -204,13 +204,14 @@ class @MLog extends MUser
 		# Dans le cas d'un élève, le chargement des notes et des fiches se fait au chargement
 		if @isEleve then @fetchProcessing data
 	connexion: (identifiant,pwd) ->
-		$.post("./action.php?action=connexion", {identifiant:identifiant, cryptedPwd:MD5(PRE_SALT+pwd+POST_SALT), dataFetch: identifiant isnt @identifiant()}, @connexionCB, "json")
+		if SEND_CRYPTED_PWD then $.post("./action.php?action=connexion", {identifiant:identifiant, pwd:MD5(PRE_SALT+pwd+POST_SALT), dataFetch: identifiant isnt @identifiant()}, @connexionCB, "json")
+		else $.post("./action.php?action=connexion", {identifiant:identifiant, pwd:pwd, dataFetch: identifiant isnt @identifiant()}, @connexionCB, "json")
 	connexionCB: (data) =>
 		if data.success
 			@log data.logged, data
 			@triggerEvent "connexion"
 		else
-			Controller.notyMessage "Identifiant ou mot de passe incorrect", "error"
+			Controller.errorMessagesList data.messages, "<b>Connexion :</b>", "glyphicon-log-in"
 	init: (local)->
 		if local then @initCB { uLog:{ nom:"Disconnected", prenom:"", email:"", rank:"Off", date:"",locked:false},users:[],classes:[],fiches:[],messages:[] }
 		else $.post("./action.php?action=getData", {}, @initCB, "json")
@@ -375,7 +376,7 @@ class MExam extends Model
 	_name: "exam"
 	_nExos: null
 	enteteForMessages: -> "<b>Examen @#{@id} :</b> "
-	defaultValues: -> { }
+	defaultValues: -> { nom:"Nouvel exam" }
 	parse: ->
 		if @id? then @id = Number @id
 		if @idFiche? then @idFiche = Number @idFiche
@@ -389,6 +390,7 @@ class MExam extends Model
 		toBDD = {}
 		if @id? then toBDD.id = @id
 		toBDD.idFiche = @parent.parent.id
+		if mods.nom? then toBDD.nom = mods.nom
 		if mods.data? then toBDD.data = JSON.stringify mods.data
 		if mods.locked?
 			if (mods.locked or (mods.locked is "1")) then toBDD.locked = "1"
@@ -402,7 +404,7 @@ class MExam extends Model
 			exo = new Exercice { model: model, options:item.options }
 			texList = texList.concat(model.tex?( ( exo.init({ inputs:inp }).data for inp in item.inputs), slide ) or [])
 		if slide is true then Handlebars.templates.slide_container { items:texList }
-		else  Handlebars.templates.tex_container { items:texList, id:@id }
+		else  Handlebars.templates.tex_container { items:texList, id:@id, nom:@nom }
 	fiche: -> @parent.parent
 	nExos: ->
 		if @_nExos is null
@@ -431,7 +433,21 @@ class MExam extends Model
 					@exam.data[@indiceParent].inputs[@indiceEnfant] = inp
 					@exam.save { data:@exam.data }
 		}
-
+class MCon extends Model
+	_glyph: "glyphicon-off"
+	_name: "con"
+	parse: ->
+		if @id? then @id = Number @id
+		if @date?
+			jour = @date.replace /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/, "$3/$2/$1"
+			heure = @date.replace /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/, "$4:$5:$6"
+			@dateFr = "#{jour} #{heure}"
+		else @date = @currentDate()
+		@success = (@success is "1") or (@success is true)
+		@
+	bddJSON: (mods) -> {}
+	enteteForMessages: -> "<b>Connexion @#{@id} :</b> "
+	defaultValues: -> {  }
 class MExoFiche extends Model
 	_glyph: "glyphicon-edit"
 	_name: "exofiche"

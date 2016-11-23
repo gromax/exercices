@@ -87,6 +87,30 @@
 				force = true
 			return new Vector config.name, coords
 	}
+	distribution: {
+		gaussian: (x,params) ->
+			config = mergeObj { moy:0, std:1 }
+			Proba.gaussianDistribution (x - config.moy)/config.std
+		binomial: (n,p,k) -> Proba.binomial_density(n, p, k)
+	}
+	repartition: {
+		gaussian: (x,params) ->
+			config = mergeObj { moy:0, std:1 }
+			if (typeof x is "object")
+				if x.max? then out = Proba.gaussianRepartition (x.max - config.moy)/config.std else out = 1
+				if x.min? then out = out - Proba.gaussianRepartition (x.min - config.moy)/config.std
+				out
+			else Proba.gaussianRepartition (x - config.moy)/config.std
+		binomial: (n,p,k) ->
+			if (typeof k is "object")
+				if k.max? then out = Proba.binomial_rep(n, p, k.max) else out = 1
+				if k.min? then out = out - Proba.binomial_rep(n, p, k.min)
+				out
+			else Proba.binomial_rep(n, p, k)
+	}
+	intervalle_fluctuation:{
+		binomial:(n,p,seuil=.95)-> Proba.binomial_IF(n,p,seuil)
+	}
 	test: {
 		isFloat: (number) ->
 			nO = mM.toNumber(number)
@@ -367,4 +391,12 @@
 			goodObject = if closest isnt null then good = closest.value else new RealNumber()
 		else goodObject = @toNumber good
 		erreurManager.main(goodObject,userObject,symbols)
+	factorisation:(obj,regex, params)->
+		# Bug ici, besoin de trop simplifier
+		if (f=obj.facto?(regex))?
+			config = mergeObj { simplify:false, developp:false }, params
+			if config.simplify then f[0] = f[0].simplify(null,config.developp).simplify() # bug : pourquoi faut-il deux simplify() ?
+			MultiplyNumber.makeMult f
+		else obj.toClone()
+
 }

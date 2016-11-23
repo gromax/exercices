@@ -30,6 +30,8 @@
 	<button type="button" class="btn btn-default btn-sm" name="editButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Modifier"><span class="glyphicon glyphicon-pencil"></span></button>
 {{!Bouton suppression}}
 	<button type="button" class="btn btn-default btn-sm {{#if item.locked}}disabled{{/if}}" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="text-danger glyphicon glyphicon-trash"></span></button>
+{{!Bouton mdp oublié}}
+	<button type="button" class="btn btn-default btn-sm" name="forgottenButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Mot de passe oublié"><span class="text-danger glyphicon glyphicon-envelope"></span></button>
 {{#if params.showNote}}
 {{#if item.isEleve}}
 	<a href="#notes-eleve:{{ item.id }}" class="btn btn-primary btn-sm" role="button"><span class="glyphicon glyphicon-list-alt" data-toggle="tooltip" data-placement="top" title="Voir les notes"></span></a>

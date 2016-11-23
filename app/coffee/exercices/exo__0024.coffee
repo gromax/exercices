@@ -11,15 +11,30 @@ Exercice.liste.push
 		else inp.p = Number inp.p
 		if (typeof inp.k is "undefined") then inp.k = Math.round(inp.n*inp.p)
 		else k = Math.min(Number inp.k, inp.n-1)
-		pXegalK_good = Proba.binomial_density(inp.n,inp.p,inp.k)
-		pXinfK_good = Proba.binomial_rep(inp.n,inp.p,inp.k)
+		pXegalK_good = mM.distribution.binomial(inp.n, inp.p, inp.k)
+		pXinfK_good = mM.repartition.binomial(inp.n,inp.p,inp.k)
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>La variable aléatoire $X$ suit la loi binomiale de paramètres $n=#{inp.n}$ et $p=#{numToStr inp.p, 2}$, autrement dit $\\mathcal{B}(#{inp.n};#{numToStr inp.p, 2})$.</p>"}]}
 			new BListe {
 				data:data
 				bareme:100
 				title:"Calculs de probabilités"
-				liste:[{tag:"$p(X=#{inp.k})=$", name:"pXegalK", description:"Valeur à 0,001 près", good:Proba.binomial_density(inp.n,inp.p,inp.k), params:{arrondi:-3}}, {tag:"$p(X\\leqslant #{inp.k})=$", name:"pXinfK", description:"Valeur à 0,001 près", good:Proba.binomial_rep(inp.n,inp.p,inp.k), params:{arrondi:-3}}]
+				liste:[
+					{
+						tag:"$p(X=#{inp.k})=$"
+						name:"pXegalK"
+						description:"Valeur à 0,001 près"
+						good:pXegalK_good
+						params:{arrondi:-3}
+					}
+					{
+						tag:"$p(X\\leqslant #{inp.k})=$"
+						name:"pXinfK"
+						description:"Valeur à 0,001 près"
+						good:pXinfK_good
+						params:{arrondi:-3}
+					}
+				]
 				aide: oHelp.proba.binomiale.calculette
 			}
 		]
