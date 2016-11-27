@@ -9,7 +9,6 @@ Exercice.liste.push
 		B = mM.alea.vector({ name:"B", def:data.inputs, forbidden:[A] }).save(data.inputs)
 		data.mg = membreGauche = mM.exec(["x", A.x, "*", A.y, "+"], {simplify:true}).tex()
 		data.md = membreDroite = mM.exec(["x", B.x, "*", B.y, "+"], {simplify:true}).tex()
-		xCoeff = A.x.toClone().am(B.x,true)
 		solutions = [ mM.exec([B.y, A.y, "-", A.x, B.x, "-", "/"], {simplify:true}) ]
 		[
 			new BEnonce {title:"Énoncé", zones:[{body:"enonce", html:"<p>On considère l'équation : $#{ membreGauche }= #{ membreDroite }$.</p><p>Vous devez donner la ou les solutions de cette équations, si elles existent.</p><p><i>S'il n'y a pas de solution, écrivez $\\varnothing$. s'il y a plusieurs solutions, séparez-les avec ;</i></p>"}]}

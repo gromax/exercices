@@ -56,6 +56,7 @@ class Model extends SimpleModel
 				if @events[i].obj? then @events[i].cb? @events[i].obj, params...
 				else @events[i].cb? params...
 				if @events[i].modal then closeModal()
+				if @events[i].url? then pushUrlInHistory @events[i].url
 				if not(@events[i].forever) then @events.splice(i,1) # evenements once par défaut
 				else i++
 			else i++
@@ -185,7 +186,6 @@ class MLog extends MUser
 	users:null
 	fiches:null
 	exercices:null
-	classeFiltre:null
 	_infosLoaded:true # Aucune importance pour un prof ou +. Un élève charge toutes ses données au démarrage
 	@_glyph: "glyphicon-log-in"
 	setLocal:(local)-> @local = (local is true)
@@ -193,6 +193,9 @@ class MLog extends MUser
 		@classes = new CClasses data?.classes
 		@UFlist = new CAssoUF null
 		@users = new CUsers data?.users, @
+		@users.on { type:"setFilter", forever:true, obj:Controller.menuLog, cb:(menu,col)->
+			menu.display()
+		}
 		@parent = @users # permet d'assurer une compatibilité avec un user normal
 		if @exercices is null then @exercices = new CExercices()
 		@fiches = new CFiches data?.fiches
@@ -243,9 +246,6 @@ class MLog extends MUser
 			@parse()
 			@reset data
 			@triggerEvent "change"
-	setClasseFiltre: (nomClasse) ->
-		@classeFiltre = nomClasse
-		@triggerEvent "change"
 	forgotten: (identifiant) ->
 		# On demande à réinitialiser le mot de passe d'un élève
 		$.post("./action.php?action=forgotten", {identifiant:identifiant}, @forgottenCB, "json")

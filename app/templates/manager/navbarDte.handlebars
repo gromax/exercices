@@ -6,9 +6,9 @@
 {{#if user.isOff}}
 <li><a href="#Connexion" class="boutonConnexion">Connexion</a></li>
 {{else}}
-{{#if user.classeFiltre}}
-<li class="bg-danger"><a href="#{{links.classe}}{{user.classeFiltre.id}}">Classe : {{ user.classeFiltre.nom }}</a></li>
+{{#if user.users.permanentFilter.classe}}
+<li class="bg-danger"><a href="#{{links.classe}}{{user.users.permanentFilter.classe.id}}">Classe : {{ user.users.permanentFilter.classe.nom }}</a></li>
 {{/if}}
-<li><a href="" id="modifMyAccount{{id}}" data-toggle="tooltip" data-placement="bottom" title="Modifier vos informations">{{user.prenom}} {{user.nom}}</a></li>
+<li><a href="#mon-compte/edit" data-toggle="tooltip" data-placement="bottom" title="Modifier vos informations">{{user.prenom}} {{user.nom}}</a></li>
 <li><a href="#Deconnexion" class="boutonConnexion">Déconnexion</a></li>
 {{/if}}

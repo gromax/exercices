@@ -5,7 +5,7 @@ Exercice.liste.push
 	description:"Une fonction polynome est donnée, il faut la dériver."
 	keyWords:["Analyse", "fonction", "Dérivation", "Première"]
 	options: {
-		a:{ tag:"Avec ln" , options:["Sans", "ln(x)", "ln(ax+b)", "exp(x)", "exp(ax+b)"] , def:0 }
+		a:{ tag:"Avec ln ou exp" , options:["Sans", "ln(x)", "ln(ax+b)", "exp(x)", "exp(ax+b)"] , def:0 }
 		d:{ tag:"Degré max du polynôme", options:[0,1,2,3,4,5], def:5 }
 	}
 	init: (data) ->

@@ -19,25 +19,30 @@ class NumberObject extends MObject
 		if @_plus then 1
 		else -1
 	toString: ->
-		composite = @compositeString(false)
+		composite = @compositeString { tex:false }
 		if composite[1] then out=composite[0]
 		else out="-"+composite[0]
 		if @_modulo?
-			modComposite = @_modulo.compositeString(false)
+			modComposite = @_modulo.compositeString { tex:false }
 			if modComposite[1] then out = out+"+"+MODULO_LETTER+"*"+modComposite[0]
 			else out = out+"-"+MODULO_LETTER+"*"+modComposite[0]
 		out
-	tex: ->
-		composite = @compositeString(true)
+	tex: (config)->
+		# options.tex = indique si on cherche une version tex
+		# les autres options ne servent que pour le cas d'un tex
+		# options.symbolsUp : 2/4*x s'écriera 2x/4
+		# options.altFunctionTex : tableau des fonctions à donner sous une forme alt
+		options = mergeObj { tex:true }, config
+		composite = @compositeString options
 		if composite[1] then out=composite[0]
 		else out="-"+composite[0]
 		if @_modulo?
-			modComposite = @_modulo.compositeString(true)
+			modComposite = @_modulo.compositeString options
 			if modComposite[1] then out = out+"+"+MODULO_LETTER+"\\cdot "+modComposite[0]
 			else out = out+"-"+MODULO_LETTER+"\\cdot "+modComposite[0]
 			out+=",k\\in\\mathbb{Z}"
 		out
-	compositeString : (tex) -> ["?", @_plus, false, false]
+	compositeString : (options) -> ["?", @_plus, false, false]
 		# Cette fonction renvoie en morceaux les différents éléments d'un string
 		# On obtient donc un tableau qui renvoie :
 		# string => chaine sans l'éventuel premier signe (toujours donnée en premier élément)
@@ -151,6 +156,9 @@ class NumberObject extends MObject
 		d
 	equals: (b,symbols) -> @floatify(symbols).am(b.floatify(symbols),true).isNul()
 	facto: (regex) -> null
+	replace: (replacement,needle) ->
+		# Remplaces les symboles needle par replacement
+		@toClone()
 class PlusNumber extends NumberObject
 	constructor: ->
 		@operands = []
@@ -165,21 +173,21 @@ class PlusNumber extends NumberObject
 		if (ops.length is 2) and ops[1].isImag() and ops[0].isReal()
 			return ops[0].am ops[1], false
 		new PlusNumber ops...
-	compositeString: (tex) ->
+	compositeString: (options) ->
 		n = @operands.length
 		if n is 0 then return ['0', true, false, false]
-		cs_start = @operands[0].compositeString(tex)
+		cs_start = @operands[0].compositeString options
 		if n is 1
 			cs_start[1] = (cs_start[1] == @_plus)
 			return cs_start
 		str = cs_start[0]
 		for oper in @operands[1..n]
-			cs = oper.compositeString(tex);
+			cs = oper.compositeString options;
 			if cs[1] then str += "+"+cs[0]
 			else str += "-"+cs[0];
 		if @_plus then return [str, cs_start[1], true, false]
 		if not cs_start[1] then str = '-'+str
-		if tex then str = "\\left(#{str}\\right)"
+		if options.tex then str = "\\left(#{str}\\right)"
 		else str = "(#{str})"
 		[str, false, false, false]
 	simplify: (infos=null,developp=false)->
@@ -312,6 +320,11 @@ class PlusNumber extends NumberObject
 			out.push f[0]
 		if factor is null then return null
 		[@constructor.makePlus(out), factor]
+	replace: (replacement,needle) ->
+		# Remplaces les symboles needle par replacement
+		clone = new PlusNumber()
+		clone.push(operand.replace(replacement,needle)) for operand in @operands
+		clone.setPlus(@_plus)
 class MultiplyNumber extends NumberObject
 	constructor: ->
 		@_signature = null
@@ -339,11 +352,11 @@ class MultiplyNumber extends NumberObject
 		# Utile pour l'utilisation depuis les tokens afin de créer l'objet adequat
 		if (fractionized = op1.fractionize?(op2))? then return fractionized
 		return (new MultiplyNumber()).pushNumerator(op1).pushDenominator(op2)
-	compositeString: (tex) ->
-		num = @compositeString_special(@numerator, tex)
+	compositeString: (options) ->
+		num = @compositeString_special(@numerator, options)
 		if @denominator.length is 0 then return num
-		den = @compositeString_special(@denominator, tex)
-		if tex
+		den = @compositeString_special(@denominator, options)
+		if options.tex
 			if num[2] and not num[1]
 				num[0] = "-"+num[0]
 				num[1] = true
@@ -606,27 +619,27 @@ class MultiplyNumber extends NumberObject
 			if simplify then operPlus = operPlus.simplify(infos,false)
 			operands.push(operPlus)
 		@
-	compositeString_special: (operands, tex) ->
+	compositeString_special: (operands, options) ->
 		n = operands.length
 		if n is 0 then return ['1', true, false, false]
-		cs0 = operands[0].compositeString(tex)
+		cs0 = operands[0].compositeString options
 		if n is 1 then return cs0
 		str = cs0[0]
 		if (cs0[2])
 			if cs0[1]
-				if tex then str = "\\left(#{str}\\right)"
+				if options.tex then str = "\\left(#{str}\\right)"
 				else str = "(#{str})"
 			else
 				cs0[1] = true
-				if tex then str = "\\left(-#{str}\\right)"
+				if options.tex then str = "\\left(-#{str}\\right)"
 				else str = "(-#{str})"
 		for operand in operands[1..n]
-			cs = operand.compositeString(tex)
+			cs = operand.compositeString options
 			if not cs[1] then cs[0] = "-#{cs[0]}"
 			if not cs[1] or cs[2]
-				if tex then cs[0] = "\\left(#{cs[0]}\\right)"
+				if options.tex then cs[0] = "\\left(#{cs[0]}\\right)"
 				else cs[0] = "(#{cs[0]})"
-			if tex then str = "#{str}\\cdot #{cs[0]}"
+			if options.tex then str = "#{str}\\cdot #{cs[0]}"
 			else str = "#{str}*#{cs[0]}"
 		[str, cs0[1], false, true]
 	extractModulo: (variable) ->
@@ -650,13 +663,21 @@ class MultiplyNumber extends NumberObject
 				return [ out, f[1] ]
 			i++
 		return null
+	replace: (replacement,needle) ->
+		# Remplaces les symboles needle par replacement
+		clone = new MultiplyNumber()
+		for operand in @numerator
+			clone.pushNumerator(operand.replace(replacement,needle))
+		for operand in @denominator
+			clone.pushDenominator(operand.replace(replacement,needle))
+		clone
 class PowerNumber extends NumberObject
 	# constructor est private. Passer par make
 	constructor: (base, exposant) ->
 		@_base = base
 		@_exposant = exposant
 	@make: (base, exposant) ->
-		if base is "e" then return FunctionNumber.make("exp",exposant)
+		if (base is "e") or (base instanceof SymbolNumber) and (base._name is "e") then return FunctionNumber.make("exp",exposant)
 		if (typeof base is "undefined") or not (base instanceof NumberObject) then base = new RealNumber(base)
 		switch
 			when (typeof exposant isnt "undefined") and (exposant instanceof NumberObject) then exp = exposant
@@ -664,21 +685,32 @@ class PowerNumber extends NumberObject
 			else exp = new RealNumber(1)
 		if (base instanceof SymbolNumber) and exp.isReal() and exp.isInteger() then return base.puissance(exp)
 		new PowerNumber(base,exp)
-	compositeString: (tex) ->
-		b = @_base.compositeString(tex)
-		e = @_exposant.compositeString(tex)
-		if not b[1] then b[0] = "-#{b[0]}" # On ajoute l'éventuel - dans le string du nombre
-		if not e[1] then e[0] = "-#{e[0]}" # idem
-		if tex
-			if b[2] or b[3] or not b[1] then b[0] = "\\left(#{b[0]}\\right)"
-			e[0] = "{#{e[0]}}"
+	compositeString: (options) ->
+		if (@_base instanceof FunctionNumber) and (@_exposant instanceof RealNumber)
+			cs = @_base.compositeString options, @_exposant.float()
+			cs[1] = @_plus
+			cs
 		else
-			if b[2] or b[3] or not b[1] then b[0] = "(#{b[0]})"
-			if e[2] or e[3] then e[0] = "(#{e[0]})"
-		["#{b[0]}^#{e[0]}", @_plus, false, true]
-	simplify: (infos=null) ->
-		@_exposant = @_exposant.simplify(infos)
-		@_base = @_base.simplify(infos)
+			b = @_base.compositeString options
+			e = @_exposant.compositeString options
+			if not b[1] then b[0] = "-#{b[0]}" # On ajoute l'éventuel - dans le string du nombre
+			if not e[1] then e[0] = "-#{e[0]}" # On ajoute l'éventuel - dans le string du nombre
+			if options.tex
+				if b[2] or b[3] or not b[1] or (@_base instanceof FunctionNumber) then b[0] = "\\left(#{b[0]}\\right)"
+				e[0] = "{#{e[0]}}"
+			else
+				if b[2] or b[3] or not b[1] or (@_base instanceof FunctionNumber) then b[0] = "(#{b[0]})"
+				if e[2] or e[3] then e[0] = "(#{e[0]})"
+			["#{b[0]}^#{e[0]}", @_plus, false, true]
+	simplify: (infos=null, developp=false) ->
+		@_exposant = @_exposant.simplify(infos,developp)
+		@_base = @_base.simplify(infos,developp)
+		if (@_base instanceof SymbolNumber) and (@_base._name is "e")
+			out = new FunctionNumber("exp",@_exposant)
+			return out.simplify(infos,developp)
+		if (@_base instanceof FunctionNumber) and (@_base._function.alias is "exp")
+			@_base._operand = @_base._operand.md @_exposant, false
+			return @_base.simplify(infos,developp)
 		if @_exposant instanceof SimpleNumber
 			output = null
 			switch
@@ -736,6 +768,10 @@ class PowerNumber extends NumberObject
 			if not @_plus then output.opposite()
 			output
 		else (new Polynome(variable)).addMonome(0,@)
+	replace: (replacement,needle) ->
+		base = @_base.replace(replacement,needle)
+		exposant = @_exposant.replace(replacement,needle)
+		new PowerNumber(base,exposant)
 class SymbolNumber extends NumberObject
 	@symbolsList: {}
 	constructor: (name, exposant) ->
@@ -775,15 +811,15 @@ class SymbolNumber extends NumberObject
 		obj = {}
 		obj[@_name] = @_exposant
 		new Monome(new RealNumber(1),obj)
-	compositeString: (tex) ->
+	compositeString: (options) ->
 		switch
-			when tex and (@_name in grecques) then name = "\\#{@_name}"
+			when options.tex and (@_name in grecques) then name = "\\#{@_name}"
 			when @_name is "pi" then name = "π"
 			when @_name is "modulo" then name=MODULO_LETTER
 			else name = @_name
 		if @_exposant is 1 then return [name, @_plus, false, false]
 		else
-			if tex then strPower = "#{name}^{#{@_exposant}}"
+			if options.tex then strPower = "#{name}^{#{@_exposant}}"
 			else if @_exposant >=0 then strPower = "#{name}^#{@_exposant}"
 			else strPower = "#{name}^(#{@_exposant})"
 		[strPower, @_plus, false, true]
@@ -849,6 +885,12 @@ class SymbolNumber extends NumberObject
 		return { base: newRealNumber(0), error:false, modulo:newRealNumber(1) }
 	#------- Fonctions spécifiques -------------
 	getName: -> @_name
+	replace: (replacement,needle) ->
+		switch
+			when needle isnt @_name then @toClone()
+			when (@_exposant is 1) and @_plus then replacement.toClone()
+			when (@_exposant is 1) and not(@_plus) then replacement.toClone().opposite()
+			else (new PowerNumber(replacement.toClone(), new RealNumber(@_exposant))).setPlus(@_plus)
 class Monome extends NumberObject
 	coeff: null		# Toujours un SimpleNumber
 	symbols: null	# Une table d'objet {clé = string nom de la variable : valeur = number, toujours un entier relatif}
@@ -881,38 +923,38 @@ class Monome extends NumberObject
 	setPlus: (plus) ->
 		@coeff.setPlus(plus)
 		@
-	compositeString: (tex) ->
+	compositeString: (options) ->
 		symbolsString = []
-		if not @hasSymbols() then return @coeff.compositeString(tex)
+		if not @hasSymbols() then return @coeff.compositeString options
 		multObj = false
 		keys = Object.keys(@symbols).sort()
 		if not @_order then keys.reverse()
 		for key in keys
 			power = @symbols[key]
 			switch
-				when tex and (key in grecques) then name = "\\#{key}"
+				when options.tex and (key in grecques) then name = "\\#{key}"
 				when key is "pi" then name = "π"
 				when key is "modulo" then name=MODULO_LETTER
 				else name = key
 			if power is 1 then symbolsString.push name
 			else
 				multObj=true
-				if tex then symbolsString.push "#{name}^{#{power}}"
+				if options.tex then symbolsString.push "#{name}^{#{power}}"
 				else if power >=0 then symbolsString.push "#{name}^#{power}"
 				else symbolsString.push "#{name}^(#{power})"
 		if symbolsString.length>1 then multObj=true
-		if tex then symbolsString=symbolsString.join(" ")
+		if options.tex then symbolsString=symbolsString.join(" ")
 		else symbolsString = symbolsString.join("*")
 		# Je veux qu'un facteur en fraction apparaisse d'une certaine façon
-		if @coeff instanceof RationalNumber then return @coeff.compositeString(tex,symbolsString)
-		csCoeff = @coeff.compositeString(tex)
+		if @coeff instanceof RationalNumber then return @coeff.compositeString(options,symbolsString)
+		csCoeff = @coeff.compositeString options
 		if csCoeff[0] isnt "1"
 			multObj=true
 			if csCoeff[2]
-				if tex then symbolsString = "\\left(#{csCoeff[0]}\\right)#{symbolsString}"
+				if options.tex then symbolsString = "\\left(#{csCoeff[0]}\\right)#{symbolsString}"
 				else "(#{csCoeff[0]})*#{symbolsString}"
 			else
-				if tex then symbolsString = csCoeff[0]+symbolsString
+				if options.tex then symbolsString = csCoeff[0]+symbolsString
 				else symbolsString = csCoeff[0]+"*"+symbolsString
 		[symbolsString,csCoeff[1],false,multObj]
 	simplify: (infos=null) ->
@@ -989,7 +1031,7 @@ class Monome extends NumberObject
 		cl.pushSymbol(key,power) for key,power of @symbols
 		cl
 	isNul: () -> @coeff.isNul()
-	isOne: (factor) -> not(@hasSymbols) and @coeff.isOne(factor)
+	isOne: (factor) -> not(@hasSymbols()) and @coeff.isOne(factor)
 	assignValueToSymbol: (liste) ->
 		for key,value of liste
 			if @symbols[key]?
@@ -1043,18 +1085,31 @@ class Monome extends NumberObject
 	order: (normal=true) ->
 		@_order = normal
 		@
+	replace: (replacement,needle) ->
+		if @symbols[needle]?
+			x = replacement.toClone()
+			if @symbols[needle] isnt 1 then x = new PowerNumber(x,new RealNumber(@symbols[needle]))
+			y = @toClone()
+			delete y.symbols[needle]
+			switch
+				when y.isOne() then x
+				when y.isOne(-1) then x.opposite()
+				else x.md(y,false)
+		else @toClone()
 class FunctionNumber extends NumberObject
 	@functions: {
 		inconnue: {
 			tex: "\\text{fonction inconnue}"
 			alias: "inconnue"
 			needBraces: false
+			powerNearName: false
 			calc: (x) -> NaN
 		}
 		sqrt: {
 			tex: "\\sqrt"
 			alias: "sqrt"
 			needBraces: true
+			powerNearName: false
 			calc: (x) -> Math.sqrt x
 		}
 		racine: { alias: "sqrt" }
@@ -1062,24 +1117,29 @@ class FunctionNumber extends NumberObject
 			tex:"\\cos"
 			alias: "cos"
 			needBraces: false
+			powerNearName: true
 			calc: (x) -> Math.cos x
 		}
 		sin: {
 			tex:"\\sin"
 			alias: "sin"
 			needBraces: false
+			powerNearName: true
 			calc: (x) -> Math.sin x
 		}
 		ln: {
 			tex:"\\ln"
 			alias: "ln"
 			needBraces: false
+			powerNearName: true
 			calc: (x) -> Math.log x
 		}
 		exp: {
 			tex:"e^"
+			alt:{ needBraces:false, tex:"\\exp", powerNearName: true }
 			alias: "exp"
 			needBraces: true
+			powerNearName: false
 			calc: (x) -> Math.exp x
 		}
 	}
@@ -1099,22 +1159,42 @@ class FunctionNumber extends NumberObject
 	@cos: (operand) -> @make("cos",operand)
 	@sin: (operand) -> @make("sin",operand)
 	@sqrt: (operand) -> @make("sqrt",operand)
-	compositeString: (tex) ->
-		if tex
-			if @_function.needBraces
-				return ["#{@_function.tex}{#{@_operand.tex()}}", @_plus, false, false]
-			else
-				return ["#{@_function.tex}\\left(#{@_operand.tex()}\\right)", @_plus, false, false]
-		["#{@_function.alias}(#{@_operand})", @_plus, false, false]
-	simplify: (infos=null) ->
+	compositeString: (options,power) ->
+		if options.tex
+			opCS = @_operand.compositeString options
+			if opCS[1] then opTex = opCS[0] else opTex = "-#{opCS[0]}"
+			if isArray(options.altFunctionTex) and (@_function.alt?) and (@_function.alias in options.altFunctionTex) then f_tex = @_function.alt
+			else f_tex = @_function
+			switch
+				when power? and @_plus and f_tex.powerNearName
+					fct_name = "#{f_tex.tex}^{#{power}}"
+					power = null
+				when power? and not @_plus then fct_name = "-#{f_tex.tex}"
+				else fct_name = f_tex.tex
+			if f_tex.needBraces is true then tex = "#{fct_name}{#{opTex}}"
+			else tex = "#{fct_name}\\left(#{opTex}\\right)"
+			if power? then tex = "\\left(#{tex}\\right)^{#{power}}"
+			[tex, @_plus or power?, false, false]
+		else
+			if power?
+				if @_plus then ["(#{@_function.alias}(#{@_operand}))^#{power}", true, false, false]
+				else ["(-#{@_function.alias}(#{@_operand}))^#{power}", true, false, false]
+			else ["#{@_function.alias}(#{@_operand})", @_plus, false, false]
+	simplify: (infos=null, developp=false) ->
 		# Debug : À améliorer
-		@_operand = @_operand.simplify(infos)
+		@_operand = @_operand.simplify(infos,developp)
 		if (@_function.alias is "sqrt")
 			# Debug : Mettre le fonction sqrt pour tous
 			if (@_operand instanceof RationalNumber) or (@_operand instanceof RealNumber)
 				sqrt = @_operand.sqrt(infos)
 				if not @_plus then sqrt.opposite()
 				return sqrt
+		if (@_function.alias is "exp")
+			if @_operand.isNul() then return new RealNumber(1)
+			if @_operand.isOne() then return SymbolNumber.makeSymbol("e")
+		if (@_function.alias is "ln")
+			if @_operand.isOne() then return new RealNumber(0)
+			if @_operand.isNegative() or @_operand.isNul() then return new RealNumber()
 		@
 	# am: (operand, minus, infos=null) -> identique au parent
 	md: (operand, div, infos=null) ->
@@ -1136,7 +1216,7 @@ class FunctionNumber extends NumberObject
 	getOperand: -> @_operand
 	getFunction: -> @_function.alias
 	# developp: (infos=null) -> identique au parent
-	signature: -> @order().compositeString()[0]
+	signature: -> @order().compositeString({tex:false})[0]
 	# extractFactor: -> identique au parent
 	toPolynome: (variable = "x") ->
 		if @_operand.isFunctionOf(variable) then return (new Polynome(variable)).setInvalid()
@@ -1155,6 +1235,8 @@ class FunctionNumber extends NumberObject
 	facto: (regex) ->
 		if @toString().match(regex) isnt null then [new RealNumber(1), @toClone()]
 		else null
+	replace: (replacement,needle) ->
+		(new FunctionNumber(@_function.alias, @_operand.replace(replacement,needle) )).setPlus(@_plus)
 #----------Nombres simples-------
 # Les simples ne contiennent pas de fonction ou de symboles
 class SimpleNumber extends NumberObject
@@ -1195,8 +1277,8 @@ class SimpleNumber extends NumberObject
 class InftyNumber extends SimpleNumber
 	constructor: (plus) ->
 		if arguments.length is 1 then @_plus = (arguments[0] is true)
-	compositeString: (tex) ->
-		if (tex) then return ["\\infty", @_plus, false, false]
+	compositeString: (options) ->
+		if options.tex then return ["\\infty", @_plus, false, false]
 		["∞", @_plus, false, false]
 	simplify: (infos=null) -> @
 	# opposite: () -> identique à NumberObject
@@ -1260,16 +1342,23 @@ class RationalNumber extends SimpleNumber
 		else if @denominator.isNegative()
 			@denominator.opposite()
 			@numerator.opposite()
-	compositeString: (tex,complement="") ->
-		num = @numerator.compositeString(tex)
-		if (complement isnt "") and (num[0] is "1") then num[0] = complement
-		else if tex then num[0] = num[0]+" "+complement
-		else if complement isnt "" then num[0] = num[0]+"*"+complement
-		num[3]=(complement isnt "")
-		den = @denominator.compositeString(tex)
+	compositeString: (options,complement="") ->
+		num = @numerator.compositeString options
+		den = @denominator.compositeString options
+		if (complement isnt "") and ((options.symbolsUp is true) or (den[0] is "1"))
+			# On colle le complément au numérateur
+			switch
+				when num[0] is "1" then num[0] = complement
+				when options.tex then num[0] = num[0]+" "+complement
+				else num[0] = num[0]+"*"+complement
+			num[3]=true
 		if den[0] is "1" then return num
-		if tex then return ["\\frac{#{num[0]}}{#{den[0]}}", num[1], false, true]
-		["#{num[0]}/#{den[0]}", num[1], false, true]
+		if options.tex then out = ["\\frac{#{num[0]}}{#{den[0]}}", num[1], false, true]
+		else out = ["#{num[0]}/#{den[0]}", num[1], false, true]
+		if (complement isnt "") and (options.symbolsUp is false)
+			if options.tex then out[0] = out[0]+" "+complement
+			else out[0] = out[0]+"*"+complement
+		out
 	simplify: (infos=null) ->
 		if @isNaN() then return new RealNumber()
 		if @isNul() then return new RealNumber(0)
@@ -1363,19 +1452,19 @@ class RadicalNumber extends SimpleNumber
 	constructor: () ->
 		@factors=[] # contient des objets {base : un_entier, value : un réel ou fraction ou infty}
 		@_basesSimplified = false # indique si les racines sont simplifiées et regroupées
-	compositeString: (tex) ->
+	compositeString: (options) ->
 		if @isNul() then return ['0', true, false, false]
 		@order()
 		strs = []
 		for factor in @factors
 			base = factor.base
 			if base<0
-				cs = factor.value.compositeString(tex,"i")
+				cs = factor.value.compositeString(options,"i")
 				base=-base
-			else cs = factor.value.compositeString(tex)
+			else cs = factor.value.compositeString(options)
 			if cs[0] is "1" and (factor.base isnt 1) then cs[0] = ""
 			if base isnt 1
-				if (tex) then cs[0] = "#{cs[0]}\\sqrt{#{base}}"
+				if options.tex then cs[0] = "#{cs[0]}\\sqrt{#{base}}"
 				else cs[0] = "#{cs[0]}sqrt(#{base})"
 			if cs[1] then strs.push("+")
 			else strs.push("-")
@@ -1638,16 +1727,16 @@ class RealNumber extends FloatNumber
 		else @_value = - Math.abs(@_value)
 		@
 	signe: () -> if @_value < 0 then -1 else 1
-	compositeString: (tex,complement="") ->
+	compositeString: (options,complement="") ->
 		if @isNaN() then return ["NaN", true, false, false]
 		# En javascript, un Number peut être infini
 		multGroup = (complement isnt "")
 		if isInfty(@_value)
-			if tex then return ["\\infty"+complement, @_value > 0, false, multGroup]
+			if options.tex then return ["\\infty"+complement, @_value > 0, false, multGroup]
 			else return ["∞"+complement, @_value > 0, false, multGroup]
 		v = Math.abs(@_value)
 		if @percent
-			if tex then str_value = "#{v*100}\\%"
+			if options.tex then str_value = "#{v*100}\\%"
 			else str_value = "#{v*100}%"
 			if multGroup then str_value += " "+complement
 		else
@@ -1827,9 +1916,9 @@ class ComplexeNumber extends SimpleNumber
 	signe: () ->
 		if isReal() then return @_reel.signe()
 		else return undefined
-	compositeString: (tex) ->
-		re = @_reel.compositeString(tex)
-		im = @_imaginaire.compositeString(tex)
+	compositeString: (options) ->
+		re = @_reel.compositeString options
+		im = @_imaginaire.compositeString options
 		if im[0] is "0" then return re
 		if im[0] is "1" then im[0] = "i"
 		else

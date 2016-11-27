@@ -68,7 +68,7 @@ class Polynome
 		if @isNul() then return "0"
 		arrOut = []
 		for monome in @_monomes
-			cs = monome.coeff.compositeString(false)
+			cs = monome.coeff.compositeString { tex:false }
 			power = switch monome.power
 				when 0 then "1"
 				when 1 then @_variable
@@ -95,8 +95,9 @@ class Polynome
 		for monome in @_monomes
 			output_arr.push monome.coeff.toClone().md(x.toClone().puissance(monome.power),false)
 		PlusNumber.makePlus output_arr
-	tex: (options) ->
-		canonique = (options?.canonique is true) and (@degre() is 2)
+	tex: (config) ->
+		options = mergeObject { tex:true, canonique:false }, config
+		canonique = (options.canonique is true) and (@degre() is 2)
 		switch
 			when canonique
 				a = @getCoeff(2)
@@ -105,33 +106,33 @@ class Polynome
 				xS = b.toClone().opposite().md((new RealNumber(2)).md(a,false),true).simplify()
 				yS = @calc(xS)
 				if not xS.isNul()
-					cs = xS.compositeString(true)
+					cs = xS.compositeString options
 					output = "\\left("+@_variable
 					# inversion du signe devant le xS
 					if cs[1] then output = output + "-"
 					else output = output + "+"
 					output = output+ cs[0] + "\\right)^2"
 				else output = @_variable+"^2"
-				cs = a.compositeString(true)
+				cs = a.compositeString options
 				if cs[0] isnt "1" then output = cs[0]+output
 				if not cs[1] then output = "-"+output
 				if not yS.isNul()
-					cs = yS.compositeString(true)
+					cs = yS.compositeString options
 					if cs[1] then output = output+"+"+cs[0]
 					else output = output+"-"+cs[0]
 			else
 				if @.isNul() then return "0"
 				@unsort()
-				cs0 = @monomeToTex(@_monomes[0])
+				cs0 = @monomeToTex(@_monomes[0],options)
 				output = cs0[0]
 				if @_monomes.length is 1 then return output
 				for monome in @_monomes[1..@_monomes.length-1]
-					cs = @monomeToTex(monome)
+					cs = @monomeToTex(monome,options)
 					if cs[1] then output = output+"+"
 					output = output+cs[0]
 		output
-	monomeToTex : (monome) ->
-		cs = monome.coeff.compositeString(true)
+	monomeToTex : (monome,options) ->
+		cs = monome.coeff.compositeString options
 		if cs[1] then output = ""
 		else output = "-"
 		if cs[0] isnt "1"
@@ -389,6 +390,10 @@ class Polynome
 	solveExact: (value,imag) ->
 		# On résout poly = value
 		# Dans le cas de coefficients dépendant d'un symbole, delta.isNegative revoie false et alors on envisage les deux racines, même si le delta est une expression ne pouvant être que négative
+		if @degre() is 1
+			a = @getCoeff(1)
+			b = @getCoeff(0).toClone().am(value,true)
+			return [ b.opposite().md(a,true) ]
 		if @degre() is 2
 			a = @getCoeff(2)
 			b = @getCoeff(1)

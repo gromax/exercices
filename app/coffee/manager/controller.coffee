@@ -53,9 +53,9 @@ class @Controller
 			number: "Entrez un nombre"
 		}
 		unless local
-			menuLog = new VLogMenu { container:"#menu-droite", links:{ classe:"eleves-de-la-classe:"} }
-			@uLog.on { type:"change", forever:true, cb:(user)->
-				menuLog.display()
+			@menuLog = new VLogMenu { container:"#menu-droite", links:{ classe:"eleves-de-la-classe:"} }
+			@uLog.on { type:"change", forever:true, obj:@menuLog, cb:(menu,user)->
+				menu.display()
 				Controller.initRoutes user
 			}
 		@uLog.on { type:"init", obj:uri, cb:(uri,user)->
@@ -80,11 +80,51 @@ class @Controller
 						@setAriane [{text:"Liste des utilisateurs"}]
 						new VUsersList {}
 				}
+				{ #user:id/edit - aussi prof
+					regex:/// ^utilisateur:([0-9]+)/edit$ ///i
+					exec:(m)->
+						idUser = Number m[1]
+						user=Controller.uLog.users.get idUser
+						if user?
+							@setAriane [
+								{link:"comptes", text:"Liste des utilisateurs"}
+								{text:"Modification de l'utilisateur : #{user.nom} #{user.prenom}"}
+							]
+							new VUserMod {
+								item:user
+								container:"#mainContent"
+								links: { cancel:"comptes" }
+							}
+				}
+				{ #mon-compte/edit - aussi prof
+					regex:/// ^mon-compte/edit$ ///i
+					exec:(m)->
+						@setAriane [
+							{text:"Modification de mon compte"}
+						]
+						new VUserMod {
+							item:Controller.uLog
+							container:"#mainContent"
+							links: { cancel:"Home" }
+						}
+				}
 				{# classes
 					regex:/// ^classes$ ///i
 					exec:(m)->
 						@setAriane [{text:"Liste des classes"}]
 						new VClassesList { links:{ classe:"eleves-de-la-classe:"} }
+				}
+				{# classes/add - aussi prof
+					regex:/// ^classes/add$ ///i
+					exec:(m)->
+						@setAriane [
+							{link:"classes", text:"Liste des classes"}
+							{text:"Création d'une classe"}
+						]
+						new VClasseMod {
+							container:"#mainContent"
+							links: { cancel:"classes" }
+						}
 				}
 				{ # classe:id/edit - aussi prof
 					regex:/// ^classe:([0-9]+)/edit$ ///i
@@ -372,12 +412,13 @@ class @Controller
 						idClasse = Number m[1]
 						classe=Controller.uLog.classes.get idClasse
 						if classe?
-							Controller.uLog.setClasseFiltre classe
+							filtre = { idClasse:idClasse, rank:"Élève", classe:classe }
+							Controller.uLog.users.setFilter filtre
 							@setAriane [
 								{link:"classes", text:"Liste des classes"}
 								{text:"Liste des élèves de "+classe.nom}
 							]
-							new VUsersList { filtre: {idClasse: classe.id} }
+							new VUsersList { filtre: filtre, showClasses:false, showRanks:false }
 				}
 				{ # notes-eleve:id - aussi prof (avec "vos classes")
 					# Liste des devoirs d'un élève, avec les notes
@@ -527,6 +568,18 @@ class @Controller
 					exec:(m)->
 						Controller.uLog.deconnexion { cb: ()-> new VHome {} }
 						@setAriane()
+				}
+				{ #mon-compte/edit
+					regex:/// ^mon-compte/edit$ ///i
+					exec:(m)->
+						@setAriane [
+							{text:"Modification de mon compte"}
+						]
+						new VUserMod {
+							item:Controller.uLog
+							container:"#mainContent"
+							links: { cancel:"Home" }
+						}
 				}
 				{
 					regex:/// ^exercices$ ///i
@@ -783,3 +836,4 @@ class @Controller
 			})
 	@setAriane: (list) ->
 		$("ol[name='ariane']").html Handlebars.templates.ariane( {fils:list} )
+

@@ -27,7 +27,8 @@
 {{!bouton lock/unlock}}
 	<button type="button" class="btn {{#if item.locked}}btn-danger{{else}}btn-success{{/if}} btn-sm" name="lockButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Vérouiller/Déverrouiller"><span class="glyphicon glyphicon-lock"></span></button>
 {{!Bouton d'édition}}
-	<button type="button" class="btn btn-default btn-sm" name="editButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Modifier"><span class="glyphicon glyphicon-pencil"></span></button>
+	<!--<button type="button" class="btn btn-default btn-sm" name="editButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Modifier"><span class="glyphicon glyphicon-pencil"></span></button>-->
+	<a href="#utilisateur:{{ item.id }}/edit" class="btn btn-default btn-sm" role="button"><span class="glyphicon glyphicon-pencil" data-toggle="tooltip" data-placement="top" title="Modifier"></span></a>
 {{!Bouton suppression}}
 	<button type="button" class="btn btn-default btn-sm {{#if item.locked}}disabled{{/if}}" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="text-danger glyphicon glyphicon-trash"></span></button>
 {{!Bouton mdp oublié}}

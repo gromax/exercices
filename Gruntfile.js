@@ -70,18 +70,42 @@ module.exports = function(grunt) {
       }
     },
     coffee: {
-      development: {
+      math: {
         options: {
           bare:false,
           join:true
         },
         files: {
-          'dist/exercices.js': ['app/coffee/exercices/functions.coffee','app/coffee/exercices/exercice.coffee','app/coffee/exercices/briques.coffee','app/coffee/exercices/aide.coffee','app/coffee/exercices/gestClavier.coffee','app/coffee/exercices/exo__*.coffee'],
-          'dist/manager.js': 'app/coffee/manager/*.coffee',
-          'dist/math.js': ['app/coffee/math/functions.coffee','app/coffee/math/math.coffee','app/coffee/math/ensembleObject.coffee','app/coffee/math/tokens.coffee','app/coffee/math/parser.coffee','app/coffee/math/polynome.coffee','app/coffee/math/geometrie.coffee','app/coffee/math/proba.coffee','app/coffee/math/Stats.coffee','app/coffee/math/suite.coffee','app/coffee/math/trigo.coffee','app/coffee/math/erreur.coffee','app/coffee/math/myMath.coffee'],
+          'dist/math.js': ['app/coffee/math/functions.coffee','app/coffee/math/math.coffee','app/coffee/math/ensembleObject.coffee','app/coffee/math/tokens.coffee','app/coffee/math/parser.coffee','app/coffee/math/polynome.coffee','app/coffee/math/geometrie.coffee','app/coffee/math/proba.coffee','app/coffee/math/Stats.coffee','app/coffee/math/suite.coffee','app/coffee/math/trigo.coffee','app/coffee/math/erreur.coffee','app/coffee/math/myMath.coffee']
+        }
+      },
+      disp: {
+        options: {
+          bare:false,
+          join:true
+        },
+        files: {
           'dist/disp.js': ['app/coffee/disp/functions.coffee', 'app/coffee/disp/svg_helper.coffee', 'app/coffee/disp/tabVar.coffee']
         }
       },
+      manager: {
+        options: {
+          bare:false,
+          join:true
+        },
+        files: {
+          'dist/manager.js': 'app/coffee/manager/*.coffee'
+        }
+      },
+      exercices: {
+        options: {
+          bare:false,
+          join:true
+        },
+        files: {
+          'dist/exercices.js': ['app/coffee/exercices/functions.coffee','app/coffee/exercices/exercice.coffee','app/coffee/exercices/briques.coffee','app/coffee/exercices/aide.coffee','app/coffee/exercices/gestClavier.coffee','app/coffee/exercices/exo__*.coffee']
+        }
+      }
     },
     watch: {
         less: {

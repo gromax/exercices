@@ -14,6 +14,7 @@ class SimpleCollection
 	lastSort: null
 	sortOrder: -1 # -1 pour reverse, +1 pour normal
 	model: null
+	permanentFilter:null
 	constructor: (liste) ->
 		if @model is null then @model = SimpleModel #Model par défaut
 		@parse liste
@@ -58,12 +59,16 @@ class SimpleCollection
 		unless @_liste? then @_liste = []
 		if liste? then @push(item,false) for item in liste
 		if @lastSort? then @_liste.sort sortBy @lastSort, @sortOrder
-	liste: (filter)->
-		if filter?
+	liste: (inFilter)->
+		if (filter = inFilter ? @permanentFilter)?
 			if (typeof filter.search is "string") and (filter.search isnt "") then filter.reg = new RegExp("("+filter.search+")")
 			else filter.reg = null
 			return @filteredList(filter)
 		@_liste
+	setFilter: (inFilter) ->
+		@permanentFilter = inFilter
+		@triggerEvent "setFilter"
+		@
 	filteredList: (filter) ->
 		output = []
 		for item in @_liste
@@ -73,7 +78,7 @@ class SimpleCollection
 		# Si needle est un objet, on le chercher directement et on renvoie les objets précédents et suivants,
 		# sinon on cherche l'objet dont l'id est needle et on renvoie les ids précédents et suivants
 		out = { prev:null, next:null }
-		liste = @liste(filter)
+		liste = @liste(filter ? @permanentFilter)
 		if typeof needle is "object"
 			indice = liste.indexOf(needle)
 			if indice>0 then out.prev  = liste[indice-1]
@@ -137,7 +142,9 @@ class Collection extends SimpleCollection
 				if @events[i].obj? then @events[i].cb? @events[i].obj, params...
 				else @events[i].cb? params...
 				closeModal @events[i].modal
+				if @events[i].url? then pushUrlInHistory @events[i].url
 				if not(@events[i].forever) then @events.splice(i,1) # evenements once par défaut
+				else i++
 			else i++
 class CUsers extends Collection
 	name: "users"
@@ -148,16 +155,22 @@ class CUsers extends Collection
 		id = Number id
 		if id is @loggedUser.id then return @loggedUser
 		return (it for it in @_liste when it.id is id)[0]
-	nextEleve: (id) ->
+	nextEleve: (id, idClasse) ->
 		index = (k for it,k in @_liste when it.id is id)[0]
 		index++
-		index++ while (index<@_liste.length) and not(@_liste[index]?.isEleve)
+		if idClasse?
+			index++ while (index<@_liste.length) and not(@_liste[index]?.isEleve) and (@_liste[index]?.idClasse isnt idClasse)
+		else
+			index++ while (index<@_liste.length) and not(@_liste[index]?.isEleve)
 		if index<@_liste.length then return @_liste[index]
 		else return null
-	prevEleve: (id) ->
+	prevEleve: (id,idClasse) ->
 		index = (k for it,k in @_liste when it.id is id)[0]
 		index--
-		index-- while (index>=0) and not(@_liste[index]?.isEleve)
+		if idClasse?
+			index-- while (index>=0) and not(@_liste[index]?.isEleve) and (@_liste[index]?.idClasse isnt idClasse)
+		else
+			index-- while (index>=0) and not(@_liste[index]?.isEleve)
 		if index>=0 then return @_liste[index]
 		else return null
 class CClasses extends Collection
@@ -190,8 +203,6 @@ class CExosFiche extends Collection
 				fiche = fiches.get currentId
 			fiche?.pushExoFiche item
 class CNotes extends Collection
-	@fetchUFN:(liste)->
-		$.get("./action.php?action=UFNlist", {liste:liste.join(";")}, @fetchUFN_CB, "json")
 	constructor: (liste) ->
 		@model = MNote
 		super(liste)
@@ -222,3 +233,11 @@ class CCons extends Collection
 	constructor: (liste)->
 		@model = MCon
 		super(liste)
+	purge: ->
+		$.get("./action.php?action=ConxPurge", {}, @purge_CB, "json")
+	purge_CB: (data)=>
+		if data.error
+			Controller.errorMessagesList data.messages, "", null
+		else
+			@_liste = []
+			@triggerEvent "purge"

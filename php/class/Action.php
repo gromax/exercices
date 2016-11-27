@@ -147,11 +147,10 @@ class Action
 	{
 		$idClasse = getPost("idClasse");
 		$pwdClasse = getPost("pwdClasse");
-		$user = extractFromPost(array('pseudo'=>null, 'nom'=>'', 'prenom'=>'', 'email'=>null, 'pwd'=>''));
+		$user = extractFromPost(array('nom'=>'', 'prenom'=>'', 'email'=>null, 'pwd'=>''));
 		if (($idClasse === null) || ($pwdClasse === null)) EC::addError("Paramètres manquants.");
 		else {
 			$user=new Logged(array(
-				'pseudo'=>$user['pseudo'],
 				'pwd'=>$user['pwd'],
 				'email'=>$user['email'],
 				'nom'=>$user['nom'],
@@ -753,6 +752,17 @@ class Action
 			if (count($liste)>0) $output['faits'] = Note::getList(array("usersList"=>$liste));
 			else $output['faits'] = array();
 			return $output;
+		}
+		return array("error"=>true, "messages"=>EC::messages(), "unlogged"=>$unlogged);
+	}
+
+	protected function ConxPurge()
+	{
+		$uLog=Logged::getConnectedUser();
+		if (($unlogged = !$uLog->connexionOk()) && !$uLog->isAdmin()) EC::addError("Connexion admin requise.");
+		else {
+			$success = Conx::purge();
+			if ($success) return array("success"=>true, "messages"=>EC::messages());
 		}
 		return array("error"=>true, "messages"=>EC::messages(), "unlogged"=>$unlogged);
 	}

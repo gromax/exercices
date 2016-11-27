@@ -202,6 +202,7 @@
 					pile.push (new Ensemble()).init(m[1] is "[", op1, m[2] is "]", op2)
 		if pile.length is 0 then return new RealNumber()
 		out = pile.pop()
+		if config.developp then out.developp()
 		if config.simplify then out = out.simplify(null,config.developp)
 		if config.modulo isnt false
 			# On cherche à extraire un modulo
@@ -262,7 +263,9 @@
 	}
 	polynome: {
 		make:(params) ->
-			if typeof params is "string" then params = { expression:params }
+			switch
+				when typeof params is "string" then params = { expression:params }
+				when params instanceof NumberObject then params = { number:params }
 			config = mergeObj {
 				variable: "x"
 			}, params
@@ -290,6 +293,7 @@
 					coeffs = ( mM.toNumber x for x in config.coeffs )
 					PolynomeMaker.widthCoeffs(coeffs,config.variable)
 				when config.expression? then PolynomeMaker.parse(config.expression, config.variable)
+				when config.number? then config.number.toPolynome(config.variable)
 				else PolynomeMaker.invalid(config.variable)
 		parse: (expression, variable="x") -> (new Parser expression,{type:"number"}).object?.toPolynome(variable)
 		solve: {

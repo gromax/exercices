@@ -21,7 +21,7 @@ class View
 			if (typeof obj is "object") and (obj isnt null)
 				out[key] = val for key, val of obj
 		out
-	init_config:(params=null) -> [{ container:@_defaultContainer, divId:@divId }]
+	init_config:(params=null) -> [{ container:@_defaultContainer, divId:@divId, links:null }]
 	events: -> []
 	html: -> Handlebars.templates.erreur {}
 	display: ->
@@ -83,7 +83,11 @@ class View
 		out[it.name] = it.value for it in arrValues
 		out
 class VLogMenu extends View
-	init_config:(params=null) -> h_push super(),{ user:Controller.uLog, showMessages:Controller.showMessages, id:@divId }
+	init_config:(params=null) -> h_push super(),{
+		user:Controller.uLog
+		showMessages:Controller.showMessages
+		id:@divId
+	}
 	html: -> Handlebars.templates.navbarDte @config
 	events: -> [
 		{ evt:"click", selector:"#modifMyAccount#{@divId}", callback:"changeULog" }
@@ -240,7 +244,7 @@ class VUsersList extends VList
 	_glyph: "glyphicon-user"
 	init_config:(params=null)->
 		@push_action { name:"lockButton", fct_name:"lockAction" }, "button"
-		@push_action { name:"filtreClasseButton", fct_name:"filtreClasse" }, "button"
+		@push_action { name:"filtreClasseButton", fct_name:"filtrerClasse" }, "button"
 		@push_action { name:"forgottenButton", fct_name:"forgottenAction" }, "button"
 		h_push super(), {
 			showEmail:true
@@ -250,7 +254,7 @@ class VUsersList extends VList
 			showIds:Controller.uLog.isAdmin
 			showPseudo:USE_PSEUDO and Controller.uLog.isAdmin
 			showRanks:Controller.uLog.isAdmin
-			filtre:{ idClasse:Controller.uLog.classeFiltre?.id }
+			filtre:@collection().permanentFilter
 			buttons: if Controller.uLog.isAdmin then [{ name:"_add_button", title:"Ajouter un utilisateur"}] else null
 		}
 	collection: -> Controller.uLog.users
@@ -262,13 +266,14 @@ class VUsersList extends VList
 			view.final()
 		}
 		item.save {locked:not item.locked}
-	filtreClasse: (idClasse) ->
-		if idClasse is @config.filtre.idClasse
-			@config.filtre.idClasse = null
-			Controller.uLog.setClasseFiltre null
+	filtrerClasse: (idClasse) ->
+		if idClasse is @config.filtre?.idClasse
+			@collection().setFilter null
+			@config.filtre = null
 		else
-			@config.filtre.idClasse = idClasse
-			Controller.uLog.setClasseFiltre Controller.uLog.classes.get(idClasse)
+			filtre = { idClasse:idClasse, rank:"Élève", classe:Controller.uLog.classes.get(idClasse) }
+			@collection().setFilter filtre
+			@config.filtre = filtre
 		@renderItems()
 		@final()
 	forgottenAction: (idUser) ->
@@ -285,7 +290,16 @@ class VConsList extends VList
 	_template: "Con_parent"
 	_itemTemplate: "Con_item"
 	_glyph: "glyphicon-off"
+	init_config:(params=null) ->
+		@push_action { name:"_purge_button", fct_name:"purge" }, "button"
+		h_push super(), { buttons:[ { name:"_purge_button", title:"Purger cette liste"} ] }
 	collection: -> Controller.uLog.cons
+	purge: ->
+		if confirm("Purger la liste ?")
+			@collection().on { type:"purge", obj:@, cb:(view,col)->
+				view.renderItems()
+			}
+			@collection().purge()
 class VUserChoice extends VList
 	_template: "User_parent"
 	_itemTemplate: "User_item"
@@ -296,7 +310,7 @@ class VUserChoice extends VList
 		h_push super(), {
 			showClasses:true
 			addButton:true
-			filtre: { idClasse:Controller.uLog.classeFiltre?.id, rank:"Élève" }
+			filtre: { idClasse:Controller.filtreClasse?.id, rank:"Élève" }
 			title: "Choix des utilisateurs"
 
 		}
@@ -310,11 +324,11 @@ class VUserChoice extends VList
 	collection: -> Controller.uLog.users
 	filtreClasse: (idClasse) ->
 		if idClasse is @config.filtre.idClasse
-			@config.filtre.idClasse = null
-			Controller.uLog.setClasseFiltre null
+			@config.filtre = null
+			@collection().setFilter = null
 		else
-			@config.filtre.idClasse = idClasse
-			Controller.uLog.setClasseFiltre Controller.uLog.classes.get(idClasse)
+			@collection().setFilter { idClasse:idClasse, rank:"Élève", classe:Controller.uLog.classes.get(idClasse) }
+			@config.filtre = { idClasse:idClasse, rank:"Élève", classe:Controller.uLog.classes.get(idClasse) }
 		@renderItems()
 		@final()
 class VClassesList extends VList
@@ -328,7 +342,7 @@ class VClassesList extends VList
 			showOwner:Controller.uLog.isAdmin
 			showOpen:Controller.uLog.isAdmin or Controller.uLog.isProf
 			showModify:Controller.uLog.isAdmin or Controller.uLog.isProf
-			buttons:if Controller.uLog.isAdmin or Controller.uLog.isProf then [{ name:"_add_button", title:"Ajouter une classe"}] else null
+			buttons:if Controller.uLog.isAdmin or Controller.uLog.isProf then [{ link:"classes/add", title:"Ajouter une classe"}] else null
 		}
 	collection: -> Controller.uLog.classes
 class VFichesList extends VList
@@ -442,12 +456,11 @@ class VList_aUF extends VList
 			# Création des boutons de navigation d'un utilisateur à l'autre
 			# Sans doute moins utile à l'avenir
 			user = params.user
-			precedent = user.parent.prevEleve user.id
-			if precedent is null then precNav = { name:"Précédent", class:"disabled", link:""}
-			else precNav = { name:"Élève précédent", class:"", link:"#notes-eleve:"+precedent.id }
-			suivant = user.parent.nextEleve user.id
-			if suivant is null then suivNav = { name:"Suivant", class:"disabled", link:""}
-			else suivNav = { name:"Élève suivant", class:"", link:"#notes-eleve:"+suivant.id }
+			neighbours = user.parent.neighbours(null,user)
+			if neighbours.prev is null then precNav = { name:"Précédent", class:"disabled", link:""}
+			else precNav = { name:"Élève précédent", class:"", link:"#notes-eleve:"+neighbours.prev.id }
+			if neighbours.next is null then suivNav = { name:"Suivant", class:"disabled", link:""}
+			else suivNav = { name:"Élève suivant", class:"", link:"#notes-eleve:"+neighbours.next.id }
 			othersNav=[precNav, suivNav]
 		if params.fiche? and (Controller.uLog.isProf or Controller.uLog.isAdmin)
 			# On propose d'ajouter des élèves
@@ -522,8 +535,12 @@ class VMod extends View
 				view = $form.data("view")
 				if view?
 					values = view.formatValues $form.serializeArray()
-					if view.config.item? then view.config.item.save values
-					else view.collection().add values
+					if view.config.item?
+						view.config.item.save values
+						if view.config.links.cancel? then view.config.item.on { type:"change", url:"#"+view.config.links.cancel }
+					else
+						view.collection().add values
+						if view.config.links.cancel? then view.config.item.on { type:"add", url:"#"+view.config.links.cancel }
 				false
 		}
 		if @config.container is "#modalContent"

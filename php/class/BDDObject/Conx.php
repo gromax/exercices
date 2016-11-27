@@ -31,10 +31,22 @@ class Conx extends Item
 		try {
 			$bdd_result=DB::query("SELECT id, date, identifiant, pwd, success FROM ".PREFIX_BDD."connexion_history ORDER BY date DESC");
 		} catch(MeekroDBException $e) {
-			EC::addBDDError($e->getMessage(), "Con/getList");
+			EC::addBDDError($e->getMessage(), "Conx/getList");
 			return array();
 		}
 		return $bdd_result;
+	}
+
+	public static function purge()
+	{
+		require_once BDD_CONFIG;
+		try {
+			DB::delete(PREFIX_BDD.static::$myName,"1=%i",1);
+		} catch(MeekroDBException $e) {
+			EC::addBDDError($e->getMessage(), "Conx/purge");
+			return false;
+		}
+		return true;
 	}
 
 	##################################### METHODES     #####################################
