@@ -55,6 +55,10 @@ class SimpleCollection
 			return (it for it in @_liste when it.id is id)[0]
 		else
 			return ( it for it in @_liste when (it.id is id) and (it.match?(filter)) )[0]
+	getByField: (field, value) ->
+		for it in @_liste
+			if it[field] is value then return it
+		return null
 	parse: (liste) ->
 		unless @_liste? then @_liste = []
 		if liste? then @push(item,false) for item in liste

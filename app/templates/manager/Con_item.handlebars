@@ -2,6 +2,7 @@
 <td><span class="badge">{{ item.id }}</span></td>
 <td>{{ item.dateFr }}</td>
 <td>{{ item.identifiant }}</td>
+<td>{{ item.user.prenom }} {{ item.user.nom }}</td>
 <td>{{ item.pwd }}</td>
 <td>{{#if item.success }}<span class="glyphicon glyphicon-ok-circle">{{else}}<span class="glyphicon glyphicon-ban-circle">{{/if}}</td>
 <td align="right">

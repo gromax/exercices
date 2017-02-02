@@ -96,7 +96,7 @@ class Polynome
 			output_arr.push monome.coeff.toClone().md(x.toClone().puissance(monome.power),false)
 		PlusNumber.makePlus output_arr
 	tex: (config) ->
-		options = mergeObject { tex:true, canonique:false }, config
+		options = mergeObj { tex:true, canonique:false }, config
 		canonique = (options.canonique is true) and (@degre() is 2)
 		switch
 			when canonique
@@ -390,26 +390,28 @@ class Polynome
 	solveExact: (value,imag) ->
 		# On résout poly = value
 		# Dans le cas de coefficients dépendant d'un symbole, delta.isNegative revoie false et alors on envisage les deux racines, même si le delta est une expression ne pouvant être que négative
-		if @degre() is 1
-			a = @getCoeff(1)
-			b = @getCoeff(0).toClone().am(value,true)
-			return [ b.opposite().md(a,true) ]
-		if @degre() is 2
-			a = @getCoeff(2)
-			b = @getCoeff(1)
-			c = @getCoeff(0).toClone().am(value,true)
-			delta = b.toClone().md(b,false).am((new RealNumber(4)).md(a, false).md(c, false), true).simplify()
-			neg=false # flag pour se rappeler le signe de delta
-			if delta.isNegative()
-				if imag
-					neg = true
-					delta.opposite()
-				else return []
-			x0 = b.toClone().opposite().md((new RealNumber(2)).md(a, false), true).simplify()
-			if delta.isNul() then return [x0]
-			sq = delta.sqrt().md((new RealNumber(2)).md(a, false), true)
-			if neg then sq = sq.md(new ComplexeNumber(0,1), false)
-			return [x0.toClone().am(sq, true).simplify(), x0.toClone().am(sq, false).simplify()]
+		switch
+			when @degre() is 1
+				a = @getCoeff(1)
+				b = @getCoeff(0).toClone().am(value,true)
+				return [ b.opposite().md(a,true) ]
+			when @degre() is 2
+				a = @getCoeff(2)
+				b = @getCoeff(1)
+				c = @getCoeff(0).toClone().am(value,true)
+				delta = b.toClone().md(b,false).am((new RealNumber(4)).md(a, false).md(c, false), true).simplify()
+				neg=false # flag pour se rappeler le signe de delta
+				if delta.isNegative()
+					if imag
+						neg = true
+						delta.opposite()
+					else return []
+				x0 = b.toClone().opposite().md((new RealNumber(2)).md(a, false), true).simplify()
+				if delta.isNul() then return [x0]
+				sq = delta.sqrt().md((new RealNumber(2)).md(a, false), true)
+				if neg then sq = sq.md(new ComplexeNumber(0,1), false)
+				return [x0.toClone().am(sq, true).simplify(), x0.toClone().am(sq, false).simplify()]
+			else @solve_numeric(null,null,10,0)
 	discriminant: () ->
 		if @degre() isnt 2 then return new RealNumber()
 		a = @getCoeff(2)

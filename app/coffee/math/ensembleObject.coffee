@@ -4,7 +4,7 @@
 class Collection extends MObject
 	constructor: (@type, ops)->
 		@_operands = []
-		@_operands.push item for item in ops
+		if isArray(ops) then @_operands.push item for item in ops
 	push: ->
 		for item in arguments
 			if (item instanceof Collection) and (item.type is @type) then @_operands.push item._operands...
@@ -20,6 +20,60 @@ class Collection extends MObject
 	tex: -> (op.tex() for op in @_operands).join(@type)
 	toString: -> (String(op) for op in @_operands).join(@type)
 	getOperands: -> @_operands
+	toEquation: -> new Equation(@operands[0], @operands[1])
+class Equation extends MObject
+	constructor: (gauche, droite)->
+		@gauche = @affectation gauche
+		@droite = @affectation droite
+	affectation: (value) ->
+		if value instanceof NumberObject then value
+		else new RealNumber()
+	simplify: (infos=null,developp=false) ->
+		@gauche = @gauche.simplify(infos,developp)
+		@droite = @droite.simplify(infos,developp)
+		@
+	reduct: ->
+		unless @_reduct? then @_reduct = @gauche.toClone().am(@droite,true).simplify(null,true)
+		@_reduct
+	toClone: ->
+		mg = @gauche.toClone()
+		md = @droite.toClone()
+		new Equation(mg,md,@isValid)
+	tex: (config)-> "#{@gauche.tex(config)} = #{@droite.tex(config)}"
+	toString: -> "#{ @gauche } = #{ @droite }"
+	isEqual: (other)->
+		if not(other instanceof Equation) then return false
+		eq1 = @reduct()
+		norm1 = @normalize(eq1)
+		# S'il n'y a aucun symbole à réduire on considère que ça ne va pas
+		if norm1 is null then return false
+		eq2 = other.reduct()
+		norm2 = @normalize(eq2,norm1.signature)
+		if norm2 is null then return false
+		eq1.toClone().md(norm2.factor,false).am(eq2.toClone().md(norm1.factor,false),true).developp().simplify(null,false).isNul()
+	distance: (other)->
+		if @isEqual(other) then 0
+		else 1
+	normalize: (nObj, signature) ->
+		# Cette fonction est utilisée pour comparer deux équations
+		# Elle consiste à chercher la présence d'un symbole dans un numberObject développé
+		# et de voir son coefficient.
+		# En comparant entre deux, on peut trouver s'il y a une combinaison linéaire passant de l'un à l'autre
+		# On peut préciser signature si on recherche une signature particulière
+		unless typeof signature is "string" then signature = null
+		switch
+			when nObj instanceof PlusNumber
+				for op in nObj.getOperands()
+					sign = op.signature()
+					if (sign is signature) or (signature is null) and (sign isnt "1") and (sign isnt "N/A") and (op.isFunctionOf().length > 0)
+						# Dans ce cas on a trouvé un élément avec une signature et qui contient un symbole
+						return { signature: sign, factor:op.toClone().extractFactor() }
+			when nObj instanceof NumberObject
+				sign = nObj.signature()
+				if (sign is signature) or (signature is null) and (sign isnt "1") and (sign isnt "N/A") and (nObj.isFunctionOf().length > 0)
+					# Dans ce cas on a trouvé un élément avec une signature et qui contient un symbole
+					return { signature: sign, factor:nObj.toClone().extractFactor() }
+		null
 #----------Ensembles---------
 class EnsembleObject extends MObject
 	# C'est par défaut un ensemble vide

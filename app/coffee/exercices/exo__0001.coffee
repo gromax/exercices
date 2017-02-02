@@ -45,7 +45,8 @@ Exercice.liste.push
 			]
 			aide:oHelp.droite.equation_reduite.oblique
 		}
-
+		data.A = A
+		data.B = B
 		[
 			new BEnonce {
 				zones:[{
@@ -65,5 +66,15 @@ Exercice.liste.push
 			}
 			lastStage
 		]
+	tex: (data, slide) ->
+		if not isArray(data) then data = [ data ]
+		{
+			title:@title
+			content:Handlebars.templates["tex_enumerate"] {
+				pre:"Dans tous les cas, donnez l'équation réduite de la droite $(AB)$."
+				items: ("Points $#{item.A.texLine()}$ et $#{item.B.texLine()}$" for item in data)
+				large:slide is true
+			}
+		}
 
 

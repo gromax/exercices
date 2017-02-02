@@ -395,13 +395,21 @@ class VExamsList extends VList
 		@_collection
 	texSlideAction: (id) ->
 		exam = @collection().get id
-		console.log exam.toTex(true)
+		str = exam.toTex(false)
+		str = str.replace(/&#x3D;/g, "=")
+		str = str.replace(/&#x27;/g, "'")
+		$("#zonetexte#{@divId}").val(str)
+		#console.log exam.toTex(true)
 		#fiche?.load { type:"load", obj:@, cb:(view,fiche)->
 		#	$(view.config.container).html fiche.toTexSlide()
 		#}
 	texAction: (id) ->
 		exam = @collection().get id
-		console.log exam.toTex(false)
+		str = exam.toTex(false)
+		str = str.replace(/&#x3D;/g, "=")
+		str = str.replace(/&#x27;/g, "'")
+		$("#zonetexte#{@divId}").val(str)
+		#console.log exam.toTex(false)
 		#fiche?.load { type:"load", obj:@, cb:(view,fiche)->
 		#	$(view.config.container).html fiche.toTexSlide()
 		#}
@@ -537,10 +545,10 @@ class VMod extends View
 					values = view.formatValues $form.serializeArray()
 					if view.config.item?
 						view.config.item.save values
-						if view.config.links.cancel? then view.config.item.on { type:"change", url:"#"+view.config.links.cancel }
+						if view.config.links?.cancel? then view.config.item.on { type:"change", url:"#"+view.config.links.cancel }
 					else
 						view.collection().add values
-						if view.config.links.cancel? then view.config.item.on { type:"add", url:"#"+view.config.links.cancel }
+						if view.config.links?.cancel? then view.collection().on { type:"add", url:"#"+view.config.links.cancel }
 				false
 		}
 		if @config.container is "#modalContent"
@@ -832,6 +840,7 @@ class VExercice extends View
 			conf = Handlebars.templates.exoDebugDiv {
 				id:@config.showDebug
 				idForm:"form_debug_#{@divId}"
+				inputs:JSON.stringify @exo.data.inputs
 				answers:@exo.data.answers
 			}
 		else
@@ -859,8 +868,11 @@ class VExercice extends View
 				view = $form.data("view")
 				if view?
 					values = view.formatValues $form.serializeArray()
+					inputs = values.inputs
+					delete values.inputs
 					exo = view.exo
 					note = exo.note()
+					if inputs? then note.inputs = JSON.parse inputs
 					note.answers = values
 					exo.init { note:note }
 					view.display()

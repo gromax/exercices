@@ -25,7 +25,7 @@ Exercice.liste.push
 			new BEnonce { zones:[
 				{
 					body:"enonce"
-					html:"<p>Une usine fabrique des tuyaux en caoutchouc. On sait que #{inp.p*100}% des tuyaux sont poreux. On prélève {{n}} tuyaux dans la production qui est considérée comme assez importante pour qu'on puisse assimiler ce prélèvement à un prélèvement avec remise. On note $X$ le nombre de tuyaux poreux.</p><p>On reconnaît un <b>schéma de Bernoulli</b>.</p>"
+					html:"<p>Une usine fabrique des tuyaux en caoutchouc. On sait que #{inp.p*100}% des tuyaux sont poreux. On prélève #{inp.n} tuyaux dans la production qui est considérée comme assez importante pour qu'on puisse assimiler ce prélèvement à un prélèvement avec remise. On note $X$ le nombre de tuyaux poreux.</p><p>On reconnaît un <b>schéma de Bernoulli</b>.</p>"
 				}
 				{
 					well:"schema"

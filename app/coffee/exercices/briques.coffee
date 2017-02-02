@@ -74,99 +74,11 @@ class Brique extends BaseBrique
 				if (typeof @a[name] is "undefined") then return false
 		true
 	run: (upBDD) -> @parent?.run(upBDD)
-	verification: (name, tag, user, good, bareme, params) ->
-		# name = nom de la réponse dans les champs de formulaire
-		# tag = étiquette utilisée pour l'utilisateur
-		# user = valeur retournée par l'utilisateur. Peut être un objet déjà parsé.
-		# good = bonne valeur. Un NumberObject ou EnsembleObject
-		# bareme = nombres de points alloués à cette question (bareme total = 100)
-		# params = objet de paramètres dont les possibilités sont données ci-dessous
-		config = @mergeConf {
-			formes:null		# forme autorisées. Par ex : { racine:true, fraction:true } ou encore "FRACTION"
-			p_forme:0.5		# pondération pour une forme pas suffisemment simplifiée
-			tolerance:0		# Une approximation dans la tolérance est considérée comme juste et n'est pas signalée
-			approx:0.1		# Une approximation est tolérée mais signalée comme fausse
-			p_approx:0.5	# Pondération si le résultat n'est qu'approximatif et dans la tolérance
-			arrondi:null	# Si on demande un arrondi, on précise ici une puissance (-2 pour 0.01 par ex.)
-			p_arrondi:0.5	# Pondération si arrondi demandé et mal fait
-			p_modulo:0.5	# Pondération si le modulo est faux
-			developp:false	# Indique s'il faut développer le résultat de l'utilisateur
-			toLowercase:false
-			cor_prefix:""
-		}, params
-		# La bonne valeur peut-être un ensemble ou un objet convertible en number ou même un tableau de number
-		if mM.isEnsemble(good) then parse_type = "ensemble" else parse_type = "number"
-		if user instanceof Parser then info=user # Cas où on fournirait un user déjà parsé
-		else info = new Parser user, { type:parse_type, developp:config.developp, toLowercase:config.toLowercase }
-		output = {
-			name:name							# nom de la réponse, correspond au champ de formulaire
-			tag: tag							# étiquette
-			goodObject: good					# bonne réponse sous forme d'objet
-			good: config.cor_prefix+good.tex()	# bonne réponse sous forme tex
-			bareme: 0							# nombre de points obtenus
-			ok:false							# ok = true -> la réponse s'affiche en vert avec éventuellement une remarque
-			user:info.expression				# text entré par l'utilisateur
-			userTex:config.cor_prefix+info.tex	# tex de la réponse entrée par l'utilisateur
-			userObject:info.object				# objet parsé entré par l'utilisateur
-			formeOk : true						# La forme est ok par défaut
-		}
-		# Dans le cas d'un number, output renverra également :
-		# - erreur = objet produit par la fonction mM.erreur et contenant les infos :
-		# -- exact = true/false : valeur exacte
-		# -- float = true/false : valeur décimale
-		# -- approx_ok:true/false : approximation correctement faite
-		# -- ecart:ecart = nombre
-		# -- moduloError = false/tex : en cas d'erreur, on envoie le tex du modulo demandé
-		# -- p_user = nombre entier : puissance du dernier chiffre significatif
-		# - resolution = string : Dans le cas d'un arrondi, text de la forme "0,01"
-		# - good_arrondi = valeur numérique de la bonne réponse arrondie correctement
-		# - mauvais_arrondi = true : La valeur donnée n'est pas un float ou erreur de troncature ou précision trop grande
-		# - approximation = true : Quand la réponse utilisateur est un float, approx correcte et dans la zone tolérée (mais éventuellement pénalisée) d'une approx
-		if parse_type is "ensemble"
-			output.goodObject = good								# Bonne réponse
-			if config.tex? then output.good = config.tex			# Le tex peut être fourni
-			else output.good = config.cor_prefix+good.tex()			# Sinon on calcule le tex
-			output.ok = good.isEqual(info.object,config.tolerance)
-			# on ne vérifie pas la forme pour un ensemble (formeOk)
-			if output.ok then @data.note += output.bareme = bareme
-		else
-			erreur = output.erreur = mM.erreur good, info.object
-			output.goodObject = erreur.good							# Bonne réponse
-			if config.tex? then output.good = config.tex			# Le tex peut être fourni
-			else output.good = config.cor_prefix+erreur.good.tex()	# Sinon on calcule le tex
-			formeOk = output.formeOk = info.forme(config.formes)
-			switch
-				when config.arrondi isnt null
-					# On exige un arrondi.
-					# On envisage pas le cas d'un modulo, donc si l'utilisateur en a mis un, c'est faux
-					approx = Math.pow(10,config.arrondi)
-					output.resolution = numToStr approx
-					approx = approx/2
-					# On vérifie d'abord qu'on est juste au moins dans l'approx
-					output.good_arrondi = numToStr mM.float(good), -config.arrondi
-					# Une difficulté : Si la réponse attendue est ,4,10236 à 0,01. L'utilisateur répond 4,10 ou 4,1 ce qui est
-					# pris identique pour la machine et peut provoquer une erreur
-					if (erreur.exact or erreur.float and erreur.approx_ok and ((erreur.ordre<=config.arrondi) or (erreur.p_user<=config.arrondi))) and not erreur.moduloError
-						# Maintenant on peut vérifier si l'utilisateur respecte le format
-						if not erreur.float or erreur.troncature or (erreur.p_user<config.arrondi)
-							output.mauvais_arrondi = true
-							@data.note += output.bareme = bareme*config.p_arrondi
-						else
-							@data.note += output.bareme = bareme
-						output.ok = true
-				when erreur.exact or erreur.float and (erreur.ecart<=config.tolerance)
-					# Résultat exact ou dans la tolérance
-					if not formeOk then bareme *= config.p_forme
-					if erreur.moduloError then bareme *= config.p_modulo
-					@data.note += output.bareme = bareme
-					output.ok = true
-				when erreur.float and erreur.approx_ok and (erreur.ecart<=config.approx) and not erreur.moduloError
-					output.approximation = true
-					@data.note += output.bareme = bareme*config.p_approx
-					output.ok = true
-				else
-					config.custom?(output)
-					@data.note += output.bareme
+	verification: (name, tag, user, goodObject, bareme, params) ->
+		output = mM.verification(user,goodObject,params)
+		output.tag = tag
+		output.name = name
+		@data.note += output.ponderation*bareme
 		output
 	helper_disp_inputs: (title,text,inputs_list,aide,touches) ->
 		# params :
@@ -181,6 +93,7 @@ class Brique extends BaseBrique
 			clavier=[]
 			for touche in touches
 				switch
+					when touche is "infini" then clavier.push {name:"infty-button", title:"Infini", tag:"$\\infty$"}
 					when touche is "sqrt" then clavier.push {name:"sqrt-button", title:"Racine carrée", tag:"$\\sqrt{x}$"}
 					when touche is "pi" then clavier.push {name:"pi-button", title:"Pi", tag:"$\\pi$"}
 					when touche is "sqr" then clavier.push {name:"sqr-button", title:"Carré", tag:"$.^2$"}
@@ -227,6 +140,7 @@ class Brique extends BaseBrique
 			@gc = new GestClavier $inputs_List...
 			for touche in touches
 				switch
+					when touche is "infini" then $("button[name='infty-button']",@container).on 'click', (event) => @gc.clavier("∞","",true)
 					when touche is "sqrt" then $("button[name='sqrt-button']",@container).on 'click', (event) => @gc.clavier("sqrt(",")",false)
 					when touche is "pi" then $("button[name='pi-button']",@container).on 'click', (event) => @gc.clavier("π","",true)
 					when touche is "sqr" then $("button[name='sqr-button']",@container).on 'click', (event) => @gc.clavier("","^2",false)
@@ -235,25 +149,6 @@ class Brique extends BaseBrique
 					when typeof touche is "object" then $("button[name='#{touche.name}']",@container).on 'click', (event) => @gc.clavier(touche.pre,touche.post,touche.recouvre)
 		if inputs_list.length>0 then $("input[name='#{inputs_list[0].name}']",@container).focus()
 
-class BDiscriminant extends Brique
-	default: () -> { aKey:"delta", title:"Discriminant" }
-	go: -> (typeof @a[@config.aKey] isnt "undefined")
-	ask:->
-		@container.html Handlebars.templates.std_panel {
-			title:"Calcul du discriminant $\\Delta$"
-			focus:true
-			zones:[
-				{ body:"champ", html:Handlebars.templates.std_form { id:"form#{@divId}", inputs:[{tag:"$\\Delta=$", description:"discriminant", name:"delta"}], help_target:@divId+"_aide" } }
-				{ help:@divId+"_aide", html:Handlebars.templates.help oHelp.trinome.discriminant }
-			]
-		}
-		$("#form#{@divId}").on 'submit', (event) =>
-			@a[@config.aKey] = $(event.target).serializeArray()[0].value
-			@run true
-			false
-		$("input[name='delta']").focus()
-	ver: ->
-		@container.html Handlebars.templates.verif { title:"$\\Delta = #{@config.discriminant?.tex()}$", values:[@verification(@config.aKey,"$\\Delta$", @a[@config.aKey], @config.discriminant, @bareme)] }
 class BListe extends Brique
 	default: () ->  {liste:[], title:"titre ?"}
 	go: ->
@@ -264,7 +159,7 @@ class BListe extends Brique
 		@helper_disp_inputs(@config.title,@config.text,@config.liste,@config.aide,@config.touches)
 	ver: ->
 		bar = @bareme/Math.max(@config.liste.length,1)
-		values = ( @verification(item.name,item.tag, @a[item.name], item.good,bar, item.params) for item in @config.liste)
+		values = ( @verification(item.name,item.tag, @a[item.name], item.good, bar, item.params) for item in @config.liste)
 		@container.html Handlebars.templates.verif {values:values, title:@config.title, text:@config.cor_text}
 		for it,i in @config.liste
 			if it.params?.customTemplate?
@@ -283,17 +178,38 @@ class BChoixMultiple extends Brique
 		if @config.choix.length>0
 			lChoix.push { title:item, value:k } for item,k in @config.choix
 			lChoix[0].checked = true
+
+		zones = []
+
 		if @config.aide?
-			help_zone=@divId+"_aide"
-			help_html=Handlebars.templates.help(@config.aide)
-		else help_html = help_zone = null
+			zones.push {
+				help: @divId+"_aide"
+				html: Handlebars.templates.help(@config.aide)
+			}
+			help_zone_id = @divId+"_aide"
+		else help_zone_id = null
+
+		zones.unshift {
+			body: "champ"
+			html: Handlebars.templates.std_form {
+				id:"form#{@divId}"
+				inputs:[{
+					radio:@config.aKey
+					list:lChoix
+				}]
+				help_target:help_zone_id
+			}
+		}
+
+		if @config.text? then zones.unshift {
+			body:"texte"
+			html:@config.text
+		}
+
 		@container.html Handlebars.templates.std_panel {
-			title:@config.title
-			focus:true
-			zones:[
-				{ body:"champ", html:Handlebars.templates.std_form { id:"form#{@divId}", inputs:[{radio:@config.aKey, list:lChoix}], help_target:help_zone } }
-				{ help:help_zone, html:help_html }
-			]
+			title: @config.title
+			focus: true
+			zones: zones
 		}
 		$("#form#{@divId}",@container).on 'submit', (event) =>
 			@a[@config.aKey] = $(event.target).serializeArray()[0].value
@@ -339,7 +255,7 @@ class BSolutions extends Brique
 			N = Math.max @config.solutions.length, users.length
 			if N is 0 then bareme = 0
 			else bareme = @bareme/N
-			sorted = mM.tri users,@config.solutions
+			sorted = mM.tri users,@config.solutions, "number"
 			list=[]
 			goodValues = []
 			bads = []
@@ -361,6 +277,65 @@ class BSolutions extends Brique
 				html:Handlebars.templates.cor_solutions context
 			}]
 		}
+class BEquations extends Brique
+	# L'utilisateur fournit une ou plusieurs équations séparées par ;
+	default: () ->  {aKey:"equations", title:"Équation(s)", equations:[], text:""}
+	go: -> (typeof @a[@config.aKey] isnt "undefined")
+	ask: ->
+		unless @config.touches? then @config.touches=[]
+		inputs_list = [ {tag:"Équation(s)", description:"Équation(s)", name:@config.aKey, large:true} ]
+		@config.touches.unshift "empty"
+		@config.text = @config.text+"<p>S'il y a plusieurs réponses, séparez-les avec ; S'il n'y a aucune réponse, répondez $\\varnothing$</p>"
+		@helper_disp_inputs(@config.title, @config.text,inputs_list,@config.aide,@config.touches)
+	ver: ->
+		if @config.equations.length is 0 then solutionsTex = "Aucune équation"
+		else solutionsTex = " : $#{(eq.tex() for eq in @config.equations).join(';')}$"
+		if @a[@config.aKey] is "∅"
+			# L'utilisateur a répondu ensemble vide
+			context = {
+				users: "\\varnothing"
+				userIsEmpty:true
+				goodValues:null
+				bads:null
+				goodIsEmpty:@config.solutions.length is 0
+				lefts: (l.tex() for l in @config.solutions).join(" ; ")
+			}
+			if @config.solutions.length is 0 then @data.note += @bareme
+		else
+			# On fait un tableau avec la réponse utilisateur
+			users = (str for str in @a[@config.aKey].split ";" when str isnt "")
+			N = Math.max @config.equations.length, users.length
+			if N is 0 then bareme = 0
+			else bareme = @bareme/N
+			sorted = mM.tri users,@config.equations, "equation"
+			list=[]
+			goodValues = []
+			bads = []
+			for sol,i in sorted.closests
+				list.push sol.info.tex
+				if sol.good?
+					# on a un user associé un good, mais est-il exact ?
+					if sol.d is 0
+						goodValues.push sol
+						@data.note += bareme
+					else
+						bads.push sol.info.tex
+						sorted.lefts.push sol.good
+				else bads.push sol.info.tex
+			context = {
+				users:list.join(" ; ")
+				goodValues:goodValues
+				bads:bads.join(" ; ")
+				lefts:(l.tex() for l in sorted.lefts).join(" ; ")
+			}
+		@container.html Handlebars.templates.std_panel {
+			title: @config.title+"#{solutionsTex}"
+			zones: [{
+				list:"correction"
+				html:Handlebars.templates.cor_equations context
+			}]
+		}
+
 class BEnsemble extends Brique
 	default: () ->  { aKey:"ensemble", title:"Ensemble solution", ensemble_solution:mM.ensemble.vide() }
 	go: -> (typeof @a[@config.aKey] isnt "undefined")

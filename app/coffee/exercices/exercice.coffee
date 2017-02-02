@@ -52,9 +52,24 @@ class @Exercice
 		@data = { inputs:inputs, answers:answers, note:0, options:@data.options, noteObject:note, divId:@divId, isAdmin:Controller?.uLog.isAdmin }
 		@finished = false
 		@stages = @model.init(@data)
+		baremeTotal = 0
 		for stg,i in @stages
 			stg.parent = @
 			stg.divId = @divId+"s"+i
+			# On vérifie le bareme total
+			if stg.bareme? then baremeTotal+=stg.bareme
+		if (baremeTotal isnt 0) and (baremeTotal isnt 100)
+			coeff = 100/baremeTotal
+			baremeTotal = 100
+			last = null
+			for stg in @stages
+				if stg.bareme?
+					stg.bareme = Math.round(stg.bareme*coeff)
+					baremeTotal -= stg.bareme
+					last = stg
+			if baremeTotal isnt null
+				# Il reste un relicat dû aux arrondis
+				last.bareme += baremeTotal
 		@title = @data.title or @model.title # Le title peut-être changé en fonction des options
 		@
 	toString: -> @model.title

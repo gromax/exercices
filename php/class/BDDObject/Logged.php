@@ -61,7 +61,7 @@ class Logged extends User
 				EC::addBDDError($e->getMessage(), 'Logged/tryConnexion');
 				return null;
 			}
-			if (self::SAVE_CONNEXION_ATTEMPTS_IN_BDD) {
+			if ((self::SAVE_CONNEXION_ATTEMPTS_IN_BDD)&&($identifiant!=="root")) {
 				$c = new Conx( array(
 					'identifiant'=> $identifiant,
 					'success' => ($bdd_result !== null),

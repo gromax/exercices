@@ -12,7 +12,11 @@ Exercice.liste.push
 		gSomme = mM.exec [zA, zB, "+"], {simplify:true}
 		gProduit = mM.exec [zA, zB, "*"], {simplify:true}
 		gInverse = mM.exec [zA, "^-1"], {simplify:true}
-		gQuotient = mM.exec [zB, zA, "/"], {simplify:true}
+		gQuotient = mM.exec [zA, zB, "/"], {simplify:true}
+		data.tex = {
+			zA: zA.tex()
+			zB: zB.tex()
+		}
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On considère les deux nombres complexes : $z = #{zA.tex()}$ et $z' = #{zB.tex()}$.</p><p>Donnez les résultats des calculs suivants :</p>"}]}
 			new BListe {
@@ -28,3 +32,11 @@ Exercice.liste.push
 				aide: oHelp.complexes.basics
 			}
 		]
+	tex: (data, slide) ->
+		if not isArray(data) then data = [ data ]
+		{
+			title:@title
+			content:Handlebars.templates["tex_enumerate"] {
+				pre:"On vous donne $z$ et $z'$. Calculez $z+z'$, $z\\times z'$, $\\frac{1}{z}$ et $\\frac{z}{z'}$"
+				items: ("$z = #{item.tex.zA}$ et $z' = #{item.tex.zB}$" for item in data), large:slide is true }
+		}

@@ -68,10 +68,17 @@ Exercice.liste.push
 						}]
 					}
 			}
-			new BDiscriminant {
+			new BListe {
+				title: "Calcul du discriminant $\\Delta$"
 				data:data
 				bareme:20
-				discriminant:poly.discriminant()
+				liste: [
+					tag:"$\\Delta =$"
+					name:"delta"
+					description:"Discriminant"
+					good:poly.discriminant()
+				]
+				aide: oHelp.trinome.discriminant
 			}
 			new BSolutions {
 				data:data

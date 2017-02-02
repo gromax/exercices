@@ -444,6 +444,8 @@ class MCon extends Model
 			@dateFr = "#{jour} #{heure}"
 		else @date = @currentDate()
 		@success = (@success is "1") or (@success is true)
+		if @identifiant?
+			@user = Controller.uLog.users.getByField("email",@identifiant)
 		@
 	bddJSON: (mods) -> {}
 	enteteForMessages: -> "<b>Connexion @#{@id} :</b> "

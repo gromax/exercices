@@ -19,14 +19,22 @@ class @Parser
 		if value instanceof MObject
 			# Cas où on a fourni directement un objet pour suivi de simplifications
 			@object = value
-			@tex = value.tex()
+			@tex = value.tex(@config)
 			if @config.developp and (dvp = @object.developp(@)) then @object = dvp
 			if @config.simplify and (simp = @object.simplify(@)) then @object = simp
-	check_type: (value,type) ->
-		switch type
-			when "ensemble" then return (value instanceof EnsembleObject)
-			when "number" then return (value instanceof NumberObject)
-			else return false
+	check_type: (value,type,def) ->
+		switch
+			when (type is "ensemble") and (value instanceof EnsembleObject) then return value
+			when (type is "number") and (value instanceof NumberObject) then return value
+			when (type is "equation") and (value instanceof Equation) then return value
+			when type is "ensemble" then return new Ensemble()
+			when type is "equation" then return new Equation(null,null)
+			when def is "NaN" then return new RealNumber()
+			when def is "Nul" then return new RealNumber(0)
+			when def is "empty" then return new Ensemble()
+			when def is "reels" then return (new Ensemble()).inverse()
+			when type is "number" then return new NumberObject()
+			else return new MObject()
 	parse: (expression) ->
 		@str = expression
 		@initParse()
@@ -40,19 +48,11 @@ class @Parser
 		if matchList?
 			rpn = @buildReversePolishNotation @correction matchList.map @createToken
 			output = @buildObject(rpn).pop()
+		else output = null
 		#catch e
 		#	console.log e.message
 		#	@messages.push e.message
-		if not @check_type(output,@config.type)
-			switch
-				when @config.default is "NaN" then output = new RealNumber()
-				when @config.default is "Nul" then output = new RealNumber(0)
-				when @config.default is "empty" then output = new Ensemble()
-				when @config.default is "reels" then output = (new Ensemble()).inverse()
-				when @config.type is "number" then output = new NumberObject()
-				when @config.type is "ensemble" then output = new Ensemble()
-				else output = new MObject()
-		output
+		@check_type(output,@config.type,@config.default)
 	initParse: ->
 		# Pour éviter d'alourdir le constructor dans le cas où la classe ne servirait à aucun parse
 		# Initialisation du parser

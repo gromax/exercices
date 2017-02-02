@@ -74,7 +74,23 @@ class Vector
 		if @z isnt null then data["z#{name}"] = String @z
 		@
 class Droite2D
-	constructor: (@a,@b,@c) ->
+	constructor: ( param ) ->
+		if param?
+			if isArray(param)
+				@a = param[0]
+				@b = param[1]
+				@c = param[2]
+			else
+				# C'est un numberobject
+				@a = param.derivate "x"
+				@b = param.derivate "y"
+				vx = (new SymbolNumber("x",1)).md(@a,false)
+				vy = (new SymbolNumber("y",1)).md(@b,false)
+				@c = vx.am(vy,false).opposite().am(param,false)
+		else
+			@a = new RealNumber(0)
+			@b = new RealNumber(0)
+			@c = new RealNumber(0)
 		# Représentation cartésienne
 	verticale: -> @b.isNul()
 	m: -> @a.toClone().opposite().md @b, true
@@ -116,4 +132,11 @@ class Droite2D
 		[_a, _b, _c] = mM.float [@a, @b, @c], params
 		if _b is 0 then [[-_a / _c,-M ],[ -_a / _c,M]]
 		else [[-M, (M*_a-_c) / _b ],[M, -(M*_a+_c)/_b ]]
+	isEqual: (droite) ->
+		d1 = @a.toClone().md(droite.b,false).am(@b.toClone().md(droite.a,false),true)
+		d2 = @a.toClone().md(droite.c,false).am(@c.toClone().md(droite.a,false),true)
+		d3 = @b.toClone().md(droite.c,false).am(@c.toClone().md(droite.b,false),true)
+		return d1.isNul() and d2.isNul() and d3.isNul()
+
+
 

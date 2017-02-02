@@ -17,62 +17,76 @@ Exercice.liste.push
 		# b = 2 pour ln(x)^2 - 5 ln(x) + 2 =0
 		# b = 3 pour 3 ln(expr) +2 = 2 ln(expr) -1 (ou exp)
 		# b = 4 pour ln(expr)^2 - 5 ln(expr) + 2 =0
+		infos = []
 		switch
 			when typeof data.inputs.b isnt "undefined"
 				expr = mM.toNumber(data.inputs.b)
 				expr1 = mM.toNumber(data.inputs.c ? "x")
 				expr2 = mM.toNumber(data.inputs.d ? "0")
 				a = Number(data.inputs.a ? a)
-				{ goods, tex } = @cas_b12(expr,expr1,expr2,a)
+				{ goods, eqTex } = @cas_b12(expr,expr1,expr2,a)
 			when (typeof data.inputs.c isnt "undefined") and (typeof data.inputs.d isnt "undefined")
 				expr1 = mM.toNumber(data.inputs.c)
 				expr2 = mM.toNumber(data.inputs.d, "x")
 				a = Number(data.inputs.a ? a)
-				{ goods, tex } = @cas_b0(expr1,expr2,a)
+				{ goods, eqTex } = @cas_b0(expr1,expr2,a)
 			else
 				# On commence par créer expr qui sera dans ln ou exp
 				# Cas b = 2, il faut un polynome
-				if (b is 2) or (b is 4)
-					if b is 4 then expr = mM.alea.poly { degre:1, coeffDom:{ min:1, max:5, sign:true }, values:{min:-10, max:10} }
-					else expr = mM.exec ["x"]
-					if a is 0 then xS = mM.alea.real { values:{min:-10, max:10} }
-					else xS = mM.alea.real { values:{min:0, max:10} } # Pour une équation en exp, on prendra le ln, il vaut mieux qu'il y ait des sol>0
-					# Une fois sur 8 on prend le cas sans solution
-					if mM.alea.dice(1,8)
-						yS = mM.alea.real { values:{min:-20, max:20} }
-						opp = (yS<0)
+				switch
+					when (b is 2) or (b is 4)
+						if b is 4 then expr = mM.alea.poly { degre:1, coeffDom:{ min:1, max:5, sign:true }, values:{min:-10, max:10} }
+						else expr = mM.exec ["x"]
+						if a is 0 then xS = mM.alea.real { values:{min:-10, max:10} }
+						else xS = mM.alea.real { values:{min:0, max:10} } # Pour une équation en exp, on prendra le ln, il vaut mieux qu'il y ait des sol>0
+						# Une fois sur 8 on prend le cas sans solution
+						if mM.alea.dice(1,8)
+							yS = mM.alea.real { values:{min:1, max:20, sign:true} }
+							opp = (yS<0)
+						else
+							yS = mM.alea.real { min:1, max:10, sign:true }
+							opp = (yS>0)
+							yS = yS*yS
+						if opp then expr1 = mM.exec [ "x", xS, "-", 2, "^", "*-", yS, "+"], { simplify:true, developp:true }
+						else expr1 = mM.exec [ "x", xS, "-", 2, "^", yS, "-"], { simplify:true, developp:true }
+						expr2 = mM.toNumber 0
+						data.inputs.a = String a
+						data.inputs.b = String expr
+						data.inputs.c = String expr1
+						{ goods, eqTex } = @cas_b12(expr,expr1,expr2,a)
+						if a is 0 then infos.push { class:"info", html:"La notation $\\ln^2(#{expr.tex()})$ est un racourci pour $\\left(\\ln(#{expr.tex()})\\right)^2$"}
+						if a is 1 then infos.push { class:"info", html:"La notation $\\exp^2(#{expr.tex()})$ est un racourci pour $\\left(\\exp(#{expr.tex()})\\right)^2$"}
+					when (b is 1) or (b is 3)
+						if b is 3 then expr = mM.alea.poly { degre:1, coeffDom:{ min:1, max:5, sign:true }, values:{min:-10, max:10} }
+						else expr = mM.exec ["x"]
+						a1 = mM.alea.real { min:-10, max:10 }
+						aff1 = mM.alea.poly { degre:1, coeffDom:a1, values:{min:-10, max:10} }
+						aff2 = mM.alea.poly { degre:1, coeffDom:{min:-10, max:10, no:[a1]}, values:{min:-10, max:10} }
+						data.inputs.a = String a
+						data.inputs.b = String expr
+						data.inputs.c = String aff1
+						data.inputs.d = String aff2
+						{ goods, eqTex } = @cas_b12(expr,aff1,aff2,a)
 					else
-						yS = mM.alea.real { min:1, max:10, sign:true }
-						opp = (yS>0)
-						yS = yS*yS
-					if opp then expr1 = mM.exec [ "x", xS, "-", 2, "^", "*-", yS, "+"], { simplify:true, developp:true }
-					else expr1 = mM.exec [ "x", xS, "-", 2, "^", yS, "-"], { simplify:true, developp:true }
-					expr2 = mM.toNumber 0
-					data.inputs.a = String a
-					data.inputs.b = String expr
-					data.inputs.c = String expr1
-					{ goods, tex } = @cas_b12(expr,expr1,expr2,a)
-				if (b is 1) or (b is 3)
-					if b is 3 then expr = mM.alea.poly { degre:1, coeffDom:{ min:1, max:5, sign:true }, values:{min:-10, max:10} }
-					else expr = mM.exec ["x"]
-					a1 = mM.alea.real { min:-10, max:10 }
-					aff1 = mM.alea.poly { degre:1, coeffDom:a1, values:{min:-10, max:10} }
-					aff2 = mM.alea.poly { degre:1, coeffDom:{min:-10, max:10, no:[a1]}, values:{min:-10, max:10} }
-					data.inputs.a = String a
-					data.inputs.b = String expr
-					data.inputs.c = String expr1
-					data.inputs.d = String expr1
-					{ goods, tex } = @cas_b12(expr,aff1,aff2,a)
-				if b is 0
-					a1 = mM.alea.real { min:-10, max:10 }
-					expr1 = mM.alea.poly { degre:1, coeffDom:a1, values:{min:-10, max:10} }
-					expr2 = mM.alea.poly { degre:1, coeffDom:{min:-10, max:10, no:[a1]}, values:{min:-10, max:10} }
-					data.inputs.a = String a
-					data.inputs.c = String expr1
-					data.inputs.d = String expr1
-					{ goods, tex } = @cas_b0(expr1,expr2,a)
+						a1 = mM.alea.real { min:-10, max:10 }
+						expr1 = mM.alea.poly { degre:1, coeffDom:a1, values:{min:-10, max:10} }
+						expr2 = mM.alea.poly { degre:1, coeffDom:{min:-10, max:10, no:[a1]}, values:{min:-10, max:10} }
+						data.inputs.a = String a
+						data.inputs.c = String expr1
+						data.inputs.d = String expr2
+						if a is 0 then infos.push { class:"warning", html:"Si vous trouvez une solution, pensez à vérifier si l'équation est bien définie pour cette valeur. Par exemple $\\ln(3x-4)$ n'est pas défini pour $x=1$ car $3\\cdot 1 - 4 = -1$"}
+						{ goods, eqTex } = @cas_b0(expr1,expr2,a)
+		if infos.length > 0 then infosZone = { list:"infos", items:infos }
+		else infosZone = { vide:true }
+		data.equation = eqTex
 		[
-			new BEnonce {title:"Énoncé", zones:[{body:"enonce", html:"<p>On considère l'équation : $#{ tex }$.</p><p>Vous devez donner la ou les solutions de cette équations, si elles existent.</p><p><i>S'il n'y a pas de solution, écrivez $\\varnothing$. s'il y a plusieurs solutions, séparez-les avec ;</i></p>"}]}
+			new BEnonce {
+				title:"Énoncé"
+				zones:[
+					{body:"enonce", html:"<p>On considère l'équation : $#{ eqTex }$.</p><p>Vous devez donner la ou les solutions de cette équations, si elles existent.</p><p><i>S'il n'y a pas de solution, écrivez $\\varnothing$. s'il y a plusieurs solutions, séparez-les avec ;</i></p>"}
+					infosZone
+				]
+			}
 			new BSolutions {
 				data:data
 				bareme:100
@@ -90,7 +104,7 @@ Exercice.liste.push
 		mg = mM.exec [expr1, fct]
 		md = mM.exec [expr2, fct]
 		if a is 1 then options = { altFunctionTex:["exp"] } else options = {}
-		{ goods:goods, tex:mg.tex(options)+" = "+md.tex(options) }
+		{ goods:goods, eqTex:mg.tex(options)+" = "+md.tex(options) }
 	cas_b12: (expr,expr1,expr2,a) ->
 		diff = mM.exec [ expr1, expr2, "-"], {simplify:true}
 		pol = mM.polynome.make diff
@@ -111,6 +125,12 @@ Exercice.liste.push
 			mg = expr1.replace(X, "x").order()
 		md = expr2.replace(X,"x").order()
 		if a is 1 then options = { altFunctionTex:["exp"] } else options = {}
-		{ goods:goods, tex:mg.tex(options)+" = "+md.tex(options) }
+		{ goods:goods, eqTex:mg.tex(options)+" = "+md.tex(options) }
+	tex: (data, slide) ->
+		if not isArray(data) then data = [ data ]
+		{
+			title:@title
+			content:Handlebars.templates["tex_enumerate"] { items: ("$#{item.equation}$" for item in data), large:slide is true }
+		}
 
 

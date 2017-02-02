@@ -86,3 +86,14 @@ extractSquarePart = (value) ->
 		i += 2
 	extract
 fixNumber = (num,decimals) -> Number(num.toFixed(decimals))
+
+union_arrays = (x, y) ->
+	obj = {}
+	obj[it] = it for it in x
+	obj[it] = it for it in y
+	( obj[key] for key of obj )
+
+numToStr = (num,decimals) ->
+	if decimals? then out = num.toFixed decimals
+	else out = String num
+	out.replace '.', ","

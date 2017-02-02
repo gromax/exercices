@@ -88,7 +88,11 @@ class NumberObject extends MObject
 	floatify: (symbols) -> new RealNumber()
 		#	Renvoie soit un RealNumber soit un ComplexeNumber
 	float: () -> NaN
-	isFunctionOf: (symbol) -> false
+	isFunctionOf: (symbol) ->
+		# Si on précise le string symbol, on cherche si l'objet est fonction de ce symbol
+		# sinon on donne un tableau contenant tous les symbols donc le number est fonction
+		if symbol? then false
+		else []
 	degre: (variable) -> 0 # degre de dépendance à un symbole donné. Pas "i"
 	toClone : ->
 		clone = new NumberObject()
@@ -96,6 +100,7 @@ class NumberObject extends MObject
 	isNul: (symbols) -> @floatify(symbols).isNul()
 	isPositive: (symbols) -> @floatify(symbols).isPositive()
 	isNegative: (symbols) -> @floatify(symbols).isNegative()
+	isOne:(facto=1) -> @float() is facto
 	isNaN: -> true
 	isInteger: -> undefined	# Permet d'appeler la fonction sur tous les objets
 	isFloat: -> undefined	# Permet d'appeler la fonction sur tous les objets
@@ -143,6 +148,7 @@ class NumberObject extends MObject
 	distance: (b, symbols) ->
 		# Renvoie un float donnant la distance entre deux numberobject
 		# Fonctionne pour les complexes
+		if not(b instanceof NumberObject) then return NaN
 		d = @toClone().am(b,true).floatify(symbols).abs().float()
 		if @getModulo() isnt false then modA = @getModulo().floatify(symbols).abs().float()
 		else modA=-1
@@ -196,7 +202,6 @@ class PlusNumber extends NumberObject
 			@operands[i] = operand.simplify(infos,developp)
 		@_plus = true
 		@absorb_sousAdd()
-
 		i=0
 		while i<@operands.length
 			sign_i = @operands[i].signature()
@@ -236,9 +241,16 @@ class PlusNumber extends NumberObject
 		if not @_plus then total.opposite()
 		total
 	isFunctionOf: (symbol) ->
-		for operand in @operands
-			if operand.isFunctionOf(symbol) then return true
-		false
+		if symbol?
+			for operand in @operands
+				if operand.isFunctionOf(symbol) then return true
+			false
+		else
+			out = []
+			for operand in @operands
+				sym = operand.isFunctionOf()
+				out = union_arrays out, sym
+			out
 	degre: (variable) -> Math.max (operand.degre(variable) for operand in @operands)...
 	toClone: ->
 		clone = new PlusNumber()
@@ -325,6 +337,7 @@ class PlusNumber extends NumberObject
 		clone = new PlusNumber()
 		clone.push(operand.replace(replacement,needle)) for operand in @operands
 		clone.setPlus(@_plus)
+	getOperands: -> @operands
 class MultiplyNumber extends NumberObject
 	constructor: ->
 		@_signature = null
@@ -356,12 +369,12 @@ class MultiplyNumber extends NumberObject
 		num = @compositeString_special(@numerator, options)
 		if @denominator.length is 0 then return num
 		den = @compositeString_special(@denominator, options)
-		if options.tex
-			if num[2] and not num[1]
-				num[0] = "-"+num[0]
+		if options.tex					# format tex
+			if num[2] and not num[1]	# groupe additif et signe -
+				num[0] = "-"+num[0]		# Dans ce cas on ajoute le - devant le premier élément
 				num[1] = true
-			if den[2] and not den[1]
-				den[0] = "-".den[0]
+			if den[2] and not den[1]	# Même chose pour le dénominateur
+				den[0] = "-#{den[0]}"
 				den[1] = true
 			return ["\\frac{#{num[0]}}{#{den[0]}}", num[1] is den[1], false, true]
 		if num[2]
@@ -429,11 +442,21 @@ class MultiplyNumber extends NumberObject
 			produit = produit.mdSimple(operand.floatify(symbols).inverse(),false)
 		produit
 	isFunctionOf: (symbol) ->
-		for operand in @numerator
-			if operand.isFunctionOf(symbol) then return true
-		for operand in @denominator
-			if operand.isFunctionOf(symbol) then return true
-		false
+		if symbol?
+			for operand in @numerator
+				if operand.isFunctionOf(symbol) then return true
+			for operand in @denominator
+				if operand.isFunctionOf(symbol) then return true
+			false
+		else
+			out = []
+			for operand in @numerator
+				sym = operand.isFunctionOf()
+				out = union_arrays out, sym
+			for operand in @denominator
+				sym = operand.isFunctionOf()
+				out = union_arrays out, sym
+			out
 	degre:(variable) ->
 		out = 0
 		out += operand.degre(variable) for operand in @numerator
@@ -479,7 +502,7 @@ class MultiplyNumber extends NumberObject
 		if num.length is 0 then output = "1"
 		else output=num.join(".")
 		if den.length is 1 then output = output+"/"+den[0]
-		if den.length > 1 then output = output+"/("+den.join(".")+")"
+		else if den.length > 1 then output = output+"/("+den.join(".")+")"
 		@_signature = output
 		return output
 	extractFactor: ->
@@ -738,7 +761,9 @@ class PowerNumber extends NumberObject
 		base = @_base.floatify(symbols)
 		exposant = @_exposant.floatify(symbols)
 		base.puissance(exposant)
-	isFunctionOf: (symbol) -> @_base.isFunctionOf(symbol) or @_exposant.isFunctionOf(symbol)
+	isFunctionOf: (symbol) ->
+		if symbol? then @_base.isFunctionOf(symbol) or @_exposant.isFunctionOf(symbol)
+		else union_arrays @_base.isFunctionOf(), @_exposant.isFunctionOf()
 	degre: (variable) -> if @isFunctionOf(variable) then Infinity else 0
 	toClone: -> PowerNumber.make(@_base, @_exposant).setPlus(@_plus)
 	assignValueToSymbol: (liste) ->
@@ -854,7 +879,11 @@ class SymbolNumber extends NumberObject
 		base_value = SymbolNumber.getSymbolValue(@_name, symbols).floatify(symbols);
 		if (@_plus) then return base_value.puissance(@_exposant)
 		base_value.puissance(@_exposant).opposite()
-	isFunctionOf: (symbol) -> symbol is @_name
+	isFunctionOf: (symbol) ->
+		if symbol? then symbol is @_name
+		else
+			if (@_name is "pi") or (@_name is "i") or (@_name is "e") then []
+			else [ @_name ]
 	degre: (variable) -> if variable is @_name then @_exposant else 0
 	toClone: () -> (new SymbolNumber(@_name, @_exposant)).setPlus(@_plus)
 	isNul: () -> SymbolNumber.getSymbolValue(@_name).isNul() and (@_exposant>0)
@@ -1024,7 +1053,13 @@ class Monome extends NumberObject
 				else return new RealNumber()
 			factor *= Math.pow(x,power)
 		base_value.md(new RealNumber(factor),false)
-	isFunctionOf: (symbol) -> @symbols[symbol]? and @symbols[symbol] isnt 0
+	isFunctionOf: (symbol) ->
+		if symbol? then @symbols[symbol]? and @symbols[symbol] isnt 0
+		else
+			out = []
+			for key, power of @symbols
+				if (power isnt 0) and (key isnt "i") and (key isnt "pi") and (key isnt "e") then out.push key
+			out
 	degre: (variable) -> @symbols[symbol] ? 0
 	toClone: () ->
 		cl = new Monome @coeff.toClone()
@@ -1216,7 +1251,9 @@ class FunctionNumber extends NumberObject
 	getOperand: -> @_operand
 	getFunction: -> @_function.alias
 	# developp: (infos=null) -> identique au parent
-	signature: -> @order().compositeString({tex:false})[0]
+	signature: -> @order().compositeString({tex:false, floatNumber:true})[0]
+	# L'option floatNumber fait qu'un simple number est évalué.
+	# L'intérêt est d'éviter d'avoir plusieurs écriture équivalentes comme 2/5 et 0,4
 	# extractFactor: -> identique au parent
 	toPolynome: (variable = "x") ->
 		if @_operand.isFunctionOf(variable) then return (new Polynome(variable)).setInvalid()
@@ -1247,7 +1284,7 @@ class SimpleNumber extends NumberObject
 		if operand instanceof SimpleNumber then return @mdSimple(operand, divide, infos)
 		if (operand instanceof SymbolNumber) or (operand instanceof Monome) then return @toMonome().md(operand,divide,infos)
 		super(operand, divide, infos)
-	isFunctionOf: (symbol) -> false
+	#isFunctionOf: (symbol) -> false Identique au parent
 	isFloat: -> false
 		# Les valeurs sont données sous forme de décimaux et on ne reste alors pas en valeur exacte.
 	isInteger: -> false
@@ -1343,6 +1380,10 @@ class RationalNumber extends SimpleNumber
 			@denominator.opposite()
 			@numerator.opposite()
 	compositeString: (options,complement="") ->
+		if options.floatNumber is true
+			_num = @numerator.float()
+			_den = @denominator.float()
+			return [ String(Math.abs(_num)/_den)+complement, _num>=0, false, complement isnt ""]
 		num = @numerator.compositeString options
 		den = @denominator.compositeString options
 		if (complement isnt "") and ((options.symbolsUp is true) or (den[0] is "1"))
@@ -1355,7 +1396,7 @@ class RationalNumber extends SimpleNumber
 		if den[0] is "1" then return num
 		if options.tex then out = ["\\frac{#{num[0]}}{#{den[0]}}", num[1], false, true]
 		else out = ["#{num[0]}/#{den[0]}", num[1], false, true]
-		if (complement isnt "") and (options.symbolsUp is false)
+		if (complement isnt "") and (options.symbolsUp isnt true)
 			if options.tex then out[0] = out[0]+" "+complement
 			else out[0] = out[0]+"*"+complement
 		out
@@ -1454,6 +1495,9 @@ class RadicalNumber extends SimpleNumber
 		@_basesSimplified = false # indique si les racines sont simplifiées et regroupées
 	compositeString: (options) ->
 		if @isNul() then return ['0', true, false, false]
+		if options.floatNumber is true
+			_x = @floatify().float()
+			return [String(_x), _x>=0, false,false]
 		@order()
 		strs = []
 		for factor in @factors
@@ -1728,7 +1772,7 @@ class RealNumber extends FloatNumber
 		@
 	signe: () -> if @_value < 0 then -1 else 1
 	compositeString: (options,complement="") ->
-		if @isNaN() then return ["NaN", true, false, false]
+		if @isNaN() then return ["(?)", true, false, false]
 		# En javascript, un Number peut être infini
 		multGroup = (complement isnt "")
 		if isInfty(@_value)

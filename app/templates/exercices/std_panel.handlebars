@@ -13,7 +13,14 @@
 	{{/if}}
 	{{#if this.list}}
 	<ul class="list-group" name="{{ this.list }}">
+		{{#if this.html}}
 		{{{this.html}}}
+		{{/if}}
+		{{#if this.items}}
+			{{#each this.items}}
+		<li class="list-group-item {{#if this.class}}list-group-item-{{this.class}}{{/if}}">{{{this.html}}}</li>
+			{{/each}}
+		{{/if}}
 	</ul>
 	{{/if}}
 	{{#if this.help}}
