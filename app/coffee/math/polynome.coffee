@@ -53,7 +53,7 @@ PolynomeMaker = {
 		poly = new Polynome(variable)
 		poly.addMonome(power,coeff) for coeff,power in monomes
 		poly
-	parse: (expression, variable="x") -> Parser.parse(expression, {type:"number"}).toPolynome(variable)
+	parse: (expression, variable="x") -> (new ParseInfo(expression, {type:"number"})).object?.toPolynome?(variable)
 }
 
 class Polynome
@@ -90,10 +90,7 @@ class Polynome
 	toNumberObject: () ->
 		if not @isValid() then return new RealNumber()
 		if @isNul() then return new RealNumber(0)
-		x = SymbolNumber.makeSymbol(@_variable)
-		output_arr = []
-		for monome in @_monomes
-			output_arr.push monome.coeff.toClone().md(x.toClone().puissance(monome.power),false)
+		output_arr = ( new Monome(monome.coeff.toClone(), { name:@_variable, power:monome.power}) for monome in @_monomes )
 		PlusNumber.makePlus output_arr
 	tex: (config) ->
 		options = mergeObj { tex:true, canonique:false }, config
@@ -207,7 +204,11 @@ class Polynome
 		monome.coeff.opposite() for monome in @_monomes
 		@
 	assignValueToSymbol: (liste) ->
-		monome.coeff = monome.coeff.assignValueToSymbol(liste) for monome in @_monomes
+		for key,value of liste
+			switch
+				when typeof value is "number" then liste[key] = new RealNumber(value)
+				when (value instanceof NumberObject) and (value.isFunctionOf().length>0) then liste[key] = new RealNumber()
+		monome.coeff = monome.coeff._childAssignValueToSymbol(liste) for monome in @_monomes
 		@
 	floatify: (symbols) ->
 		if not @_isValidPolynome then return new RealNumber()

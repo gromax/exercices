@@ -103,21 +103,34 @@ class @Exercice
 				@data.noteObject.save { inputs:@data.inputs, answers:@data.answers, note:Math.round(@data.note), finished:@finished }, true
 	finish: -> @finished = true
 	run: (upBdd) ->
+		# @stages contient des briques qui sont des éléments d'énoncés et des questions
 		go = true
+		# go : parcourir les différentes briques.
+		# Dès qu'on rencontre une brique attendant des réponses qui n'existe pas encore
+		# go passe à false
 		while (@stages.length>0) and go
-			# On peut mettre d'autres items dans la liste, comme l'énoncé ou un graphique
 			currentStage = @stages[0]
 			if currentStage instanceof Brique
 				currentStage.initContainer()
+				# La fonction Brique.go() d'une brique permet de savoir s'il y a des réponses attendues.
 				if ( go = go and currentStage.go() )
+					# La présente brique a déjà reçu ses réponses, on peut donc la dépiler et la vérifier ->Brique.ver()
 					@stages.shift()
 					currentStage.ver()
+					# Certaines briques se répètent (permettent d'afiner la réponse)
+					# Dans ce cas, on rempile la brique et on stoppe le déroulement (false->go)
 					if currentStage.config.repeat
 						@stages.unshift currentStage
 						go = false
 				else currentStage.ask()
+				# On en est arrivé à une brique à laquelle il faut répondre : fonction Brique.ask()
 			else @stages.shift()
+			# L'item n'est pas une brique, ça ne devrait pas arriver
+		# On a vider la pile de briques, l'exercice est terminé -> Fonction finish()
 		if @stages.length is 0 then @finish()
+		# La base de données n'est remise à jour que s'il s'agit d'une version notée de l'exercice
+		# Et quand run() s'est déclenché suite à une réponse utilisateur.
+		# Lors du premier affichage de l'exercice, aucune raison de remettre à jour la BDD
 		if upBdd then @updateBDD()
 		@refreshDisplay()
 	makeContainers: ->
@@ -140,7 +153,4 @@ class @Exercice
 		for it in optionsArray
 			@data.options[it.name]?.value = Number it.value
 		@init null
-	#----------------------------------------------------
-	#--------- production d'un fichier tex --------------
-	#----------------------------------------------------
-	slide: (data) -> @model?.side?(data) or ""
+

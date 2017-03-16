@@ -1,7 +1,7 @@
 ﻿
 Exercice.liste.push
 	id:42
-	title: "Termes d'une suite récurente"
+	title: "Termes d'une suite récurrente"
 	description: "Calculer les termes d'une suite donnée par récurence."
 	keyWords:["Analyse", "Suite", "Première"]
 	init: (data) ->
@@ -18,12 +18,63 @@ Exercice.liste.push
 		u3= u.calc(3)
 		u10= u.calc(10)
 		formule= u.recurence().tex()
+		data.tex = {
+			formule: formule
+			u0:u0
+		}
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On considère la suite $(u_n)$ définie par $u_0=#{u0}$ et $u_{n+1}= #{formule}$ pour $n\\geqslant 0$.</p><p>On demande de calculer les termes suivants à $0,01$ près :</p>"}]}
 			new BListe {
 				data:data
 				bareme:100
 				title:"Termes de la suite"
-				liste:[{tag:"$u_1$", name:"u1", description:"Terme de rang 1", good:u1, params:{arrondi:-2}}, {tag:"$u_2$", name:"u2", description:"Terme de rang 2", good:u2, params:{arrondi:-2}}, {tag:"$u_3$", name:"u3", description:"Terme de rang 3", good:u3, params:{arrondi:-2}}, {tag:"$u_{10}$", name:"u10", description:"Terme de rang 10", good:u10, params:{arrondi:-2}}]
+				liste:[
+					{
+						tag:"$u_1$"
+						name:"u1"
+						description:"Terme de rang 1"
+						good:u1
+						arrondi:-2
+					}
+					{
+						tag:"$u_2$"
+						name:"u2"
+						description:"Terme de rang 2"
+						good:u2
+						arrondi:-2
+					}
+					{
+						tag:"$u_3$"
+						name:"u3"
+						description:"Terme de rang 3"
+						good:u3
+						arrondi:-2
+					}
+					{
+						tag:"$u_{10}$"
+						name:"u10"
+						description:"Terme de rang 10"
+						good:u10
+						arrondi:-2
+					}]
 			}
 		]
+	tex: (data) ->
+		symbs = ["","<","\\leqslant"]
+		if not isArray(data) then data = [ data ]
+		its = ( "$u_0 = #{it.tex.u0}$ et $u_{n+1} = #{it.tex.formule}$" for it in data )
+		if its.length > 1 then [{
+				title:@title
+				content:Handlebars.templates["tex_enumerate"] {
+					pre:"Dans les cas suivants, calculez $u_1$, $u_2$, $u_3$ et $u_{10}$."
+					items: its
+					large:false
+				}
+			}]
+		else [{
+				title:@title
+				content:Handlebars.templates["tex_plain"] {
+					content: "Calculez $u_1$, $u_2$, $u_3$ et $u_{10}$ avec #{its[0]}."
+					large:false
+				}
+			}]

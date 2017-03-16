@@ -61,11 +61,9 @@ Exercice.liste.push
 					name:"d"
 					description:"Expression de la dérivée"
 					good:derivee
-					params:{
-						developp:true
-						goodTex:deriveeForTex.tex()
-						formes:{ fraction:true, distribution:true}
-					}
+					developp:true
+					goodTex:deriveeForTex.tex()
+					formes:{ fraction:true, distribution:true}
 				}]
 				aide: oHelp.derivee.basics
 			}
@@ -84,19 +82,39 @@ Exercice.liste.push
 				bareme:100
 				title:"Calcul de $f(a)$ et $f'(a)$ en $a=#{x}$"
 				liste:[
-					{tag:"$f(#{x})$", name:"fa", description:"Valeur de f(a) à 0,01", good:fa, params:{ arrondi:-2 }}
-					{tag:"$f'(#{x})$", name:"f2a", description:"Valeur de f'(a) à 0,01", good:f2a, params:{ arrondi:-2 }}
+					{
+						tag:"$f(#{x})$"
+						name:"fa"
+						description:"Valeur de f(a) à 0,01"
+						good:fa
+						arrondi:-2
+					}
+					{
+						tag:"$f'(#{x})$"
+						name:"f2a"
+						description:"Valeur de f'(a) à 0,01"
+						good:f2a
+						arrondi:-2
+					}
 				]
 			})
 			out.push new BListe({
 				data:data
 				bareme:100
 				title:"Équation de la tangente $\\mathcal{T}_{#{x}}$ à l'abscisse $#{x}$"
-				liste:[{tag:"$y=$", name:"e", description:"Équation de la tangente", good:t, params:{developp:true, formes:"FRACTION", cor_prefix:"y="}}]
+				liste:[{
+					tag:"$y=$"
+					name:"e"
+					description:"Équation de la tangente"
+					good:t
+					developp:true
+					cor_prefix:"y="
+					formes:"FRACTION"
+				}]
 				aide:oHelp.derivee.tangente
 			})
 		out
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		if (data[0]?.options.e?.value is 1)
 			{
@@ -104,7 +122,7 @@ Exercice.liste.push
 				content:Handlebars.templates["tex_enumerate"] {
 					pre:"Dans tous les cas, déterminer l'expression de $f'(x)$ ; calulez $f(a)$ et $f'(a)$ à $0,01$ près ; déterminez la tangente à $\\mathcal{C}_f$ à l'abscisse $a$."
 					items: ("$x \\mapsto #{item.fct}$ et $a=#{item.inputs.x}$" for item in data)
-					large:slide is true
+					large:false
 				}
 			}
 		else
@@ -113,6 +131,6 @@ Exercice.liste.push
 				content:Handlebars.templates["tex_enumerate"] {
 					pre: "Donnez les dérivées des fonctions suivantes :"
 					items: ("$x \\mapsto #{item.fct}$" for item in data)
-					large:slide is true
+					large:false
 				}
 			}

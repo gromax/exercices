@@ -1,6 +1,49 @@
 
 MODULO_LETTER = "k"
 
+class SymbolManager
+	# Simple conteneur pour créer les objets symboles
+	# et pour contenir les valeurs
+	@symbolsValueList: {}
+	@symbolsAliasList: {}
+	@makeSymbol: (name) ->
+		# Le but de cette méthode est de créer directement le bon type d'objet
+		switch
+			when name is "ℝ" then (new Ensemble()).inverse()
+			when name is "π" then @pi()
+			when name is "∅" then new Ensemble()
+			when (name is "∞") or (name is "infini") then new InftyNumber()
+			when name is "i" then new ComplexeNumber(0,1)
+			when name is "#" then new Monome(1, { name:"modulo", power:1} )
+			when name is "" then new RealNumber()
+			else new Monome(1, { name:name, power:1 })
+	@pi: -> new Monome(1, { name:"pi", power:1 })
+	@setSymbolsValue: (symbols) ->
+		# Liste de symbols { key:value }
+		for key, value of symbol
+			switch
+				when typeof value is "number" then @symbolsValueList[key] = new RealNumber(value)
+				when (value instanceof NumberObject) and (value.isFunctionOf().length is 0) then @symbolsValueList[key] = value # On autorise pas de dépendance de symbole à symbole
+				else @symbolsValueList[key] = new RealNumber()
+	@getSymbolValue: (symbolName,symbols) ->
+		name = @getAlias(symbolName)
+		v1=symbols?[name]
+		v2=@symbolsValueList[name]
+		switch
+			when name is "e" then return new RealNumber(Math.E)
+			when name is "pi" then return new RealNumber(Math.PI)
+			when typeof v1 is "number" then new RealNumber v1
+			when (v1 instanceof NumberObject) and not(v1.isFunctionOf(name)) then v1
+			when typeof v2 is "number" then new RealNumber v2
+			when (v2 instanceof NumberObject) and not(v2.isFunctionOf(name)) then v2
+			else new RealNumber()
+	@getAlias:(name) ->
+		if (typeof name is "string") and (typeof (a=@symbolsAliasList[name]) is "string") then a
+		else name
+	@setAlias: (alts, alias) ->
+		# Une table de symbols alternatifs (alt) ont un alias
+		if typeof alias is "string"
+			@symbolsAliasList[name] = alias for name in alts when (typeof name is "string")
 class MObject
 	simplify: (infos=null) -> @
 	toString: -> "?"
@@ -78,20 +121,20 @@ class NumberObject extends MObject
 	inverse : -> undefined
 	puissance : (exposant) ->
 		if (exposant instanceof NumberObject) then exposant = exposant.floatify().float()
-		if not isInteger(exposant) then return undefined
+		if not isInteger(exposant) then return new RealNumber()
 		if exposant is 0 then return new RealNumber(1) # Suppose que 0^0 = 1
 		output = new RealNumber(1)
 		for i in [1..Math.abs(exposant)]
 			output = output.md(@, false)
-		if exposant<0 then return (new RealNumber(1)).md(output, true)
-		output
+		if exposant<0 then (new RealNumber(1)).md(output, true)
+		else output
 	floatify: (symbols) -> new RealNumber()
 		#	Renvoie soit un RealNumber soit un ComplexeNumber
 	float: () -> NaN
 	isFunctionOf: (symbol) ->
 		# Si on précise le string symbol, on cherche si l'objet est fonction de ce symbol
 		# sinon on donne un tableau contenant tous les symbols donc le number est fonction
-		if symbol? then false
+		if typeof symbol is "string" then false
 		else []
 	degre: (variable) -> 0 # degre de dépendance à un symbole donné. Pas "i"
 	toClone : ->
@@ -109,7 +152,15 @@ class NumberObject extends MObject
 	getReal: -> new RealNumber()	# Permet d'appeler la fonction sur tous les objets
 	getImag: -> new RealNumber()	# Permet d'appeler la fonction sur tous les objets
 	conjugue: -> @ # certains type d'objets n'ont pas une définition appropriée de conjugue
-	assignValueToSymbol: (liste) -> @	# Transforme les occurences de Symbol
+	assignValueToSymbol: (liste) ->
+		# Transforme les occurences de Symbol
+		# C'est l'appel parent qui vérifie les items
+		for key,value of liste
+			switch
+				when typeof value is "number" then liste[key] = new RealNumber(value)
+				when (value instanceof NumberObject) and (value.isFunctionOf().length>0) then liste[key] = new RealNumber()
+		@_childAssignValueToSymbol(liste)
+	_childAssignValueToSymbol:(liste) -> @
 	signature: -> "N/A"	# Permet de regrouper des termes dont la forme est semblable
 	extractFactor: ->
 		if @_plus then return new RealNumber(1)
@@ -241,7 +292,7 @@ class PlusNumber extends NumberObject
 		if not @_plus then total.opposite()
 		total
 	isFunctionOf: (symbol) ->
-		if symbol?
+		if typeof symbol is "string"
 			for operand in @operands
 				if operand.isFunctionOf(symbol) then return true
 			false
@@ -260,8 +311,8 @@ class PlusNumber extends NumberObject
 	conjugue: ->
 		operand.conjugue() for operand in @operands
 		@
-	assignValueToSymbol: (liste) ->
-		@operands[i]=operand.assignValueToSymbol(liste) for operand,i in @operands
+	_childAssignValueToSymbol: (liste) ->
+		@operands[i]=operand._childAssignValueToSymbol(liste) for operand,i in @operands
 		@
 	developp: (infos=null) ->
 		for operand,i in @operands
@@ -424,7 +475,7 @@ class MultiplyNumber extends NumberObject
 		@_signature = null
 		if div then @denominator.push(operand.toClone())
 		else @numerator.push(operand.toClone())
-		if (operand instanceof SimpleNumber) or (operand instanceof SymbolNumber) then @contractNumbersAndSymbols(infos)
+		if (operand instanceof SimpleNumber) or (operand instanceof Monome) then @contractNumbersAndSymbols(infos)
 		@
 	inverse: ->
 		@_signature = null
@@ -442,7 +493,7 @@ class MultiplyNumber extends NumberObject
 			produit = produit.mdSimple(operand.floatify(symbols).inverse(),false)
 		produit
 	isFunctionOf: (symbol) ->
-		if symbol?
+		if typeof symbol is "string"
 			for operand in @numerator
 				if operand.isFunctionOf(symbol) then return true
 			for operand in @denominator
@@ -473,9 +524,9 @@ class MultiplyNumber extends NumberObject
 		operand.conjugue() for operand in @numerator
 		operand.conjugue() for operand in @denominator
 		@
-	assignValueToSymbol: (liste) ->
-		@numerator[i]=operand.assignValueToSymbol(liste) for operand,i in @numerator
-		@denominator[i]=operand.assignValueToSymbol(liste) for operand,i in @denominator
+	_childAssignValueToSymbol: (liste) ->
+		@numerator[i]=operand._childAssignValueToSymbol(liste) for operand,i in @numerator
+		@denominator[i]=operand._childAssignValueToSymbol(liste) for operand,i in @denominator
 		@
 	developp: (infos=null) ->
 		@_signature = null
@@ -586,7 +637,7 @@ class MultiplyNumber extends NumberObject
 	contractNumbersAndSymbols : (infos=null) ->
 		@_signature = null
 		# Attention : Le calcul donne la priorité au 0. Donc en cas de 0*infini, c'est 0 qui l'emporte
-		# Tous les SimpleNumber ou SymbolNumber passent au numérateur
+		# Tous les SimpleNumber ou Monome passent au numérateur
 		@denominator.reverse()
 		new_denominator = []
 		i = 0
@@ -596,14 +647,14 @@ class MultiplyNumber extends NumberObject
 				@numerator.push(inv)
 				@denominator.splice(i,1)
 			else i++
-		# On assemble les Numbers et Symbols ce qui est rendu beaucoup plus simple par la
+		# On assemble les Numbers et Symbols et Monomes ce qui est rendu beaucoup plus simple par la
 		# la possibilité des monomes
 		flagMultNotStarted = true
 		base = new RealNumber(1)
 		i=0
 		while i<@numerator.length
 			operand = @numerator[i]
-			if (operand instanceof SimpleNumber) or (operand instanceof SymbolNumber) or (operand instanceof Monome)
+			if (operand instanceof SimpleNumber) or (operand instanceof Monome)
 				if operand.isNul()
 					infos?.set("MULT_SIMPLE")
 					@numerator = [new RealNumber(0)]
@@ -669,9 +720,10 @@ class MultiplyNumber extends NumberObject
 		if not @isFunctionOf variable then return { base:@, error:false }
 		@contractNumbersAndSymbols()
 		for op,i in @numerator
-			if (op instanceof SymbolNumber) and (op._name is variable)
-				if op._exposant isnt 1 then return { error:true }
-				@numerator.splice(i,1)[0]
+			if (op instanceof Monome) and (op.isFunctionOf variable)
+				mod = op.extractModulo(variable)
+				if mod.error then return { error:true }
+				@numerator[i] = mod.modulo
 				if not @isFunctionOf variable then return { base:new RealNumber(0), error:false, modulo:@ }
 				else return { error:true }
 		# normalement on n'atteint pas ce niveau
@@ -700,13 +752,13 @@ class PowerNumber extends NumberObject
 		@_base = base
 		@_exposant = exposant
 	@make: (base, exposant) ->
-		if (base is "e") or (base instanceof SymbolNumber) and (base._name is "e") then return FunctionNumber.make("exp",exposant)
+		if (base is "e") or (base instanceof Monome) and (base.isSymbol("e")) then return FunctionNumber.make("exp",exposant)
 		if (typeof base is "undefined") or not (base instanceof NumberObject) then base = new RealNumber(base)
 		switch
 			when (typeof exposant isnt "undefined") and (exposant instanceof NumberObject) then exp = exposant
 			when typeof exposant is "number" then exp = new RealNumber(exposant)
 			else exp = new RealNumber(1)
-		if (base instanceof SymbolNumber) and exp.isReal() and exp.isInteger() then return base.puissance(exp)
+		if (base instanceof Monome) and exp.isReal() and exp.isInteger() then return base.puissance(exp)
 		new PowerNumber(base,exp)
 	compositeString: (options) ->
 		if (@_base instanceof FunctionNumber) and (@_exposant instanceof RealNumber)
@@ -728,7 +780,8 @@ class PowerNumber extends NumberObject
 	simplify: (infos=null, developp=false) ->
 		@_exposant = @_exposant.simplify(infos,developp)
 		@_base = @_base.simplify(infos,developp)
-		if (@_base instanceof SymbolNumber) and (@_base._name is "e")
+		# DEBUG : Comment convertir cela juste avec un Monome
+		if (@_base instanceof Monome) and (@_base.isSymbol("e"))
 			out = new FunctionNumber("exp",@_exposant)
 			return out.simplify(infos,developp)
 		if (@_base instanceof FunctionNumber) and (@_base._function.alias is "exp")
@@ -744,7 +797,7 @@ class PowerNumber extends NumberObject
 					infos?.set("EXPOSANT_ZERO")
 					output = new RealNumber(@signe()) # Suppose que 0^0 = 1
 				when @_exposant.isReal() and @_exposant.isInteger()
-					if @_base instanceof SymbolNumber then output = @_base.puissance(@_exposant)
+					if @_base instanceof Monome then output = @_base.puissance(@_exposant)
 					else if (@_base instanceof SimpleNumber) and @_base.isInteger()
 						infos?.set("PUISSANCE")
 						output = @_base.puissance(@_exposant,infos)
@@ -762,13 +815,13 @@ class PowerNumber extends NumberObject
 		exposant = @_exposant.floatify(symbols)
 		base.puissance(exposant)
 	isFunctionOf: (symbol) ->
-		if symbol? then @_base.isFunctionOf(symbol) or @_exposant.isFunctionOf(symbol)
+		if typeof symbol is "string" then @_base.isFunctionOf(symbol) or @_exposant.isFunctionOf(symbol)
 		else union_arrays @_base.isFunctionOf(), @_exposant.isFunctionOf()
 	degre: (variable) -> if @isFunctionOf(variable) then Infinity else 0
 	toClone: -> PowerNumber.make(@_base, @_exposant).setPlus(@_plus)
-	assignValueToSymbol: (liste) ->
-		@_base = @_base.assignValueToSymbol(liste)
-		@_exposant = @_exposant.assignValueToSymbol(liste)
+	_childAssignValueToSymbol: (liste) ->
+		@_base = @_base._childAssignValueToSymbol(liste)
+		@_exposant = @_exposant._childAssignValueToSymbol(liste)
 		@
 	developp: (infos=null) ->
 		@_base = @_base.developp(infos)
@@ -787,7 +840,7 @@ class PowerNumber extends NumberObject
 	toPolynome: (variable = "x") ->
 		exp = @_exposant.simplify()
 		unless exp instanceof RealNumber then return (new Polynome(variable)).setInvalid()
-		unless exp.isInteger() and (exp.float()>0) then return (new Polynome(variable)).setInvalid()
+		unless exp.isInteger() and (exp.isPositive()>0) then return (new Polynome(variable)).setInvalid()
 		if @_base.isFunctionOf(variable)
 			output=@_base.toPolynome(variable).puissance(exp.float())
 			if not @_plus then output.opposite()
@@ -797,134 +850,15 @@ class PowerNumber extends NumberObject
 		base = @_base.replace(replacement,needle)
 		exposant = @_exposant.replace(replacement,needle)
 		new PowerNumber(base,exposant)
-class SymbolNumber extends NumberObject
-	@symbolsList: {}
-	constructor: (name, exposant) ->
-		if (typeof name is "string") and (name isnt "")
-			@_name = name
-			SymbolNumber.addSymbol(@_name);
-		else @_name = "var_inconnue"
-		if isInteger(exposant) then @_exposant = exposant
-		else @_exposant = 1
-	@makeSymbol: (name) ->
-		# Le but de cette méthode est de créer directement le bon type d'objet
-		switch
-			when name is "ℝ" then (new Ensemble()).inverse()
-			when name is "π" then new SymbolNumber("pi")
-			when name is "∅" then new Ensemble()
-			when (name is "∞") or (name is "infini") then new InftyNumber()
-			when name is "i" then new ComplexeNumber(0,1)
-			when name is "#" then new SymbolNumber("modulo")
-			when name is "" then new RealNumber()
-			else new SymbolNumber(name)
-	@pi: -> new SymbolNumber "pi"
-	@addSymbol: (symbolName, value) ->
-		if (symbolName isnt "e") and (symbolName isnt "pi")
-			if (typeof @symbolsList[symbolName] is "undefined") or not(value instanceof NumberObject) or (value.isFunctionOf(symbolName)) then @symbolsList[symbolName] = new RealNumber()
-			else @symbolsList[symbolName]= value
-	@getSymbolValue: (symbolName,symbols) ->
-		switch
-			when symbolName is "e" then return new RealNumber(Math.E)
-			when symbolName is "pi" then return new RealNumber(Math.PI)
-			when (val = symbols?[symbolName])?
-				if typeof val is "number" then return new RealNumber(val)
-				if (val instanceof NumberObject) and not val.isFunctionOf(symbolName) then return val
-				return new RealNumber()
-			when (typeof @symbolsList[symbolName] isnt "undefined") then return @symbolsList[symbolName]
-		new RealNumber()
-	toMonome: ->
-		obj = {}
-		obj[@_name] = @_exposant
-		new Monome(new RealNumber(1),obj)
-	compositeString: (options) ->
-		switch
-			when options.tex and (@_name in grecques) then name = "\\#{@_name}"
-			when @_name is "pi" then name = "π"
-			when @_name is "modulo" then name=MODULO_LETTER
-			else name = @_name
-		if @_exposant is 1 then return [name, @_plus, false, false]
-		else
-			if options.tex then strPower = "#{name}^{#{@_exposant}}"
-			else if @_exposant >=0 then strPower = "#{name}^#{@_exposant}"
-			else strPower = "#{name}^(#{@_exposant})"
-		[strPower, @_plus, false, true]
-	simplify: (infos=null) ->
-		if @_exposant is 0
-			infos?.set("EXPOSANT_ZERO")
-			return new RealNumber(@signe()) # Suppose que 0^0=1
-		@
-	#am: (operand, minus, infos=null) -> identique à NumberObject
-	#opposite: () -> indentique au parent
-	md: (operand, div, infos=null) ->
-		if (operand instanceof SymbolNumber) and (operand._name is @_name)
-			infos?.set("MULT_SYMBOLE")
-			if div then @_exposant -= operand._exposant
-			else @_exposant += operand._exposant
-			@_plus = (@_plus is operand._plus)
-			if @_exposant is 0 then return new RealNumber(@signe())
-			return @
-		super(operand, div, infos)
-	inverse: () ->
-		@_exposant *= -1
-		@
-	puissance: (exposant) ->
-		# Utilisé dans la simplification de power mais n'est qu'une réécriture
-		if exposant instanceof NumberObject then exposant = exposant.floatify().float()
-		if exposant is 0 then return new RealNumber(1)
-		if isInteger(exposant)
-			@_exposant *= exposant
-			@
-		else new RealNumber()
-	floatify: (symbols) ->
-		base_value = SymbolNumber.getSymbolValue(@_name, symbols).floatify(symbols);
-		if (@_plus) then return base_value.puissance(@_exposant)
-		base_value.puissance(@_exposant).opposite()
-	isFunctionOf: (symbol) ->
-		if symbol? then symbol is @_name
-		else
-			if (@_name is "pi") or (@_name is "i") or (@_name is "e") then []
-			else [ @_name ]
-	degre: (variable) -> if variable is @_name then @_exposant else 0
-	toClone: () -> (new SymbolNumber(@_name, @_exposant)).setPlus(@_plus)
-	isNul: () -> SymbolNumber.getSymbolValue(@_name).isNul() and (@_exposant>0)
-	assignValueToSymbol: (liste) ->
-		for assignement in liste
-			if assignement.name is @_name
-				if assignement.value instanceof NumberObject then value = assignement.value
-				else value = new RealNumber(assignement.value)
-				if @_exposant isnt 1 then value = PowerNumber.make(value, @_exposant)
-				if not @_plus then value.opposite()
-				return value
-		@
-	# developp: (infos=null) -> identique au parent
-	signature: -> @_name + @_exposant
-	# extractFactor: () -> identique au parent
-	toPolynome: (variable = "x") ->
-		if (@_name is variable) then return (new Polynome(variable)).addMonome(@_exposant,new RealNumber(@signe()))
-		(new Polynome(variable)).addMonome(0,@)
-	derivate: (variable) ->
-		if (@_name isnt variable) or (@_exposant is 0) then return new RealNumber(0)
-		if @_exposant is 1 then return new RealNumber(@_exposant)
-		out = @toClone()
-		out._exposant--
-		return out.md new RealNumber(@_exposant), false
-	extractModulo: (variable) ->
-		if variable isnt @_name then return { base:@, error:false }
-		if @_exposant isnt 1 then return { error:true }
-		return { base: newRealNumber(0), error:false, modulo:newRealNumber(1) }
-	#------- Fonctions spécifiques -------------
-	getName: -> @_name
-	replace: (replacement,needle) ->
-		switch
-			when needle isnt @_name then @toClone()
-			when (@_exposant is 1) and @_plus then replacement.toClone()
-			when (@_exposant is 1) and not(@_plus) then replacement.toClone().opposite()
-			else (new PowerNumber(replacement.toClone(), new RealNumber(@_exposant))).setPlus(@_plus)
 class Monome extends NumberObject
 	coeff: null		# Toujours un SimpleNumber
 	symbols: null	# Une table d'objet {clé = string nom de la variable : valeur = number, toujours un entier relatif}
 	_order:true		# Lors des affichages, les symbols sont donnés dans l'ordre / Pas encore géré
 	constructor: (coeff, symbols) ->
+		# Formats possible pour symbols :
+		# "x^2*y"
+		# [{name:"x", power:2}, {name:"y", power:1}]
+		# { name:"x", power:2 }
 		if coeff instanceof SimpleNumber then @coeff=coeff
 		else @coeff = new RealNumber coeff
 		@symbols = {}
@@ -948,6 +882,7 @@ class Monome extends NumberObject
 		if cleanZero and (@symbols[name] is 0) then delete @symbols[name]
 		@
 	hasSymbols: -> Object.keys(@symbols).length>0
+	isSymbol: (name) -> (@symbols[name]? is 1) and (Object.keys(@symbols).length is 1) and (@coeff.isOne()) # Vérifie si ce monome est 1.symbol^1 (surtout pour e)
 	# Fonctions de NumberObject
 	setPlus: (plus) ->
 		@coeff.setPlus(plus)
@@ -1005,14 +940,6 @@ class Monome extends NumberObject
 		@
 	md: (operand, div, infos=null) ->
 		switch
-			when operand instanceof SymbolNumber
-				name = operand._name
-				if div then power=-operand._exposant
-				else power=operand._exposant
-				if not(operand._plus) then @coeff.opposite()
-				@pushSymbol name,power,true,infos
-				if Object.keys(@symbols).length is 0 then return @coeff
-				return @
 			when operand instanceof Monome
 				@coeff = @coeff.md(operand.coeff,div,infos)
 				if div
@@ -1032,34 +959,20 @@ class Monome extends NumberObject
 	puissance: (exposant) ->
 		# Utilisé dans la simplification de power mais n'est qu'une réécriture
 		if exposant instanceof NumberObject then exposant = exposant.floatify().float()
+		if not(isInteger(exposant)) then return new RealNumber()
 		if exposant is 0 then return new RealNumber(1)
-		if isInteger(exposant)
-			@symbols[key] *= exposant for key,power of @symbols
-			@
-		else new RealNumber()
+		@symbols[key] *= exposant for key,power of @symbols
+		@coeff = @coeff.puissance(exposant)
+		@
 	floatify: (symbols) ->
-		base_value = @coeff.floatify(symbols)
-		factor = 1
-		for key,power of @symbols
-			switch
-				when power is 0 then x = 1
-				when key is "pi" then x = Math.PI
-				when key is "e" then x = Math.E
-				when (val=symbols?[key])?
-					switch
-						when typeof val is "number" then x = val
-						when (val instanceof NumberObject) and not (val.isFunctionOf(key)) then x = val.floatify(symbols).float()
-						else return new RealNumber()
-				else return new RealNumber()
-			factor *= Math.pow(x,power)
-		base_value.md(new RealNumber(factor),false)
+		out = @coeff.floatify(symbols)
+		out = out.md( SymbolManager.getSymbolValue(key,symbols).floatify().puissance(power), false) for key,power of @symbols when power isnt 0
+		out
 	isFunctionOf: (symbol) ->
-		if symbol? then @symbols[symbol]? and @symbols[symbol] isnt 0
-		else
-			out = []
-			for key, power of @symbols
-				if (power isnt 0) and (key isnt "i") and (key isnt "pi") and (key isnt "e") then out.push key
-			out
+		if typeof symbol is "string"
+			if (symbol is "e") or (symbol is "pi") or (symbol is "i") then false
+			else (typeof @symbols[symbol] is "number") and (@symbols[symbol] isnt 0)
+		else ( key for key, power of @symbols when (power isnt 0) and (key isnt "i") and (key isnt "pi") and (key isnt "e") )
 	degre: (variable) -> @symbols[symbol] ? 0
 	toClone: () ->
 		cl = new Monome @coeff.toClone()
@@ -1067,24 +980,24 @@ class Monome extends NumberObject
 		cl
 	isNul: () -> @coeff.isNul()
 	isOne: (factor) -> not(@hasSymbols()) and @coeff.isOne(factor)
-	assignValueToSymbol: (liste) ->
+	_childAssignValueToSymbol: (liste) ->
 		for key,value of liste
 			if @symbols[key]?
-				if value instanceof NumberObject then value = assignement.value
-				else value = new RealNumber(assignement.value)
-				if @symbols[key] isnt 1 then value = PowerNumber.make(value, @_exposant)
+				if @symbols[key] isnt 1 then value = PowerNumber.make(value.toClone(), @_exposant)
 				delete @symbols[key]
-				if Object.keys(@symbols).length is 0 then return value.md(@coeff,false)
-				else if value instanceof SimpleNumber
-					@coeff = @coeff.md(value,false)
-					return @
-				else return MultiplyNumber.makeMult(value,@)
+				switch
+					when not @hasSymbols() then return value.md(@coeff,false)
+					when value instanceof SimpleNumber
+						@coeff = @coeff.md(value,false)
+						return @
+					when value instanceof Monome then return @md(value,false)
+					else return MultiplyNumber.makeMult(value,@)
 		@
 	# developp: (infos=null) -> identique au parent
 	signature: ->
 		keys = Object.keys(@symbols).sort()
 		s = ""
-		s+=key+@symbols[key] for key in keys when (@symbols[key] isnt 0)
+		s+= key+@symbols[key] for key in keys when (@symbols[key] isnt 0)
 		if s is "" then return "1"
 		s
 	extractFactor: () ->
@@ -1226,7 +1139,7 @@ class FunctionNumber extends NumberObject
 				return sqrt
 		if (@_function.alias is "exp")
 			if @_operand.isNul() then return new RealNumber(1)
-			if @_operand.isOne() then return SymbolNumber.makeSymbol("e")
+			if @_operand.isOne() then return SymbolManager.makeSymbol("e")
 		if (@_function.alias is "ln")
 			if @_operand.isOne() then return new RealNumber(0)
 			if @_operand.isNegative() or @_operand.isNul() then return new RealNumber()
@@ -1245,8 +1158,8 @@ class FunctionNumber extends NumberObject
 	isFunctionOf: (symbol) -> @_operand.isFunctionOf(symbol)
 	degre: (variable) -> if @isFunctionOf(variable) then Infinity else 0
 	toClone: () -> (new FunctionNumber(@_function.alias, @_operand.toClone() )).setPlus(@_plus)
-	assignValueToSymbol: () ->
-		@_operand = @_operand.assignValueToSymbol(arguments)
+	_childAssignValueToSymbol: (liste) ->
+		@_operand = @_operand._childAssignValueToSymbol(liste)
 		@
 	getOperand: -> @_operand
 	getFunction: -> @_function.alias
@@ -1282,7 +1195,7 @@ class SimpleNumber extends NumberObject
 		super(operand, minus, infos)
 	md: (operand, divide, infos=null) ->
 		if operand instanceof SimpleNumber then return @mdSimple(operand, divide, infos)
-		if (operand instanceof SymbolNumber) or (operand instanceof Monome) then return @toMonome().md(operand,divide,infos)
+		if (operand instanceof Monome) then return @toMonome().md(operand,divide,infos)
 		super(operand, divide, infos)
 	#isFunctionOf: (symbol) -> false Identique au parent
 	isFloat: -> false
@@ -1311,6 +1224,8 @@ class SimpleNumber extends NumberObject
 	toPolynome: (variable = "x") -> (new Polynome(variable)).addMonome(0,@)
 	toMonome: -> new Monome(@)
 	derivate: -> new RealNumber 0
+	intPower: (exposant) ->
+
 class InftyNumber extends SimpleNumber
 	constructor: (plus) ->
 		if arguments.length is 1 then @_plus = (arguments[0] is true)
@@ -1349,7 +1264,8 @@ class InftyNumber extends SimpleNumber
 			if divide then return operand.toClone().inverse().mdSimple(@,false,infos)
 			else return operand.toClone().mdSimple(@,false,infos)
 		# Pour n'importe quel autre nombre, multiplier  +-infini à un reel ne peut que changer le signe
-		infos?.set("MULT_SIMPLE")
+		# On ne change pas le flag MULT_SIMPLE si c'est une mulitplication par 1
+		if (infos isnt null) and not( (operand instanceof RealNumber) or (operand.isOne()) ) then infos?.set("MULT_SIMPLE")
 		@_plus = (@_plus is operand.isPositive())
 		@
 	isOne: (fact = 1) -> false

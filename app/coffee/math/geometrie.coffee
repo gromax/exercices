@@ -84,8 +84,8 @@ class Droite2D
 				# C'est un numberobject
 				@a = param.derivate "x"
 				@b = param.derivate "y"
-				vx = (new SymbolNumber("x",1)).md(@a,false)
-				vy = (new SymbolNumber("y",1)).md(@b,false)
+				vx = new Monome(@a.toClone(), {name:"x", power:1})
+				vy = new Monome(@b.toClone(), {name:"y", power:1})
 				@c = vx.am(vy,false).opposite().am(param,false)
 		else
 			@a = new RealNumber(0)

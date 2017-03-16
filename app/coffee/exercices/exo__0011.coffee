@@ -17,56 +17,20 @@ Exercice.liste.push
 		poly = mM.polynome.make { coeffs:[P.toClone(), S.toClone().opposite(), 1] }
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On cherche les valeurs de $x$ et $y$ telles que $x+y=#{S.tex()}$ et $x\\cdot y =#{P.tex()}$.</p>"}]}
-			new Brique {
+			new BListe {
+				title:"Équation à rédoudre"
 				data:data
 				bareme:20
 				good:poly
-				needed: ["poly"]
-				ask: () ->
-					@container.html Handlebars.templates.std_panel {
-						title:"Équation à rédoudre"
-						focus:true
-						zones:[
-							{
-								body:"champ"
-								html:Handlebars.templates.std_form {
-									inputs:[{postTag:"$=0$", description:"Équation à résoudre", name:"poly"}]
-									clavier:[{name:"sqr-button", title:"carré", tag:"$x^2$"}]
-									help_target:@data.divId+"_aide"
-								}
-							}, {
-								help:@data.divId+"_aide"
-								html:Handlebars.templates.help {somme_produit:true}
-							}
-						]
-					}
-					@gc = new GestClavier $("input[name='poly']",@container)
-					$("button[name='sqr-button']",@container).on 'click', (event) => @gc.clavier("","x^2",false)
-					$("form",@container).on 'submit', (event) =>
-						@a.poly = $("input[name='poly']",@container).val()
-						@run true
-						false
-					$("input[name='poly']",@container).focus()
-				ver: () ->
-					si = new Parser @a.poly, {developp:true}
-					polyUserObj = si.object.toPolynome("x")
-					polyUserTex = polyUserObj.tex()
-					polyGoodTex = @config.good.tex()
-					if (polyUserObj.minus(@config.poly).simplify().isNul())
-						liste_cor = [{ text:"Vous avez répondu $#{polyUserTex}=0$. Bonne réponse.", color:"ok" }]
-						@data.note += @bareme
-					else
-						liste_cor = [
-							{ text:"Vous avez répondu $#{polyUserTex}=0$.", color:"error" }
-							{ text:"La somme  $x+y$ est $S = #{@data.S.tex()}$ et le produit $x\\cdot y$ est $P = #{@data.P.tex()}$, donc on sait que l'équation est de la forme $x^2-S x+P=0$, c'est à dire ici : $#{polyGoodTex}=0$.", color:"error"}
-						]
-					@container.html Handlebars.templates.std_panel {
-						title:"Équation à rédoudre : $#{polyGoodTex}=0$"
-						zones:[{
-							list:"correction"
-							html:Handlebars.templates.listItem liste_cor
-						}]
-					}
+				liste:[{
+					tag:"(E)"
+					name:"poly"
+					good:poly.toNumberObject()
+					large:true
+					postTag:"$=0$"
+					description:"Équation à résoudre"
+				}]
+				touches:[{name:"sqr-button", title:"carré", tag:"$x^2$", pre:"", post:"x^2", recouvre:false}]
 			}
 			new BListe {
 				title: "Calcul du discriminant $\\Delta$"
@@ -80,11 +44,17 @@ Exercice.liste.push
 				]
 				aide: oHelp.trinome.discriminant
 			}
-			new BSolutions {
+			new BListe {
+				title:"Solutions"
 				data:data
 				bareme:60
-				touches:["sqrt"]
+				touches:["empty","sqrt"]
 				aide:oHelp.trinome.racines
-				solutions:mM.ploynome.solve.exact poly, {y:0}
+				liste:[{
+					name:"solutions"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions:mM.polynome.solve.exact poly, {y:0}
+				}]
 			}
 		]

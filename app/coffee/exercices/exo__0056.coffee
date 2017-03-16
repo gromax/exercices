@@ -34,21 +34,27 @@ Exercice.liste.push
 					}
 				]
 			}
-			new BEquations {
+			new BListe {
 				title: "Équation"
 				data:data
 				bareme:100
-				equations: [ good ]
+				touches:["empty"]
+				liste:[{
+					name:"equations"
+					tag:"$\\mathcal{S}$"
+					large:true
+					equations: [ good ]
+				}]
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:@title
 			content:Handlebars.templates["tex_enumerate"] {
 				pre: "Donnez les équations des asymptotes correspondant aux limites suivantes :"
 				items: ("$\\displaystyle \\lim_{x \\to #{item.tex.x}} f(x) = #{item.tex.y}$" for item in data)
-				large:slide is true
+				large:false
 			}
 		}
 

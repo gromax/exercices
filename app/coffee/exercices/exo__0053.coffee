@@ -87,10 +87,17 @@ Exercice.liste.push
 					infosZone
 				]
 			}
-			new BSolutions {
+			new BListe {
+				title:"Solutions"
 				data:data
 				bareme:100
-				solutions:goods
+				touches:["empty"]
+				liste:[{
+					name:"solutions"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions:goods
+				}]
 			}
 		]
 	cas_b0: (expr1,expr2,a) ->
@@ -126,11 +133,11 @@ Exercice.liste.push
 		md = expr2.replace(X,"x").order()
 		if a is 1 then options = { altFunctionTex:["exp"] } else options = {}
 		{ goods:goods, eqTex:mg.tex(options)+" = "+md.tex(options) }
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:@title
-			content:Handlebars.templates["tex_enumerate"] { items: ("$#{item.equation}$" for item in data), large:slide is true }
+			content:Handlebars.templates["tex_enumerate"] { items: ("$#{item.equation}$" for item in data), large:false }
 		}
 
 

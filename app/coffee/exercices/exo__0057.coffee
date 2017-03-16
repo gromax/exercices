@@ -17,17 +17,16 @@ Exercice.liste.push
 		if (typeof inp.ne is "undefined") then inp.ne = ne = Math.round ( (100+mM.alea.real({min:-10, max:10})) * fHigh / 100 * n )
 		else ne = Number inp.ne
 		habillage = mM.alea.in [
-			"Une usine fabrique des tuyaux en caoutchouc. On sait que #{p}% des tuyaux sont poreux. On prélève un échantillon de #{n} tuyaux dans la production qui est considérée comme assez importante. On a trouvé #{ne} tuyaux poreux dans l'échantillon. On appelle $f$ la fréquence de tuyaux poreux dans l'échantillon."
-			"Une entreprise annonce que seulement #{p}% de ses clients exigent un remboursement. On interroge au hasard un échantillon de #{n} clients, en considérant que le nombre de clients est important. Dans l'échantillon, #{ne} clients ont éxigé un remboursement. On appelle $f$ la fréquence de clients dans l'échantillon ayant exigé un remboursement."
-			"Une maladie affecte #{p}% de la population. On prélève au hasard un échantillon de #{n} personnes dans la population qui est considérée comme assez importante. #{ne} individus de l'échantillon étaient affectés par la maladie. On appelle $f$ la fréquence de personnes dans l'échantillon affectées par la maladie."
-			"Un laboratoire affirme que son médicament a des effets secondaires dans #{p}% des cas. On prélève au hasard un échantillon de #{n} cas sur un nombre total assez important. Dans l'échantillon, il y a eu des effets secondaires dans #{ne} cas. On appelle $f$ la fréquence de cas dans l'échantillon présentant des effets secondaires."
+			"Une usine fabrique des tuyaux en caoutchouc. On sait que #{p}\\% des tuyaux sont poreux. On prélève un échantillon de #{n} tuyaux dans la production qui est considérée comme assez importante. On a trouvé #{ne} tuyaux poreux dans l'échantillon. On appelle $f$ la fréquence de tuyaux poreux dans l'échantillon."
+			"Une entreprise annonce que seulement #{p}\\% de ses clients exigent un remboursement. On interroge au hasard un échantillon de #{n} clients, en considérant que le nombre de clients est important. Dans l'échantillon, #{ne} clients ont éxigé un remboursement. On appelle $f$ la fréquence de clients dans l'échantillon ayant exigé un remboursement."
+			"Une maladie affecte #{p}\\% de la population. On prélève au hasard un échantillon de #{n} personnes dans la population qui est considérée comme assez importante. #{ne} individus de l'échantillon étaient affectés par la maladie. On appelle $f$ la fréquence de personnes dans l'échantillon affectées par la maladie."
+			"Un laboratoire affirme que son médicament a des effets secondaires dans #{p}\\% des cas. On prélève au hasard un échantillon de #{n} cas sur un nombre total assez important. Dans l'échantillon, il y a eu des effets secondaires dans #{ne} cas. On appelle $f$ la fréquence de cas dans l'échantillon présentant des effets secondaires."
 		]
 		isIn = (ne/n <= fHigh)
 		data.tex = {
 			habillage:habillage
 			p:p
 		}
-
 
 		[
 			new BEnonce { zones:[
@@ -46,7 +45,7 @@ Exercice.liste.push
 					description:"Intervalle de fluctuation asymptotique à 0,001 = 0,1% près"
 					good:IF
 					large:true
-					params:{arrondi:-3}
+					arrondi:-3
 				}]
 				aide: [
 					"L'intervalle de fluctuation asymptotique est l'intervalle de fluctuation obtenu en approximant la loi $\\mathcal{B}(n;p)$ par une loi normale $\\mathcal{N}(\\mu;\\sigma)$, avec $\\mu = n\\cdot p$ et $\\sigma = \\sqrt{n\\cdot p \\cdot (1-p)}$"
@@ -70,19 +69,19 @@ Exercice.liste.push
 				]
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itData in data
 			out.push {
 				title:@title
-				content: ennonce + Handlebars.templates["tex_enumerate"] {
+				content: Handlebars.templates["tex_enumerate"] {
 					pre:itData.tex.habillage
 					items: [
 						"Donnez l'intervalle de fluctuation asymptotique à 95\\% de $f$ en arrondissant à 0,001 = 0,1\\% près."
 						"Au seuil de 95\\%, doit-on rejeter l'affirmation $p=#{itData.tex.p}\\%$ ?"
 					]
-					large:slide is true
+					large:false
 				}
 			}
 		out

@@ -36,7 +36,22 @@ Exercice.liste.push
 				data:data
 				bareme:40
 				title:"Espérance et écart-type"
-				liste:[{tag:"$E(X)=$", name:"esp", description:"Espérance à 0,01 près", good:inp.n*inp.p, params:{arrondi:-2}}, {tag:"$\\sigma(X)$", name:"std", description:"Écart-type à 0,001 près", good:Math.sqrt(inp.n*inp.p*(1-inp.p)), params:{arrondi:-2}}]
+				liste:[
+					{
+						tag:"$E(X)=$"
+						name:"esp"
+						description:"Espérance à 0,01 près"
+						good:inp.n*inp.p
+						arrondi:-2
+					}
+					{
+						tag:"$\\sigma(X)$"
+						name:"std"
+						description:"Écart-type à 0,001 près"
+						good:Math.sqrt(inp.n*inp.p*(1-inp.p))
+						arrondi:-2
+					}
+				]
 				aide: [
 					"L'espérance est la valeur attendue. Si on a un fréquence $p$ de tuyaux poreux dans la production, si on prélève $n$ tuyaux, on s'attend à obtenir $E(X)=n\\times p$ tuyaux poreux."
 					"Naturellement, le nombre de tuyau réellement obtenu dans un prélèvement va varier aléatoirement. Pour un résultat donné, pour savoir s'il est loin ou proche de la valeur attendue, on utilise l'écart-type qui se cacule : $\\sigma(X)=\\sqrt{np(1-p)}$. Jusqu'à $2\\sigma$, on est assez proche de la valeur espérée. Au-delà de $2\\sigma$, on est loin."
@@ -46,7 +61,27 @@ Exercice.liste.push
 				data:data
 				bareme:60
 				title:"Intervalle de fluctuation"
-				liste:[{tag:"$a$", name:"a", description:"Nombre entier", good:Xlow}, {tag:"$b$", name:"b", description:"Nombre entier", good:Xhigh}, {tag:"$I_F$", name:"IF", description:"Intervalle de fluctuation à 0,01 près", good:IF, params:{tolerance:0.005}}]
+				liste:[
+					{
+						tag:"$a$"
+						name:"a"
+						description:"Nombre entier"
+						good:Xlow
+					}
+					{
+						tag:"$b$"
+						name:"b"
+						description:"Nombre entier"
+						good:Xhigh
+					}
+					{
+						tag:"$I_F$"
+						name:"IF"
+						description:"Intervalle de fluctuation à 0,01 près"
+						good:IF
+						tolerance:0.005
+					}
+				]
 				text: [
 					{
 						body:"texte"

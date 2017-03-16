@@ -27,8 +27,8 @@ class Suite
 			return @u_nMin[n-@nMin]
 		return new RealNumber()
 	un: (i=0) ->
-		if i is 0 then SymbolNumber.makeSymbol("#{@nom}_n")
-		else SymbolNumber.makeSymbol("#{@nom}_{n+#{i}}")
+		if i is 0 then SymbolManager.makeSymbol("#{@nom}_n")
+		else SymbolManager.makeSymbol("#{@nom}_{n+#{i}}")
 	recurence: (args) ->
 		if @recurence_def isnt null
 			k = @recurence_def.length
@@ -37,6 +37,6 @@ class Suite
 		else new NumberObject()
 	explicite: (x) ->
 		if typeof x is "number" then x = new RealNumber(x)
-		if not(x instanceof NumberObject) then x = SymbolNumber.makeSymbol("n")
+		if not(x instanceof NumberObject) then x = SymbolManager.makeSymbol("n")
 		if @explicite_def isnt null then @explicite_def(x).simplify()
 		else new NumberObject()

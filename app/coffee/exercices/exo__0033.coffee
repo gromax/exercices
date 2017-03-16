@@ -31,11 +31,17 @@ Exercice.liste.push
 				body:"enonce"
 				html:Handlebars.templates.equation { gauche:membreGaucheTex, droite:membreDroiteTex }
 			}]}
-			new BSolutions {
+			new BListe {
+				title:"Solutions"
 				data:data
 				bareme:100
-				touches:["pi"]
-				solutions:[ mM.exec([ang2, ang1, "-", 2, "#", "pi", "*", "*", "+", a, b, "-", "/"], { simplify:true, developp:true, modulo:true}) ]
-				moduloKey:"k"
+				touches:["empty","pi"]
+				liste:[{
+					name:"solutions"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions:[ mM.exec([ang2, ang1, "-", 2, "#", "pi", "*", "*", "+", a, b, "-", "/"], { simplify:true, developp:true, modulo:true}) ]
+					moduloKey: "k"
+				}]
 			}
 		]

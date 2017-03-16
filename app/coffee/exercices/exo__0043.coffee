@@ -13,6 +13,10 @@ Exercice.liste.push
 		q = 1+inp.r/100 # Raison
 		c0=inp.c*1000 # Premier terme
 		n = Math.ceil(Math.log(2)/Math.log(q)) # Doublement
+		data.tex = {
+			c0:c0
+			r:numToStr inp.r
+		}
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>Le 1 janvier 2010, on place la somme de #{c0} € sur un compte bancaire qui rapporte tous les ans #{numToStr inp.r}% d'intérêts composés.", "Soit $(C_n)$ la suite représentant le capital sur le compte au 1 janvier de l'année 2010$+n$.</p>"}]}
 			new BListe {
@@ -30,3 +34,20 @@ Exercice.liste.push
 				liste:[{tag:"$n$", name:"n", description:"Rang du doublement", good:n}, {tag:"Année", name:"a", description:"Année du doublement", good:2010+n}]
 			}
 		]
+	tex: (data) ->
+		if not isArray(data) then data = [ data ]
+		out=[]
+		for itData in data
+			out.push {
+				title:@title
+				content:Handlebars.templates["tex_enumerate"] {
+					pre:"Le 1 janvier 2010, on place la somme de #{itData.tex.c0} euros sur un compte bancaire qui rapporte tous les ans #{itData.tex.r}\\% d'intérêts composés. Soit $(C_n)$ la suite représentant le capital sur le compte au 1 janvier de l'année 2010$+n$."
+					items: [
+						"$(C_n)$ est une suité géométrique. Donnez son premier terme et sa raison."
+						"Au bout de combien d'année le capital sera-t-il le double du capital initial ?"
+					]
+					large:false
+				}
+			}
+		out
+

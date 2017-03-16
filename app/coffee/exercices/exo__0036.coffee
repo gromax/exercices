@@ -15,7 +15,7 @@ Exercice.liste.push
 			params: {axis:true, grid:true, boundingbox:[-1.5,1.5,1.5,-1.5]}
 			zone:"gauche"
 			customInit: ()->
-				circle = @graph.create("circle", [[0,0],1])
+				circle = @graph.create("circle", [[0,0],1],{fixed:true, strokeColor:'red'})
 				@M = @graph.create("glider", [circle],{name:"M", fixed:false, size:4, color:'blue', showInfoBox:true})
 			fcts:{
 				correcOk: (rad)->

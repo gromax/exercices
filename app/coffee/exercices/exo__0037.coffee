@@ -16,7 +16,13 @@ Exercice.liste.push
 				data:data
 				bareme:100
 				title:"Expression de la dérivée $f'$"
-				liste:[{tag:"$f'(t)=$", name:"u", description:"Expression de f'", good: fDer , params:{ forme:{fraction:true}}}]
+				liste:[{
+					tag:"$f'(t)=$"
+					name:"u"
+					description:"Expression de f'"
+					good: fDer
+					forme:{fraction:true}
+				}]
 				aide:oHelp.trigo.derivee
 			}
 		]

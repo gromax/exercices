@@ -30,14 +30,31 @@ Exercice.liste.push
 				bareme:100
 				title:"Donnez les indicateurs statistiques de la série"
 				liste:[
-					{tag:"$N$", name:"N", description:"Effectif total", good:serie.N()}
-					{tag:"$\\overline{x}$", name:"m", description:"Moyenne (à 0,1 près)", good:serie.moyenne(), params:{arrondi:-1}}
-					{tag:"$\\sigma$", name:"std", description:"Écart-type (à 0,1 près)", good:serie.std(), params:{arrondi:-1}}
+					{
+						tag:"$N$"
+						name:"N"
+						description:"Effectif total"
+						good:serie.N()
+					}
+					{
+						tag:"$\\overline{x}$"
+						name:"m"
+						description:"Moyenne (à 0,1 près)"
+						good:serie.moyenne()
+						arrondi:-1
+					}
+					{
+						tag:"$\\sigma$"
+						name:"std"
+						description:"Écart-type (à 0,1 près)"
+						good:serie.std()
+						arrondi:-1
+					}
 				]
 				aide:oHelp.stats.N.concat(oHelp.stats.moyenne,oHelp.stats.ecart_type)
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itData in data
@@ -50,7 +67,7 @@ Exercice.liste.push
 				pre:"On considère la série statistique donnée par le tableau suivant :"
 				lines: [xs, ns]
 				cols: xs.length
-				large: slide is true
+				large: false
 			}
 			out.push {
 				title:@title
@@ -60,7 +77,7 @@ Exercice.liste.push
 						"Donnez la moyenne $\\overline{x}$ de la série, à $0,1$ près"
 						"Donnée l'écart-type $\\sigma$ à $0,1$ près"
 					]
-					large:slide is true
+					large:false
 				}
 			}
 		out

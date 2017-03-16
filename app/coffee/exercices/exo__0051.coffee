@@ -38,21 +38,21 @@ Exercice.liste.push
 			name:"pX"
 			description:"Valeur à 0,01 près"
 			good:(b-a)/(Xmax-Xmin)
-			params:{arrondi:-2}
+			arrondi:-2
 		}]
 		if data.options.a.value is 0 then liste.push {
 			tag:"$E(X)$"
 			name:"E"
 			description:"Espérance à 0,01 près"
 			good:(Xmin+Xmax)/2
-			params:{arrondi:-2}
+			arrondi:-2
 		}
 		if data.options.b.value is 0 then liste.push {
 			tag:"$\\sigma(X)$"
 			name:"sig"
 			description:"Ecart-type à 0,01 près"
 			good:(Xmax-Xmin)/Math.sqrt(12)
-			params:{arrondi:-2}
+			arrondi:-2
 		}
 
 		[
@@ -65,7 +65,7 @@ Exercice.liste.push
 				aide: oHelp.proba.binomiale.calculette
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		symbs = ["","<","\\leqslant"]
 		if not isArray(data) then data = [ data ]
 		its=[]
@@ -95,14 +95,14 @@ Exercice.liste.push
 				content:Handlebars.templates["tex_enumerate"] {
 					items: its
 					numero:"1)"
-					large:slide is true
+					large:false
 				}
 			}]
 		else [{
 				title:@title
 				content:Handlebars.templates["tex_plain"] {
 					content: its[0]
-					large:slide is true
+					large:false
 				}
 			}]
 

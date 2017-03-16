@@ -19,17 +19,25 @@ Exercice.liste.push
 				data:data
 				bareme:100
 				title:"Équation de la tangente $\\mathcal{T}$"
-				liste:[{tag:"$y=$", name:"e", description:"Équation de la tangente", good:droite.reduiteObject(), params:{developp:true, formes:"FRACTION", cor_prefix:"y="}}]
+				liste:[{
+					tag:"$y=$"
+					name:"e"
+					description:"Équation de la tangente"
+					good:droite.reduiteObject()
+					developp:true
+					cor_prefix: "y="
+					formes:"FRACTION"
+				}]
 				aide:oHelp.derivee.tangente
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:@title
 			content:Handlebars.templates["tex_enumerate"] {
 				pre: "Dans le(s) cas suivant(s), on considère une fonction $f$ et sa courbe. Pour une certaine valeur $a$, on donne $f(a)$ et $f'(a)$. Donnez la tangente à la courbe au point d'abscisse $a$."
 				items: ("$a=#{item.values.a}$, $f(a)=#{item.values.y}$ et $f'(a)=#{item.values.der}$" for item in data)
-				large:slide is true
+				large:false
 			}
 		}

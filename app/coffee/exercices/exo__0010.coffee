@@ -47,20 +47,26 @@ Exercice.liste.push
 				]
 				aide: oHelp.trinome.discriminant
 			}
-			new BSolutions {
+			new BListe {
+				title:"Solutions"
 				data:data
 				bareme:80
-				touches:["sqrt"]
+				touches:["empty","sqrt"]
 				aide: oHelp.trinome.racines
-				solutions:mM.polynome.solve.exact poly, {y:0, imaginaire:not dansR}
+				liste:[{
+					tag:"$\\mathcal{S}$"
+					name:"solutions"
+					large:true
+					solutions:mM.polynome.solve.exact poly, {y:0, imaginaire:not dansR}
+				}]
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		if data[0]?.options.d.value is 0 then title = "Résoudre dans $\\mathbb{R}$"
 		else title = "Résoudre dans $\\mathbb{C}"
 		{
 			title:title
-			content:Handlebars.templates["tex_enumerate"] { items: ("$#{item.equation}$" for item in data), large:slide is true }
+			content:Handlebars.templates["tex_enumerate"] { items: ("$#{item.equation}$" for item in data), large:false }
 		}
 

@@ -31,6 +31,7 @@
 				denominator : null 	# null-> entier, nombre-> impose une valeur, tableau-> valeurs possibles, { min, max } -> intervalle de valeurs
 			}, params
 			num = Proba.alea config.values
+			if config.coeff? then num *= config.coeff
 			if config.denominator?
 				deno = Proba.alea config.denominator
 				if deno is 0 then deno = 1
@@ -89,13 +90,13 @@
 	}
 	distribution: {
 		gaussian: (x,params) ->
-			config = mergeObj { moy:0, std:1 }
+			config = mergeObj { moy:0, std:1 }, params
 			Proba.gaussianDistribution (x - config.moy)/config.std
 		binomial: (n,p,k) -> Proba.binomial_density(n, p, k)
 	}
 	repartition: {
 		gaussian: (x,params) ->
-			config = mergeObj { moy:0, std:1 }
+			config = mergeObj { moy:0, std:1 }, params
 			if (typeof x is "object")
 				if x.max? then out = Proba.gaussianRepartition (x.max - config.moy)/config.std else out = 1
 				if x.min? then out = out - Proba.gaussianRepartition (x.min - config.moy)/config.std
@@ -123,13 +124,13 @@
 		degToRad: (value) ->
 			switch
 				when isArray(value) then return @degToRad mM.exec value
-				when value instanceof NumberObject then return value.toClone().md(new RealNumber(180),true).md(SymbolNumber.makeSymbol("pi"),false).simplify()
+				when value instanceof NumberObject then return value.toClone().md(new RealNumber(180),true).md(SymbolManager.makeSymbol("pi"),false).simplify()
 				when typeof value is "number" then return value * Math.PI() / 180
 				else return NaN
 		radToDeg: (value) ->
 			switch
 				when isArray(value) then return @radToDeg mM.exec value
-				when value instanceof NumberObject then return value.toClone().md(new RealNumber(180),false).md(SymbolNumber.makeSymbol("pi"),true).simplify()
+				when value instanceof NumberObject then return value.toClone().md(new RealNumber(180),false).md(SymbolManager.makeSymbol("pi"),true).simplify()
 				when typeof value is "number" then return value / Math.PI() * 180
 				else return NaN
 		angles: -> Trigo.anglesConnus()
@@ -137,7 +138,7 @@
 			value = mM.toNumber value
 			nPi = value.floatify(symbols).float()/Math.PI
 			tours = Math.round(nPi/2)*2
-			output = value.toClone().am (new RealNumber tours).md(SymbolNumber.pi(),false), true
+			output = value.toClone().am (new RealNumber tours).md(SymbolManager.pi(),false), true
 			if nPi-tours is -1 then output.opposite()
 			output.simplify()
 		complexe: (module, argument) ->
@@ -192,10 +193,10 @@
 				when arg is "modulo"
 					op2 = pile.pop()
 					pile.push(pile.pop()?.setModulo(op2))
-				when arg in ["x","y","t","i","pi","#","e","∞"] then pile.push SymbolNumber.makeSymbol(arg)
+				when arg in ["x","y","t","i","pi","#","e","∞"] then pile.push SymbolManager.makeSymbol(arg)
 				when (typeof arg is "string") and (FunctionNumber.functions[arg]?) then pile.push(new FunctionNumber(arg,pile.pop()))
 				when typeof arg is "number" then pile.push(new RealNumber(arg))
-				when (typeof arg is "string") and (m = arg.match /// ^symbol:([a-zA-Z_']+)$ ///i) then pile.push SymbolNumber.makeSymbol(m[1])
+				when (typeof arg is "string") and (m = arg.match /// ^symbol:([a-zA-Z_']+)$ ///i) then pile.push SymbolManager.makeSymbol(m[1])
 				when (typeof arg is "string") and (m = arg.match /// ^ensemble:([\[\]]+)([\[\]]+)$ ///i)
 					op2 = pile.pop()
 					op1 = pile.pop()
@@ -210,13 +211,13 @@
 			decomposition = out.modulo(config.modulo)
 			unless decomposition.modulo is false then out = decomposition.base.setModulo(decomposition.modulo)
 		out
-	parse: (expression,params) -> (new Parser expression,params).object
+	parse: (expression,params) -> (new ParseInfo expression,params).object
 	toNumber: (value) ->
 		switch
+			when value instanceof NumberObject then return value
 			when $.isNumeric( value ) then return new RealNumber(Number value)
 			when (value is null) or (typeof value is "undefined") then return new RealNumber()
 			when isArray value then return @exec value
-			when value instanceof NumberObject then return value
 			when typeof value is "object"
 				if typeof value.numerator is "number"
 					out = new RationalNumber(value.numerator, value.denominator)
@@ -297,7 +298,7 @@
 				when config.expression? then PolynomeMaker.parse(config.expression, config.variable)
 				when config.number? then config.number.toPolynome(config.variable)
 				else PolynomeMaker.invalid(config.variable)
-		parse: (expression, variable="x") -> (new Parser expression,{type:"number"}).object?.toPolynome(variable)
+		parse: (expression, variable="x") -> (new ParseInfo expression,{type:"number"}).object?.toPolynome(variable)
 		solve: {
 			numeric: (poly,params) ->
 				config = mergeObj {
@@ -378,21 +379,18 @@
 			v2 = mM.toNumber val2
 			(new Ensemble()).init((ouvrant is "[") or (ouvrant is true), v1, (fermant is "]") or (fermant is true), v2)
 	}
-	tri: (users,goods,type) ->
-		# users est un tableau de string
-		# goods est un tableau d'items
-		# type précise le genre de parse attendu : number, equation
-		if type is "number" then goodsObj = ( { value: @toNumber(item), rank:i, d:[] } for item,i in goods )
-		else goodsObj = ( { value: item, rank:i, d:[] } for item,i in goods )
+	tri: (users,goods) ->
+		# users est un tableau d'objets ParseInfo
+		# goods est un tableau d'objets (idem)
+		goodsObj = ( { value: item, rank:i, d:[] } for item,i in goods )
 		# on détecte les modulos sur les users
 		usersObj = []
-		for user, i in users
-			info = new Parser user, { type:type }
-			userObject = info.object
-			if userObject instanceof NumberObject
-				moduloObj = userObject.modulo?()
-				if moduloObj.modulo isnt false then userObject = moduloObj.base
-			usersObj.push { value:userObject, info:info, rank:i, d:[] }
+		for userInfo, i in users when userInfo instanceof ParseInfo
+			user = userInfo.object
+			if user instanceof NumberObject
+				moduloObj = user.modulo?()
+				if moduloObj.modulo isnt false then user = moduloObj.base
+			usersObj.push { value:user, info:userInfo, rank:i, d:[] }
 		erreurManager.tri(usersObj,goodsObj)
 	erreur:(good,userObject,symbols) ->
 		# userObject est un NumberObject
@@ -409,115 +407,140 @@
 			if config.simplify then f[0] = f[0].simplify(null,config.developp).simplify() # bug : pourquoi faut-il deux simplify() ?
 			MultiplyNumber.makeMult f
 		else obj.toClone()
-	verification: (user, goodObject, params) ->
-		# Grande fonction de vérification des exercices
-		# tag, name peuvent-être sortis de cette fonction
-		# La sortie bareme est un facteur / 1
-		# Il faut alors sortir le calcul de la note et vérifier les custom correc
-
-		# user = valeur retournée par l'utilisateur. Peut être un objet déjà parsé.
-		# goodObject = bonne valeur. Un NumberObject ou EnsembleObject ou Equation
-		# params = objet de paramètres dont les possibilités sont données ci-dessous
-		config = mergeObj {
-			formes:null		# forme autorisées. Par ex : { racine:true, fraction:true } ou encore "FRACTION"
-			p_forme:0.5		# pondération pour une forme pas suffisemment simplifiée
-			tolerance:0		# Une approximation dans la tolérance est considérée comme juste et n'est pas signalée
-			approx:0.1		# Une approximation est tolérée mais signalée comme fausse
-			p_approx:0.5	# Pondération si le résultat n'est qu'approximatif et dans la tolérance
-			arrondi:null	# Si on demande un arrondi, on précise ici une puissance (-2 pour 0.01 par ex.)
-			p_arrondi:0.5	# Pondération si arrondi demandé et mal fait
-			p_modulo:0.5	# Pondération si le modulo est faux
-			developp:false	# Indique s'il faut développer le résultat de l'utilisateur
-			toLowercase:false # Pour le parser, convertit en petit
-			cor_prefix:""	# Permet d'ajouter un préfixe à la valeur correction. Différent de goodTex car permet de préfixer également le userTex
-		}, params
-		# La bonne valeur peut-être un ensemble ou un objet convertible en number ou même un tableau de number
-		switch
-			when config.type? then parse_type = config.type # permet de forcer le type de réponse attendu
-			when goodObject instanceof EnsembleObject then parse_type = "ensemble" # On attend un ensemble
-			when goodObject instanceof Equation then parse_type = "equation" # On attend une équation
-			when typeof goodObject is "number"
-				goodObject = new RealNumber goodObject
-				parse_type = "number"
-			else parse_type = "number"	# A défaut, on attend un nombre
-		if user instanceof Parser then info=user # Cas où on fournirait un user déjà parsé
-		else info = new Parser user, { type:parse_type, developp:config.developp, toLowercase:config.toLowercase }
-		output = {
-			ponderation: 0						# ponderation du bareme
-			ok:false							# ok = true -> la réponse s'affiche en vert avec éventuellement une remarque
-			user:info.expression				# text entré par l'utilisateur
-			userTex:config.cor_prefix+info.tex	# tex de la réponse entrée par l'utilisateur
-			userObject:info.object				# objet parsé entré par l'utilisateur
-			formeOk : true						# La forme est ok par défaut
-		}
-		# Dans le cas d'un number, output renverra également :
-		# - erreur = objet produit par la fonction mM.erreur et contenant les infos :
-		# -- exact = true/false : valeur exacte
-		# -- float = true/false : valeur décimale
-		# -- approx_ok:true/false : approximation correctement faite
-		# -- ecart:ecart = nombre
-		# -- moduloError = false/tex : en cas d'erreur, on envoie le tex du modulo demandé
-		# -- p_user = nombre entier : puissance du dernier chiffre significatif
-		# - resolution = string : Dans le cas d'un arrondi, text de la forme "0,01"
-		# - good_arrondi = valeur numérique de la bonne réponse arrondie correctement
-		# - mauvais_arrondi = true : La valeur donnée n'est pas un float ou erreur de troncature ou précision trop grande
-		# - approximation = true : Quand la réponse utilisateur est un float, approx correcte et dans la zone tolérée (mais éventuellement pénalisée) d'une approx
-		switch parse_type
-			when "ensemble"
-				output.goodObject = goodObject							# Bonne réponse
-				if config.goodTex? then output.good = config.goodTex	# Le tex peut être fourni
-				else output.good = config.cor_prefix+goodObject.tex()	# Sinon on calcule le tex
-				output.ok = goodObject.isEqual(info.object,config.tolerance)
-				# on ne vérifie pas la forme pour un ensemble (formeOk)
-				if output.ok then output.ponderation = 1
-			when "number"
-				erreur = output.erreur = mM.erreur goodObject, info.object
-				output.goodObject = goodObject							# Bonne réponse
-				if config.goodTex? then output.good = config.goodTex	# Le tex peut être fourni
-				else output.good = config.cor_prefix+goodObject.tex()	# Sinon on calcule le tex
-				formeOk = output.formeOk = info.forme(config.formes)
+	p:{
+		type: (goodObject,params) ->
+			if (typeof params isnt "object") or (params is null) then params = {}
+			if not(params.type in ["ensemble", "number", "equation"])
 				switch
-					when config.arrondi isnt null
-						# On exige un arrondi.
-						# On envisage pas le cas d'un modulo, donc si l'utilisateur en a mis un, c'est faux
-						approx = Math.pow(10,config.arrondi)
-						output.resolution = numToStr approx
-						approx = approx/2
-						# On vérifie d'abord qu'on est juste au moins dans l'approx
-						output.good_arrondi = numToStr mM.float(goodObject), -config.arrondi
-						# Une difficulté : Si la réponse attendue est ,4,10236 à 0,01. L'utilisateur répond 4,10 ou 4,1 ce qui est
-						# pris identique pour la machine et peut provoquer une erreur
-						if (erreur.exact or erreur.float and erreur.approx_ok and ((erreur.ordre<=config.arrondi) or (erreur.p_user<=config.arrondi))) and not erreur.moduloError
-							# Maintenant on peut vérifier si l'utilisateur respecte le format
-							if not erreur.float or erreur.troncature or (erreur.p_user<config.arrondi)
-								output.mauvais_arrondi = true
-								output.ponderation = config.p_arrondi
-							else
-								output.ponderation = 1
-							output.ok = true
-					when erreur.exact or erreur.float and (erreur.ecart<=config.tolerance)
-						# Résultat exact ou dans la tolérance
-						output.ponderation = 1
-						if not formeOk then output.ponderation *= config.p_forme
-						if erreur.moduloError then output.ponderation *= config.p_modulo
+					when goodObject instanceof EnsembleObject then params.type = "ensemble" # On attend un ensemble
+					when goodObject instanceof Equation then params.type = "equation" # On attend une équation
+					when typeof goodObject is "number" then params.type = "number"
+					else params.type = "number"	# A défaut, on attend un nombre
+			params
+		userAnswer: (user, params) ->
+			# user est le string utilisateur
+			# params sont les éventuels paramètres
+			config = mergeObj {
+				developp:false	# Indique s'il faut développer le résultat de l'utilisateur
+				toLowercase:false # Pour le parser, convertit en petit
+				type:"number" # type de parse par défaut
+			}, params
+			if user instanceof ParseInfo then info=user # Cas où on fournirait un user déjà parsé
+			else info = new ParseInfo user, config
+			info
+	}
+	verif:{
+		number: (userInfo,goodObject,params) ->
+			# Fonction de vérification des exercices pour les numberObject ou number
+			# La sortie bareme est un facteur / 1
+			# userInfo = Parse du string retourné par l'utilisateur
+			# goodObject = bonne valeur. Un NumberObject
+			# params = objet de paramètres dont les possibilités sont données ci-dessous
+			config = mergeObj {
+				formes:null		# forme autorisées. Par ex : { racine:true, fraction:true } ou encore "FRACTION"
+				p_forme:0.5		# pondération pour une forme pas suffisemment simplifiée
+				tolerance:0		# Une approximation dans la tolérance est considérée comme juste et n'est pas signalée
+				approx:0.1		# Une approximation est tolérée mais signalée comme fausse
+				p_approx:0.5	# Pondération si le résultat n'est qu'approximatif et dans la tolérance
+				arrondi:null	# Si on demande un arrondi, on précise ici une puissance (-2 pour 0.01 par ex.)
+				p_arrondi:0.5	# Pondération si arrondi demandé et mal fait
+				p_modulo:0.5	# Pondération si le modulo est faux
+				symbols:null	# liste de symboles
+			}, params
+
+			erreur = erreurManager.main(goodObject,userInfo.object,config.symbols)
+			# erreur = objet produit par la fonction mM.erreur et contenant les infos :
+			# - exact = true/false : valeur exacte
+			# - float = true/false : valeur décimale
+			# - approx_ok:true/false : approximation correctement faite
+			# - ecart:ecart = nombre
+			# - moduloError = false/tex : en cas d'erreur, on envoie le tex du modulo demandé
+			# - p_user = nombre entier : puissance du dernier chiffre significatif
+
+			output = {
+				arrondi:false
+				ponderation: 0						# ponderation du bareme
+				ok:false							# ok = true -> la réponse s'affiche en vert avec éventuellement une remarque
+				moduloError: erreur.moduloError		# false/tex : en cas d'erreur, on envoie le tex du modulo demandé
+				formeOk: userInfo.forme(config.formes)
+			}
+			# output renverra également :
+			# - arrondi {
+			#	resolution = string : Dans le cas d'un arrondi, text de la forme "0,01"
+			#	good = valeur numérique de la bonne réponse arrondie correctement
+			#	bad = true : La valeur donnée n'est pas un float ou erreur de troncature ou précision trop grande
+			# }
+			# - approximation = true : Quand la réponse utilisateur est un float, approx correcte et dans la zone tolérée (mais éventuellement pénalisée) d'une approx
+			switch
+				when typeof config.arrondi is "number"
+					# On exige un arrondi.
+					# On envisage pas le cas d'un modulo, donc si l'utilisateur en a mis un, c'est faux
+					approx = Math.pow(10,config.arrondi)
+					output.arrondi = {
+						resolution: numToStr(approx)
+						good:  numToStr(mM.float(goodObject), -config.arrondi)
+					}
+					# On vérifie d'abord qu'on est juste au moins dans l'approx
+					approx = approx/2
+					# Une difficulté : Si la réponse attendue est ,4,10236 à 0,01. L'utilisateur répond 4,10 ou 4,1 ce qui est
+					# pris identique pour la machine et peut provoquer une erreur
+					if (erreur.exact or erreur.float and erreur.approx_ok and ((erreur.ordre<=config.arrondi) or (erreur.p_user<=config.arrondi))) and not erreur.moduloError
+						# Maintenant on peut vérifier si l'utilisateur respecte le format
+						if not erreur.float or erreur.troncature or (erreur.p_user<config.arrondi)
+							output.arrondi.bad = true
+							output.ponderation = config.p_arrondi
+						else
+							output.ponderation = 1
 						output.ok = true
-					when erreur.float and erreur.approx_ok and (erreur.ecart<=config.approx) and not erreur.moduloError
-						output.approximation = true
-						output.ponderation = config.p_approx
-						output.ok = true
-					else
-						config.custom?(output)
-			when "equation"
-				output.goodObject = goodObject							# Bonne réponse
-				if config.goodTex? then output.good = config.goodTex	# Le tex peut être fourni
-				else output.good = config.cor_prefix+goodObject.tex()	# Sinon on calcule le tex
-				output.ok = goodObject.isEqual user
-				# on ne vérifie pas la forme pour un ensemble (formeOk)
-				if output.ok then output.ponderation = 1
-			else
-				output.goodObject = goodObject							# Bonne réponse
-				if config.goodTex? then output.good = config.goodTex	# Le tex peut être fourni
-				else output.good = config.cor_prefix+goodObject.tex()	# Sinon on calcule le tex
-				output.ok = false
-		output
+				when erreur.exact or erreur.float and (erreur.ecart<=config.tolerance)
+					# Résultat exact ou dans la tolérance
+					output.ponderation = 1
+					if not output.formeOk then output.ponderation *= config.p_forme
+					if erreur.moduloError then output.ponderation *= config.p_modulo
+					output.ok = true
+				when erreur.float and erreur.approx_ok and (erreur.ecart<=config.approx) and not erreur.moduloError
+					output.approximation = true
+					output.ponderation = config.p_approx
+					output.ok = true
+				else
+					config.custom?(userInfo.object, goodObject, output)
+			output
+		ensemble: (userInfo,goodObject,params) ->
+			# fonction de vérification des exercices pour les ensembleObject
+			# La sortie bareme est un facteur / 1
+			# Il faut alors sortir le calcul de la note et vérifier les custom correc
+			# userInfo = Parse du string retourné par l'utilisateur
+			# goodObject = bonne valeur. Un EnsembleObject
+			# params = objet de paramètres dont les possibilités sont données ci-dessous
+			config = mergeObj {
+				tolerance:0		# Une approximation dans la tolérance est considérée comme juste et n'est pas signalée
+			}, params
+
+			ok = goodObject.isEqual(userInfo.object,config.tolerance)
+			{
+				ponderation: if ok then 1 else 0	# ponderation du bareme
+				ok: ok								# ok = true -> la réponse s'affiche en vert avec éventuellement une remarque
+				formeOk : true						# La forme est ok par défaut. Pas vérifiée pour ensemble
+			}
+		equation: (userInfo,goodObject,params) ->
+			# fonction de vérification des exercices pour les equation
+			# La sortie bareme est un facteur / 1
+			# Il faut alors sortir le calcul de la note et vérifier les custom correc
+			# userInfo = Parse du string retourné par l'utilisateur
+			# goodObject = bonne valeur. Un objet Equation
+			# params = objet de paramètres dont les possibilités sont données ci-dessous
+
+			ok = goodObject.isEqual userInfo.object
+			{
+				ponderation: if ok then 1 else 0	# ponderation du bareme
+				ok:ok								# ok = true -> la réponse s'affiche en vert avec éventuellement une remarque
+				formeOk : true						# La forme est ok par défaut
+			}
+		def: (user, goodObject, params) ->
+			{
+				ponderation: 0						# ponderation du bareme
+				ok:false							# ok = true -> la réponse s'affiche en vert avec éventuellement une remarque
+				formeOk : false						# La forme est ok par défaut
+			}
+	}
 }

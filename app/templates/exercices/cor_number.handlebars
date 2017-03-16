@@ -1,0 +1,49 @@
+{{#if text}}
+<li class="list-group-item list-group-item-warning">{{ text }}</li>
+{{else}}
+<li class="list-group-item list-group-item-{{#if ok}}success{{else}}danger{{/if}}">
+	<dl class="dl-horizontal">
+		<dt>{{ tag }}</dt>
+	{{#if ok}}
+		{{#if arrondi}}
+		{{! Un arrondi est demandé }}
+			{{#if arrondi.bad}}
+			{{! L'utilisateur a mal arrondi : il a donné une formule exacte ou a tronqué ou n'a pas donné le bon nombre de décimales }}
+		<dd>Vous avez donné : ${{cor_prefix}}{{ userTex }}$. Il fallait arrondir à ${{ arrondi.resolution }}$ près, soit : ${{ arrondi.good }}$.</dd>
+			{{else}}
+		<dd>Vous avez donné : ${{cor_prefix}}{{ userTex }}$, à ${{ arrondi.resolution }}$ près. Bonne réponse.</dd>
+			{{/if}}
+		{{else}}
+			{{#if approximation}}
+			{{! Valeur approximative }}
+		<dd>Vous avez donné : ${{cor_prefix}}{{ userTex }}$. Votre résultat est une approximation de la bonne réponse : ${{cor_prefix}}{{ goodTex }}$.</dd>
+			{{else}}
+			{{! Valeur considérée exacte }}
+		<dd>Vous avez donné : ${{cor_prefix}}{{ userTex }}$. Bonne réponse.</dd>
+				{{#unless formeOk}}
+				{{! Il faut simplifier }}
+		<dd><b>Attention :</b> Vous devez donner le résultat sous une forme simplifiée : ${{cor_prefix}}{{ good }}$.</dd>
+				{{/unless}}
+			{{/if}}
+		{{/if}}
+		{{#if moduloError}}
+		<dd>Vous avez oublié le <b>modulo</b>. Ici : $k\cdot {{moduloError}}$.</dd>
+		{{/if}}
+	{{else}}
+	{{! Mauvaise réponse }}
+		{{#if arrondi}}
+		<dd>Vous avez donné : ${{cor_prefix}}{{ userTex }}$. La bonne réponse était ${{cor_prefix}}{{ arrondi.good}}$ à ${{ arrondi.resolution }}$ près.</dd>
+		{{else}}
+		<dd>Vous avez donné : ${{cor_prefix}}{{ userTex }}$. La bonne réponse était ${{cor_prefix}}{{ goodTex }}$.</dd>
+		{{/if}}
+		{{#unless formeOk}}
+	{{! Il faut tout de même simplifier }}
+		<dd><b>Attention :</b> Vous devez donner le résultat sous une forme simplifiée.</dd>
+		{{/unless}}
+	{{/if}}
+	{{#each customItems}}
+		<dd>{{{this}}}</dd>
+	{{/each}}
+	</dl>
+</li>
+{{/if}}

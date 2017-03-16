@@ -396,15 +396,14 @@ class MExam extends Model
 			if (mods.locked or (mods.locked is "1")) then toBDD.locked = "1"
 			else toBDD.locked = "0"
 		toBDD
-	toTex: (slide=false)->
+	toTex: ()->
 		texList = []
 		for item in @data
 			idE = item.idE
 			model = Controller.uLog.exercices.get(idE)
 			exo = new Exercice { model: model, options:item.options }
-			texList = texList.concat(model.tex?( ( exo.init({ inputs:inp }).data for inp in item.inputs), slide ) or [])
-		if slide is true then Handlebars.templates.slide_container { items:texList }
-		else  Handlebars.templates.tex_container { items:texList, id:@id, nom:@nom }
+			texList = texList.concat(model.tex?( ( exo.init({ inputs:inp }).data for inp in item.inputs)) or [])
+		Handlebars.templates.tex_container { items:texList, id:@id, nom:@nom }
 	fiche: -> @parent.parent
 	nExos: ->
 		if @_nExos is null

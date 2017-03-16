@@ -44,12 +44,12 @@ Exercice.liste.push
 					description:"Valeur à 0,01 près"
 					good: mM.repartition.gaussian {min:Xa, max:Xb}, { moy:mu, std:std }
 					large:true
-					params:{arrondi:-2}
+					arrondi:-2
 				}]
 				aide: oHelp.proba.binomiale.calculette
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		symbs = ["","<","\\leqslant"]
 		if not isArray(data) then data = [ data ]
 		its = []
@@ -67,20 +67,18 @@ Exercice.liste.push
 				b = Number itData.inputs.b
 				Xb = Math.floor(b*2*std)/100+mu
 				ens = "#{ens} #{symbs[sb]} #{numToStr(Xb,2)}"
-			its.push = """La variable $X$ suit la loi normale de paramètres $\\mu = #{itData.inputs.mu}$ et $\\sigma = #{itData.inputs.std}$, notée $\\mathcal{N}(#{itData.inputs.mu};#{itData.inputs.std})$.
-
-			Donnez $p(#{ens})$"""
+			its.push "La variable $X$ suit la loi normale de paramètres $\\mu = #{itData.inputs.mu}$ et $\\sigma = #{itData.inputs.std}$, notée $\\mathcal{N}(#{itData.inputs.mu};#{itData.inputs.std})$. \\\\Donnez $p(#{ens})$"
 		if its.length > 1 then [{
 				title:@title
 				content:Handlebars.templates["tex_enumerate"] {
 					items: its
-					large:slide is true
+					large:false
 				}
 			}]
 		else [{
 				title:@title
 				content:Handlebars.templates["tex_plain"] {
 					content: its[0]
-					large:slide is true
+					large:false
 				}
 			}]

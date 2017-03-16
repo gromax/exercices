@@ -87,7 +87,7 @@ Exercice.liste.push
 				aide:data.divId+"aide"
 			}
 		]
-	tex: (data,slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData,i in data

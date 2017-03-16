@@ -87,7 +87,7 @@ Exercice.liste.push
 				aide:data.divId+"aide"
 			}
 		]
-	tex: (data,slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData,i in data
@@ -95,19 +95,8 @@ Exercice.liste.push
 			arrayShuffle itemData.items
 			questions = Handlebars.templates["tex_enumerate"] { items:( item.title for item in itemData.items ) }
 			graphique = Handlebars.templates["tex_courbes"] { index:i+1, max:@max, courbes:courbes, scale:.5 }
-			if slide is true
-				out.push {
-					title:@title
-					content:Handlebars.templates["slide_cols"] {
-						cols:[
-							{ width:0.6, center:true, content:graphique}
-							{ width:0.4, content:questions }
-						]
-					}
-				}
-			else
-				out.push {
-					title:@title
-					contents:[graphique, questions]
-				}
+			out.push {
+				title:@title
+				contents:[graphique, questions]
+			}
 		out

@@ -1,41 +1,51 @@
-{{#if userIsEmpty}}
-<li class="list-group-item {{#if goodIsntEmpty}}list-group-item-danger{{else}}list-group-item-success{{/if}}">
-Vous avez répondu $\mathcal{S}=\varnothing$.{{#if goodIsEmpty}} Bonne réponse.{{/if}}
-</li>
-{{/if}}
 {{#if users}}
 <li class="list-group-item list-group-item-warning">
-Vous avez répondu : $\left\lbrace {{users}} \right\rbrace$.
+{{ tag }} : Vous avez répondu : $\left\lbrace {{users}} \right\rbrace$.
 </li>
-{{/if}}
 {{#if goodIsEmpty}}
 <li class="list-group-item list-group-item-danger">
-La bonne réponse était $\mathcal{S}=\varnothing$, c'est à dire : <b>aucune solution</b>.
+La bonne réponse était $\varnothing$, c'est à dire : <b>aucune solution</b>.
 </li>
 {{/if}}
-{{#if goodValues}}
-	{{#each goodValues}}
-		{{#with this}}
-<li class="list-group-item {{#if ok}}list-group-item-success{{else}}list-group-item-danger{{/if}}">
-	Vous avez donné la solution ${{ userTex }}$.
-			{{#if erreur.exact}}
-				{{#if formeOk}}
-	C'est une <b>bonne réponse</b>.
-				{{else}}
-	C'est une bonne réponse, mais vous devez donner le résultat sous <b>forme simplifiée</b> : ${{ good }}$.
-				{{/if}}
+{{else}}
+	{{#if goodIsEmpty}}
+<li class="list-group-item list-group-item-success">
+{{ tag }} : Vous avez répondu $\varnothing$. Bonne réponse.
+</li>
+	{{else}}
+<li class="list-group-item list-group-item-warning">
+{{ tag }} : Vous avez répondu $\varnothing$.
+</li>
+	{{/if}}
+{{/if}}
+
+{{#each goods}}
+<li class="list-group-item list-group-item-success">
+	Vous avez donné la solution ${{ this.userTex }}$.
+	{{#if this.arrondi}}
+	{{! Un arrondi est demandé }}
+		{{#if this.arrondi.bad}}
+		{{! L'utilisateur a mal arrondi : il a donné une formule exacte ou a tronqué ou n'a pas donné le bon nombre de décimales }}
+	Il fallait arrondir à ${{ this.arrondi.resolution }}$ près, soit : ${{ this.arrondi.good }}$.</dd>
+		{{else}}
+	Bonne réponse.
+		{{/if}}
+	{{else}}
+		{{#if this.approximation}}
+	Votre résultat est une <b>approximation</b> de la bonne réponse : ${{ this.goodTex }}$.
+		{{else}}
+			{{#if this.formeOk}}
+	C'est une <b>bonne réponse.</b>
 			{{else}}
-				{{#if approximation}}
-	Votre résultat est une <b>approximation</b> de la bonne réponse< : ${{ good }}$.
-				{{/if}}
+	C'est une bonne réponse, mais vous devez donner le résultat sous <b>forme simplifiée</b> : ${{ this.goodTex }}$.
 			{{/if}}
-			{{#if erreur.moduloError}}
-	Vous avez oublié le <b>modulo</b>. Ici : $k\cdot {{erreur.moduloError}}$.
-			{{/if}}
+		{{/if}}
+	{{/if}}
+	{{#if this.moduloError}}
+	Vous avez oublié le <b>modulo</b>. Ici : $k\cdot {{this.moduloError}}$.
+	{{/if}}
 </li>
-		{{/with}}
-	{{/each}}
-{{/if}}
+{{/each}}
 {{#if lefts}}
 <li class="list-group-item list-group-item-danger">
 <b>Vous n'avez pas donné</b> les solutions suivantes : ${{lefts}}$

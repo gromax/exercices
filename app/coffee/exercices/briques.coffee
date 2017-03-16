@@ -17,6 +17,10 @@ class BaseBrique
 		# Fonctions custom
 		if @config.fcts?
 			@[fct]=@config.fcts[fct] for fct of @config.fcts
+	inputSetError:(name,valid) ->
+		if valid then $("input[name='#{name}']").parent().removeClass("has-error")
+		else $("input[name='#{name}']").parent().addClass("has-error")
+
 # Brique pour l'affichage de l'énoncé
 class BEnonce extends BaseBrique
 	default: () -> { title:"Énoncé", template:"std_panel"}
@@ -38,13 +42,16 @@ class BGraph extends BaseBrique
 		return @graph.create('point',[x,y], conf)
 
 # le default des classes est une fonction car autrement l'objet default est commun à toutes les instances d'une même classe !
+
 class Brique extends BaseBrique
 	default: () -> {}
 	constructor: (params)->
 		super params
 		@bareme = @config.bareme ? 0
 		@data = @config.data ? { answers:{}, inputs:{}, note:0 }
+		# Les réponses : @data.answers contient les string des réponses utilisateur
 		@a = @data.answers
+		# Fonctions custom
 		if @config.ask then @ask = @config.ask
 		if @config.ver then @ver = @config.ver
 	initContainer:-> unless @container? then @container = $("#"+( @divId ? "inex" ))
@@ -73,25 +80,18 @@ class Brique extends BaseBrique
 			for name in @config.needed
 				if (typeof @a[name] is "undefined") then return false
 		true
-	run: (upBDD) -> @parent?.run(upBDD)
-	verification: (name, tag, user, goodObject, bareme, params) ->
-		output = mM.verification(user,goodObject,params)
-		output.tag = tag
-		output.name = name
-		@data.note += output.ponderation*bareme
-		output
-	helper_disp_inputs: (title,text,inputs_list,aide,touches) ->
-		# params :
+	ask: ->
+		# exploite les config suivantes :
 		# title = String
 		# text = String => envoyé comme texte de présentation, html non echappé
-		# inputs_list = [{tag, }]
+		# liste = [{tag, }]
 		# aide = ["it1", "it2", ...]
-		# clavier = ["sqrt", "pi", "sqr", "empty", objet{name, title, tag, pre, post, recouvre}]
-		@iList = inputs_list # Lien nécessaire pour la validation de la forme
+		# touches = ["sqrt", "pi", "sqr", "empty", objet{name, title, tag, pre, post, recouvre}]
+		@iList = @config.liste # Lien nécessaire pour la validation de la forme
 		clavier = null
-		if touches?
+		if @config.touches?
 			clavier=[]
-			for touche in touches
+			for touche in @config.touches
 				switch
 					when touche is "infini" then clavier.push {name:"infty-button", title:"Infini", tag:"$\\infty$"}
 					when touche is "sqrt" then clavier.push {name:"sqrt-button", title:"Racine carrée", tag:"$\\sqrt{x}$"}
@@ -99,17 +99,17 @@ class Brique extends BaseBrique
 					when touche is "sqr" then clavier.push {name:"sqr-button", title:"Carré", tag:"$.^2$"}
 					when touche is "x2" then clavier.push {name:"x2-button", title:"x carré", tag:"$x^2$"}
 					when touche is "empty" then clavier.push {name:"empty-button", title:"Ensemble vide", tag:"$\\varnothing$"}
+					when touche is "union" then clavier.push {name:"btnU", title:"Union", tag:"$\\cup$"}
+					when touche is "intersection" then clavier.push {name:"btnInter", title:"Intersection", tag:"$\\cap$"}
+					when touche is "reels" then clavier.push {name:"btnReels", title:"Ensemble des réels", tag:"$\\mathbb{R}$"}
 					when typeof touche is "object" then clavier.push {name:touche.name, title:touche.title, tag:touche.tag}
-		inputs=[]
-		for item in inputs_list
-			inputs.push {tag:item.tag,description:item.description,name:item.name, large:(item.large is true)}
-
-		if aide?
+		inputs=(item.templateParams for item in @config.liste)
+		if @config.aide?
 			help_zone = "#{@divId}_aide"
-			help_html = Handlebars.templates.help(aide)
+			help_html = Handlebars.templates.help(@config.aide)
 		else help_zone = help_html = null
 		context = {
-			title:title
+			title:@config.title
 			focus:true
 			zones:[{
 				body:"champ"
@@ -122,23 +122,20 @@ class Brique extends BaseBrique
 			}]
 		}
 		if help_zone isnt null then context.zones.push { help:help_zone, html:help_html}
-		if text?
+		if @config.text?
 			# On transmet soit un simple texte, soit une structure plus complexe sous forme d'un tableau
-			if isArray text then context.zones = text.concat(context.zones)
-			else context.zones.unshift { body:"texte", html:text }
+			if isArray @config.text then context.zones = @config.text.concat(context.zones)
+			else context.zones.unshift { body:"texte", html:@config.text }
 		@container.html Handlebars.templates.std_panel context
 		$("#form#{@divId}").on 'submit', (event) =>
 			aList = $(event.target).serializeObject()
-			for item in @iList
-				@a[item.name] = aList[item.name]
-				if item.moduloKey
-					@a[item.name] = @a[item.name].replace item.moduloKey, "#"
+			@a[item.name] = aList[item.name] for item in @iList
 			@run true
 			false
 		if clavier isnt null
-			$inputs_List = ($("input[name='#{item.name}']",@container) for item in inputs_list)
+			$inputs_List = ($("input[name='#{item.name}']",@container) for item in @config.liste)
 			@gc = new GestClavier $inputs_List...
-			for touche in touches
+			for touche in @config.touches
 				switch
 					when touche is "infini" then $("button[name='infty-button']",@container).on 'click', (event) => @gc.clavier("∞","",true)
 					when touche is "sqrt" then $("button[name='sqrt-button']",@container).on 'click', (event) => @gc.clavier("sqrt(",")",false)
@@ -146,24 +143,211 @@ class Brique extends BaseBrique
 					when touche is "sqr" then $("button[name='sqr-button']",@container).on 'click', (event) => @gc.clavier("","^2",false)
 					when touche is "x2" then $("button[name='x2-button']",@container).on 'click', (event) => @gc.clavier("x^2","",true)
 					when touche is "empty" then $("button[name='empty-button']",@container).on 'click', (event) => @gc.clavier("∅","",true)
+					when touche is "union" then $("button[name='btnU']",@container).on 'click', (event) => @gc.clavier("∪","",true)
+					when touche is "intersection" then $("button[name='btnInter']",@container).on 'click', (event) => @gc.clavier("∩","",true)
+					when touche is "reels" then $("button[name='btnReels']",@container).on 'click', (event) => @gc.clavier("ℝ","",true)
 					when typeof touche is "object" then $("button[name='#{touche.name}']",@container).on 'click', (event) => @gc.clavier(touche.pre,touche.post,touche.recouvre)
-		if inputs_list.length>0 then $("input[name='#{inputs_list[0].name}']",@container).focus()
+		if @config.liste.length>0 then $("input[name='#{@config.liste[0].name}']",@container).focus()
 
+
+	run: (upBDD) -> @parent?.run(upBDD)
+
+
+#-------------------------------------------------------
+# Objet item pour la brique BListe
+#-------------------------------------------------------
+class BItem
+	# BItem est un item pour BListe qui s'assure de l'intégrité des informations fournies
+	# et qui donne aussi les fonctions de correction (verif), de validation (go)
+	# Les paramètres sont les suivants :
+	# - tag : le tag à afficher à gauche du input correspondant
+	# - postTag : tag après le champ
+	# - name : le nom pour le node html correspondant et aussi le nom pour l'objet answers stocké en bdd
+	# - description : ce qui apparaît dans le champ vide
+	# - large : true/false indique s'il faut un champ allongé
+	# - text : Un message à placer avant le input
+	# - moduloKey : une lettre de variable pour le modulo, comme k dans 2kpi
+	# - un choix entre plusieurs options pour la bonne solution :
+	# -- good : Solution unique qui peut être number, ensemble, équation
+	# -- equations : objets équations, séparées de ; ou ∅ pour rien
+	# -- solutions : objets numbers multiples, séparées de ; ou ∅ pour rien
+	# - customTemplate : Une fonction qui renvoie un tableau de string à ajouter dans un template
+	# - Des paramètres concernant le parse :
+	# -- developp
+	# -- toLowerCase
+
+	# - params : paramètres de parse et de notation. Il contient :
+	# -- Des éléments de correction comme arrondi, approximation, custom()
+	# -- Des éléments de parse comme type, developp
+	name:"a"
+	moduloKey: false
+	customTemplate: () -> []
+	constructor: (item) ->
+		if item.name? then @name = item.name
+		@parseParams = { developp:item.developp is true, toLowerCase:item.toLowerCase is true} # paramètres relatifs au parse : developp, type, toLowerCase
+		@verifParams = {
+			arrondi : item.arrondi ? false
+			formes : item.formes ? null
+			custom: if typeof item.customVerif is "function" then item.customVerif else null
+			tolerance : item.tolerance ? false
+		}
+
+		item.params ? {} # autres params pour la verif : arrondi
+		@templateParams = {
+			name:item.name					# nécessaire pour les inputs
+			arrondi:item.arrondi ? false	# Si on demande un arrondi, on précise ici une puissance (-2 pour 0.01 par ex.)
+			cor_prefix:item.cor_prefix ? ""	# Permet d'ajouter un préfixe à la valeur correction. Différent de goodTex car permet de préfixer également le userTex
+			tag: item.tag ? false			# Étiquette, devant le input
+			postTag:item.postTag ? false	# Étiquette, après le input
+			large:item.large is true		# input de grande taille
+			description:item.description ? ""	# Dans le input, s'il est vide (placeholder)
+			text:item.text ? false			# texte à placer avant le input
+			user:""							# réponse utilisateur
+			invalid:false					# champ invalide
+			custom: if typeof item.customTemplate is "function" then item.customTemplate else () -> false
+		}
+
+		if typeof item.moduloKey is "string" then @moduloKey = item.moduloKey
+		switch
+			when item.solutions?
+				@templateParams.corTemplateName = "cor_solutions"
+				unless @text? then @templateParams.text = "Donnez les solutions séparées par ; ou $\\varnothing$ s'il n'y en a pas"
+				@solutions = ( mM.toNumber(it) for it in item.solutions )
+				@parseParams.type = "number"
+				@go = @go_solutions
+				@verif = @verif_solutions
+			when item.equations?
+				@templateParams.corTemplateName = "cor_solutions"
+				unless @text? then @templateParams.text = "Donnez les solutions séparées par ; ou $\\varnothing$ s'il n'y en a pas"
+				@solutions = item.equations
+				@parseParams.type = "equation"
+				@go = @go_solutions
+				@verif = @verif_solutions
+			else # par défaut, ce sera un item avec good
+				unless item.good? then item.good = 0
+				@parseParams = mM.p.type item.good, item.params
+				if (@parseParams.type is "number") then @good = mM.toNumber(item.good)
+				else @good = item.good
+				@templateParams.corTemplateName = "cor_number"
+				if typeof item.goodTex is "string" then @templateParams.goodTex = item.goodTex
+				else @templateParams.goodTex = @good.tex()
+				@go = (answers) ->
+					user = answers[@name]
+					if (typeof user isnt "string")
+						# Dans ce cas, le champ n'est pas invalide car il n'a rien reçu
+						@templateParams.invalid = false
+						false
+					else
+						@templateParams.user = user
+						@info = mM.p.userAnswer user, @parseParams
+						@templateParams.userTex = @info.tex
+						@templateParams.invalid = not(@info.valid)
+						@info.valid
+				@verif = () ->
+					verif_result = mM.verif[@parseParams.type](@info, @good,@verifParams)
+					@templateParams.customItems = @templateParams.custom(verif_result)
+					@templateParams[key] = value for key,value of verif_result
+					verif_result.ponderation
+	go_solutions: (answers) ->
+		user = answers[@name]
+		switch
+			when (typeof user isnt "string")
+				# Dans ce cas, le champ n'est pas invalide car il n'a rien reçu
+				@templateParams.invalid = false
+				false
+			when user is "∅"
+				@templateParams.user = "∅"
+				@info = []
+				@templateParams.invalid = false
+				true
+			else
+				@templateParams.user = user
+				if @moduloKey then user = user.replace @moduloKey, "#"
+				users = ( mM.p.userAnswer(str, @parseParams) for str in user.split ";" when str isnt "")
+				@info = (usItem for usItem in users when usItem.valid is true)
+				@templateParams.invalid = (users.length>@info.length) or (users.length is 0)
+				not(@templateParams.invalid)
+	verif_solutions: () ->
+		# fonction servant pour les équations et les solutions
+		# Si l'utilisateur a répondu ensemble vide...
+		if @info.length is 0
+			@templateParams[key] = value for key, value of {
+				users:false
+				goods:null
+				bads:null
+				lefts: (l.tex() for l in @solutions).join(" ; ")
+				goodIsEmpty:@solutions.length is 0
+			}
+			if @solutions.length is 0 then 1 else 0
+		else
+			# On considère que l'on a une série de valeurs
+			N = Math.max @solutions.length, @info.length
+			sorted = mM.tri @info, @solutions
+			list=[]
+			goods = []
+			bads = []
+			for sol,i in sorted.closests
+				list.push sol.user.tex()
+				if sol.good?
+					verif = mM.verif[@parseParams.type](sol.info, sol.good, @verifParams)
+					if verif.ok
+						verif.userTex = sol.info.tex
+						verif.goodTex = sol.good.tex()
+						goods.push verif
+					else
+						bads.push sol.info.tex
+						sorted.lefts.push sol.good
+				else bads.push sol.info.tex
+			@templateParams[key] = value for key, value of {
+				users:list.join(" ; ")
+				goods:goods
+				bads:bads.join(" ; ")
+				lefts:(l.tex() for l in sorted.lefts).join(" ; ")
+				goodIsEmpty:@solutions.length is 0
+			}
+			goods.length/N
+
+#-------------------------------------------------------
+# Briques supposant une ou plusieurs réponses à parser
+#-------------------------------------------------------
 class BListe extends Brique
-	default: () ->  {liste:[], title:"titre ?"}
+	# Brique généraliste qui permet de demander simultanément plusieurs valeurs
+	# config contient les objets suivants :
+	# title : Pour le titre de la brique
+	# liste : un tableau d'objets pour chaque réponse attendue. Pour chacun on a :
+	# - tag : le tag à afficher à gauche du input correspondant
+	# - name : le nom pour le node html correspondant et aussi le nom pour l'objet answers stocké en bdd
+	# - description : ce qui apparaît dans le champ vide
+	# - large : true/false indique s'il faut un champ allongé
+	# - params : paramètres de parse et de notation (voir avec la vérification)
+	# aide : objet d'aide pour produire le html avec le template help
+	# touches : un tableau des touches utiles parmi ["infini", sqrt, pi, x2 sqr, empty] ou un objet { name, title, tag }
+	# text : un texte html à faire apparaître avant les questions
+	default: () ->  { liste:[], title:"titre ?" }
+	constructor: (params) ->
+		super(params)
+		@config.liste = ( new BItem(item) for item in @config.liste ) # Il faudrait passer à @liste au lieu de @config.liste
 	go: ->
-		for item in @config.liste
-			if (typeof @a[item.name] is "undefined") then return false
-		true
-	ask: ->
-		@helper_disp_inputs(@config.title,@config.text,@config.liste,@config.aide,@config.touches)
+		valid = true
+		valid = item.go(@a) and valid for item in @config.liste # l'ordre est important !
+		valid
 	ver: ->
-		bar = @bareme/Math.max(@config.liste.length,1)
-		values = ( @verification(item.name,item.tag, @a[item.name], item.good, bar, item.params) for item in @config.liste)
-		@container.html Handlebars.templates.verif {values:values, title:@config.title, text:@config.cor_text}
-		for it,i in @config.liste
-			if it.params?.customTemplate?
-				$("[name='#{it.name}']",@container).append Handlebars.templates.cor_custom values[i]
+		# La fonction verif() renvoie la ponderation
+		score = 0
+		score += item.verif() for item in @config.liste
+		@data.note += score*@bareme/Math.max(@config.liste.length,1)
+		# De plus, l'objet verif a achevé de mettre à jour @templateParams
+		@container.html Handlebars.templates.std_panel {
+			title: @config.title
+			zones:[{
+				list:"correction"
+				html: (Handlebars.templates[item.templateParams.corTemplateName](item.templateParams) for item in @config.liste).join("")
+			}]
+		}
+
+#-------------------------------------------------------
+# Briques sans réponse à parser
+#-------------------------------------------------------
 class BChoixMultiple extends Brique
 	# title
 	# aKey
@@ -218,7 +402,7 @@ class BChoixMultiple extends Brique
 	ver: () ->
 		k = Number @a[@config.aKey]
 		if (k is @config.good)
-			@data.note = @bareme
+			@data.note += @bareme
 			liste = [{ text:"Vous avez choisi : #{@config.choix[k]}. C'est une <b>bonne réponse</b>.", color:"ok" }]
 		else
 			liste = [{ text:"Vous avez choisi : #{@config.choix[k]}. C'est une <b>mauvaise réponse</b>.", color:"error" }]
@@ -231,169 +415,6 @@ class BChoixMultiple extends Brique
 				html:Handlebars.templates.listItem liste
 			}]
 		}
-class BSolutions extends Brique
-	# moduloKey permet de remplacer par exemple le k de 2kpi par #
-	default: () ->  {aKey:"solutions", title:"Solution(s)", solutions:[]}
-	go: -> (typeof @a[@config.aKey] isnt "undefined")
-	ask: ->
-		unless @config.touches? then @config.touches=[]
-		inputs_list = [{tag:"Solution(s)", description:"Solution(s)", name:@config.aKey, large:true, moduloKey:@config.moduloKey}]
-		@config.touches.unshift "empty"
-		text = "Vous devez donner la ou les solutions de cette équations, si elles existent. S'il n'y a pas de solution, écrivez $\\varnothing$. s'il y a plusieurs solutions, séparez-les avec ;"
-		@helper_disp_inputs(@config.title,text,inputs_list,@config.aide,@config.touches)
-	ver: ->
-		if @config.solutions.length is 0 then solutionsTex = "\\varnothing"
-		else solutionsTex = "\\left\\lbrace "+(x.tex() for x in @config.solutions).join(";")+"\\right\\rbrace"
-		if @a[@config.aKey] is "∅"
-			# L'utilisateur a répondu ensemble vide
-			context = { correction:true, userIsEmpty:true, goodIsntEmpty:@config.solutions.length isnt 0, lefts: (l.tex() for l in @config.solutions).join(" ; ") }
-			if @config.solutions.length is 0 then @data.note += @bareme
-			else context.good = solutionsTex
-		else
-			# On considère que l'on a une série de valeurs
-			users = (str for str in @a[@config.aKey].split ";" when str isnt "")
-			N = Math.max @config.solutions.length, users.length
-			if N is 0 then bareme = 0
-			else bareme = @bareme/N
-			sorted = mM.tri users,@config.solutions, "number"
-			list=[]
-			goodValues = []
-			bads = []
-			for sol,i in sorted.closests
-				list.push sol.user.tex()
-				if sol.good?
-					infoUser = new Parser sol.user, {type:"number"}
-					verif = @verification @config.aKey,"", infoUser, sol.good,bareme,{formes:"RACINE"}
-					if verif.erreur.exact or verif.approximation then goodValues.push verif
-					else
-						bads.push infoUser.tex
-						sorted.lefts.push sol.good
-				else bads.push sol.user.tex()
-			context = { users:list.join(" ; "), goodValues:goodValues, bads:bads.join(" ; "), lefts:(l.tex() for l in sorted.lefts).join(" ; "), goodIsEmpty:@config.solutions.length is 0 }
-		@container.html Handlebars.templates.std_panel {
-			title: @config.title+" : $\\mathcal{S}= #{solutionsTex}$"
-			zones: [{
-				list:"correction"
-				html:Handlebars.templates.cor_solutions context
-			}]
-		}
-class BEquations extends Brique
-	# L'utilisateur fournit une ou plusieurs équations séparées par ;
-	default: () ->  {aKey:"equations", title:"Équation(s)", equations:[], text:""}
-	go: -> (typeof @a[@config.aKey] isnt "undefined")
-	ask: ->
-		unless @config.touches? then @config.touches=[]
-		inputs_list = [ {tag:"Équation(s)", description:"Équation(s)", name:@config.aKey, large:true} ]
-		@config.touches.unshift "empty"
-		@config.text = @config.text+"<p>S'il y a plusieurs réponses, séparez-les avec ; S'il n'y a aucune réponse, répondez $\\varnothing$</p>"
-		@helper_disp_inputs(@config.title, @config.text,inputs_list,@config.aide,@config.touches)
-	ver: ->
-		if @config.equations.length is 0 then solutionsTex = "Aucune équation"
-		else solutionsTex = " : $#{(eq.tex() for eq in @config.equations).join(';')}$"
-		if @a[@config.aKey] is "∅"
-			# L'utilisateur a répondu ensemble vide
-			context = {
-				users: "\\varnothing"
-				userIsEmpty:true
-				goodValues:null
-				bads:null
-				goodIsEmpty:@config.solutions.length is 0
-				lefts: (l.tex() for l in @config.solutions).join(" ; ")
-			}
-			if @config.solutions.length is 0 then @data.note += @bareme
-		else
-			# On fait un tableau avec la réponse utilisateur
-			users = (str for str in @a[@config.aKey].split ";" when str isnt "")
-			N = Math.max @config.equations.length, users.length
-			if N is 0 then bareme = 0
-			else bareme = @bareme/N
-			sorted = mM.tri users,@config.equations, "equation"
-			list=[]
-			goodValues = []
-			bads = []
-			for sol,i in sorted.closests
-				list.push sol.info.tex
-				if sol.good?
-					# on a un user associé un good, mais est-il exact ?
-					if sol.d is 0
-						goodValues.push sol
-						@data.note += bareme
-					else
-						bads.push sol.info.tex
-						sorted.lefts.push sol.good
-				else bads.push sol.info.tex
-			context = {
-				users:list.join(" ; ")
-				goodValues:goodValues
-				bads:bads.join(" ; ")
-				lefts:(l.tex() for l in sorted.lefts).join(" ; ")
-			}
-		@container.html Handlebars.templates.std_panel {
-			title: @config.title+"#{solutionsTex}"
-			zones: [{
-				list:"correction"
-				html:Handlebars.templates.cor_equations context
-			}]
-		}
-
-class BEnsemble extends Brique
-	default: () ->  { aKey:"ensemble", title:"Ensemble solution", ensemble_solution:mM.ensemble.vide() }
-	go: -> (typeof @a[@config.aKey] isnt "undefined")
-	ask: ->
-		@container.html Handlebars.templates.std_panel {
-			title:@config.title
-			focus:true
-			zones: [{
-				body:"champ"
-				html:Handlebars.templates.std_form {
-					id:"form#{@divId}"
-					inputs:[
-						{
-							tag:"$\\mathcal{S}=$"
-							description:"Ensemble solution"
-							name:"ensemble"
-						}, {
-							clavier:[
-								{name:"btnU", title:"Union", tag:"$\\cup$"},
-								{name:"btnInter", title:"Intersection", tag:"$\\cap$"},
-								{name:"btnInf", title:"Infini", tag:"$\\infty$"},
-								{name:"btnEmpty", title:"Ensemble vide", tag:"$\\varnothing$"},
-								{name:"btnReels", title:"Ensemble des réels", tag:"$\\mathbb{R}$"}
-							]
-						}
-					]
-				}
-			}]
-		}
-		@gc = new GestClavier($("input[name='ensemble']"))
-		$("button[name='btnU']",@container).on 'click', (event) => @gc.clavier("∪","",true)
-		$("button[name='btnInter']",@container).on 'click', (event) => @gc.clavier("∩","",true)
-		$("button[name='btnInf']",@container).on 'click', (event) => @gc.clavier("∞","",true)
-		$("button[name='btnEmpty']",@container).on 'click', (event) => @gc.clavier("∅","",true)
-		$("button[name='btnReels']",@container).on 'click', (event) => @gc.clavier("ℝ","",true)
-		$("#form#{@divId}").on 'submit', (event) =>
-			@a[@config.aKey] = $(event.target).serializeArray()[0].value
-			@run true
-			false
-		$("input[name='ensemble']",@container).focus()
-	ver: ->
-		user = new Parser @a[@config.aKey], {type:"ensemble"}
-		solTex = @config.ensemble_solution.tex()
-		if @config.ensemble_solution.isEqual(user.object)
-			@data.note+=@bareme
-			out = [{ text:"Vous avez donné $\\mathcal{S}= #{ user.tex }$. Bonne réponse.", color:"ok"}]
-		else
-			out = [
-				{ text:"Vous avez donné $\\mathcal{S}= #{ user.tex }$.", color:"error" }
-				{ text:"La bonne réponse était $\\mathcal{S}= #{solTex}$.", color:"error" }
-			]
-		@container.html(Handlebars.templates.std_panel({
-			title:"#{@config.title} : $\\mathcal{S} = #{ solTex }$"
-			zones:[{
-				list:"correction"
-				html:Handlebars.templates.listItem out
-			}]
-		}))
 class BWichTab extends Brique
 	default: () ->  {tableaux:[], aKey:"tableau", title:"Choisir un tableau"}
 	go: -> (typeof @a[@config.aKey] isnt "undefined")

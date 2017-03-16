@@ -12,18 +12,28 @@ Exercice.liste.push
 		solutions = [ mM.exec([B.y, A.y, "-", A.x, B.x, "-", "/"], {simplify:true}) ]
 		[
 			new BEnonce {title:"Énoncé", zones:[{body:"enonce", html:"<p>On considère l'équation : $#{ membreGauche }= #{ membreDroite }$.</p><p>Vous devez donner la ou les solutions de cette équations, si elles existent.</p><p><i>S'il n'y a pas de solution, écrivez $\\varnothing$. s'il y a plusieurs solutions, séparez-les avec ;</i></p>"}]}
-			new BSolutions {
+			new BListe {
+				title:"Solutions"
 				data:data
 				bareme:100
-				solutions:solutions
+				touches:["empty"]
+				liste:[{
+					name:"solutions"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions:solutions
+				}]
 			}
 		]
-	tex: (data,slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:"Équations du premier degré."
 			contents:[
 				"Résoudre :"
-				Handlebars.templates["tex_enumerate"] { items: ({title:"$#{itemData.mg} = #{itemData.md}$"} for item in data), large:slide is true }
+				Handlebars.templates["tex_enumerate"] {
+					items: ({title:"$#{itemData.mg} = #{itemData.md}$"} for item in data)
+					large:false
+				}
 			]
 		}

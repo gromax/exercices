@@ -29,7 +29,7 @@ Exercice.liste.push
 			for it in l
 				# On ne s'occupe pas du dernier
 				if lastP?
-					itp = new Parser lastP, {type:"number", simplify:false}
+					itp = mM.p.userAnswer lastP, {type:"number", simplify:false}
 					data.liste.push "P(x)="+itp.tex
 				data.lastP = it
 		[
@@ -73,7 +73,7 @@ Exercice.liste.push
 						onlyLast = true
 					else @data.list = []
 					for it in l
-						itp = new Parser it, {type:"number", simplify:true}
+						itp = mM.p.userAnswer it, {type:"number", simplify:true}
 						@data.list.push itp.tex
 					# On analyse le dernier
 					ecart = @data.polyDev.toClone().am(itp.object,true).simplify()
@@ -124,9 +124,9 @@ Exercice.liste.push
 		if fraction then expr_array.push(mM.alea.number({min:2, max:9}), "/")
 		if mM.alea.dice(1,3) then expr_array.push "*-"
 		mM.exec expr_array
-	tex: (data,slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:"Développer"
-			content:Handlebars.templates["tex_enumerate"] { items: ("$P_{#{i}}(x) = #{item.polyTex}$" for item,i in data), large:slide is true }
+			content:Handlebars.templates["tex_enumerate"] { items: ("$P_{#{i}}(x) = #{item.polyTex}$" for item,i in data), large:false }
 		}

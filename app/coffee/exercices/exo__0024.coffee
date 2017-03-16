@@ -25,20 +25,20 @@ Exercice.liste.push
 						name:"pXegalK"
 						description:"Valeur à 0,001 près"
 						good:pXegalK_good
-						params:{arrondi:-3}
+						arrondi:-3
 					}
 					{
 						tag:"$p(X\\leqslant #{inp.k})=$"
 						name:"pXinfK"
 						description:"Valeur à 0,001 près"
 						good:pXinfK_good
-						params:{arrondi:-3}
+						arrondi:-3
 					}
 				]
 				aide: oHelp.proba.binomiale.calculette
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itData in data
@@ -47,7 +47,6 @@ Exercice.liste.push
 				content:Handlebars.templates["tex_enumerate"] {
 					pre:"La variable $X$ suit la loi binomiale de paramètres : $n=#{itData.inputs.n}$ et $p=#{numToStr itData.inputs.p, 2}$."
 					items: ["Donnez $p(X=#{itData.inputs.k})$ à $0,001$ près.", "Donnez $p(X\\leqslant #{itData.inputs.k})$"]
-					large:slide is true
 				}
 			}
 		out

@@ -19,16 +19,18 @@
 		</div>
 	</div>
 	{{else}}
-		{{#if large}}
-	<div class="col-xs-12 col-md-12">
+		{{#if this.large}}
+	<div class="col-xs-12 col-md-8">
 		{{else}}
 	<div class="col-xs-12 col-md-4">
 		{{/if}}
-		<div class="input-group">
+		{{#if this.text}}<p class="text-info">{{this.text}}</p>{{/if}}
+		<div class="input-group {{#if this.invalid}}has-error{{/if}}">
 		{{#if this.tag}}<span class="input-group-addon">{{ this.tag }}</span>{{/if}}
-		<input type="text" name={{ this.name }} class="form-control" placeholder="{{ this.description }}">
+		<input type="text" name={{ this.name }} class="form-control" placeholder="{{ this.description }}" {{#if this.user}}value="{{this.user}}"{{/if}}>
 		{{#if postTag}}<span class="input-group-addon">{{ this.postTag }}</span>{{/if}}
 		</div>
+		{{#if this.invalid}}<p class="text-danger">Vérifiez la saisie</p>{{/if}}
 	</div>
 	{{/if}}
 	{{/if}}

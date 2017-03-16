@@ -1,0 +1,15 @@
+{{#if text}}
+<li class="list-group-item list-group-item-warning">{{ text }}</li>
+{{else}}
+<li class="list-group-item list-group-item-{{#if ok}}success{{else}}danger{{/if}}">
+	<dl class="dl-horizontal" name="{{ name }}">
+		<dt>{{ tag }}</dt>
+	{{#if ok}}
+		<dd>Vous avez donné : ${{cor_prefix}}{{ userTex }}$. Bonne réponse.</dd>
+	{{else}}
+		<dd>Vous avez donné : ${{cor_prefix}}{{ userTex }}$.</dd>
+		<dd>La bonne réponse était ${{cor_prefix}}{{ goodTex }}$.</dd>
+	{{/if}}
+	</dl>
+</li>
+{{/if}}

@@ -45,7 +45,7 @@ Trigo = {
 		if sup90 then out = 180-out
 		if _sin_is_plus is false then out = - out
 		out = new RealNumber out
-		if rad then out.md(new RealNumber(180),true).md(SymbolNumber.pi(),false).simplify()
+		if rad then out.md(new RealNumber(180),true).md(SymbolManager.pi(),false).simplify()
 		else out
 	anglesConnus: ()-> [0,30,45,60,90,120,135,150,180,-30,-45,-60,-90,-120,-135,-150]
 }

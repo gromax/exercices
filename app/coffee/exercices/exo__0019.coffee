@@ -72,13 +72,18 @@ Exercice.liste.push
 				]
 				aide: oHelp.trinome.discriminant
 			}
-			new BSolutions {
+			new BListe {
+				title:"Solutions"
 				data:data
 				bareme:40
-				aKey:"racines"
-				touches:["sqrt"]
+				touches:["empty","sqrt"]
 				aide: oHelp.trinome.racines
-				solutions:racines
+				liste:[{
+					name:"racines"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions:racines
+				}]
 			}
 			new BWichTab {
 				data:data
@@ -86,9 +91,16 @@ Exercice.liste.push
 				tableaux:[(new TabVar(tabX)).addSignLine(tabS1), (new TabVar(tabX)).addSignLine(tabS2)]
 				good:goodTab
 			}
-			new BEnsemble {
+			new BListe {
+				title:"Ensemble solution"
 				data:data
 				bareme:20
-				ensemble_solution:ensemble_solution
+				liste:[{
+					name:"ensemble"
+					tag:"$\\mathcal{S}$"
+					large:true
+					good:ensemble_solution
+				}]
+				touches:["union", "intersection", "reels", "empty", "infini"]
 			}
 		]

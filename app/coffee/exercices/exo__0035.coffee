@@ -41,10 +41,16 @@ Exercice.liste.push
 					modulo:"\\frac{2k\\pi}{#{inp.a}}"
 				}
 			}]}
-			new BSolutions {
+			new BListe {
+				title:"Solutions"
 				data:data
 				bareme:100
-				touches:["pi"]
-				solutions:solutions
+				touches:["empty","pi"]
+				liste:[{
+					name:"solutions"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions:solutions
+				}]
 			}
 		]

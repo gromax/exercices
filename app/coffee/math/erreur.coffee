@@ -29,7 +29,7 @@ erreurManager = {
 			# On cherche l'ordre de grandeur de la justesse de la réponse.
 			# On souhaite aussi savoir s'il s'agit d'une troncature au lieu d'une approx
 			# On souhaite aussi connaître le nombre de décimales de la réponse de l'utilisateur (p_user)
-			if ecart is 0 then return { exact:true, float:true, moduloError:moduloError, p_user:answer.precision(), ordre:null, good:goodObject }
+			if ecart is 0 then return { exact:true, float:true, moduloError:moduloError, p_user:answer.precision(), ordre:null }
 			else
 				ordre = Math.ceil(Math.log(ecart)/Math.log(10))
 				p_user = answer.precision()
@@ -40,10 +40,10 @@ erreurManager = {
 				if (marge>=-ERROR_MIN)
 					# L'erreur est plus petite que le degré de précision donné par l'utilisateur
 					# C'est ici qu'éventuellement on parlera de troncature
-					return { exact:false, float:true, approx_ok:true, ecart:ecart, moduloError:moduloError, p_user:p_user, ordre:ordre, good:goodObject }
-				else return { exact:false, float:true, approx_ok:false, ecart:ecart, moduloError:moduloError, p_user:p_user, ordre:ordre, good:goodObject }
+					return { exact:false, float:true, approx_ok:true, ecart:ecart, moduloError:moduloError, p_user:p_user, ordre:ordre }
+				else return { exact:false, float:true, approx_ok:false, ecart:ecart, moduloError:moduloError, p_user:p_user, ordre:ordre }
 		# L'utilisateur donne une formule. On attend donc une valeur exacte.
-		{ exact: (ecart is 0), float:false, moduloError:moduloError, good:goodObject }
+		{ exact: (ecart is 0), float:false, moduloError:moduloError }
 	tri: (usersObj,goodsObj) ->
 		# On donne un tableau de réponses utilisateur et un tableau de bonnes réponses
 		# On cherche à les associer 2 à 2 et à renvoyer le tableau des bonnes réponses

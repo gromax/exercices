@@ -27,22 +27,22 @@ Exercice.liste.push
 					tag:"$F(x)$", name:"p"
 					description:"Expression de la primitive"
 					good:poly
-					params:{
-						developp:true
-						toLowercase:true
-						custom:(output)->
-							if mM.exec([output.goodObject, "symbol:c", "-", output.userObject, "-"], {simplify:true}).isNul()
-								output.manque_constante_c = true
-								output.bareme = 50
-						customTemplate:true
-					}
+					developp:true
+					toLowercase:true
+					customVerif:(userObject,goodObject,verif_result)->
+						if mM.exec([goodObject, "symbol:c", "-", userObject, "-"], {simplify:true}).isNul()
+							verif_result.manque_constante_c = true
+							verif_result.ponderation = .5
+					customTemplate: (verif_result) ->
+						if verif_result.manque_constante_c then ["Vous avez oublié la constante $c$."]
+						else []
 				}]
 				#aide: oHelp.derivee.basics
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:@title
-			content:Handlebars.templates["tex_enumerate"] { items: ("$x \\mapsto #{item.f}$" for item in data), large:slide is true }
+			content:Handlebars.templates["tex_enumerate"] { items: ("$x \\mapsto #{item.f}$" for item in data), large:false }
 		}

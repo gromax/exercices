@@ -138,7 +138,7 @@ Exercice.liste.push
 					@config.graphContainer.solutions(cor,inp,str_antecedents)
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData,i in data
@@ -148,17 +148,8 @@ Exercice.liste.push
 			questions = Handlebars.templates["tex_enumerate"] { items:["Donnez l'image de #{xi}", "Donnez le(s) antécédent(s) de #{ya}"] }
 			# Calcul de la taille
 			graphique = Handlebars.templates["tex_courbes"] { index:i+1, max:@max, courbes:[ courbe ], scale:.4*@max/10 }
-			if slide is true
-				out.push {
-					title:@title
-					content: Handlebars.templates["tex_cols"] { cols:[
-						{ width:0.6, center:true, content:graphique}
-						{ width:0.4, content:questions }
-					]}
-				}
-			else
-				out.push {
-					title:@title
-					contents: [graphique, questions]
-				}
+			out.push {
+				title:@title
+				contents: [graphique, questions]
+			}
 		out

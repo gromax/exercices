@@ -21,7 +21,7 @@ Exercice.liste.push
 			else cv = data.inputs.cv = mM.alea.real [1,2,3]
 			# Les changements de variables sont : ln ; ln(A-y) ; ln(A/y-b)
 		if (typeof data.inputs.table is "undefined")
-			N = mM.alea.real { min:7, max:11 }
+			N = mM.alea.real { min:6, max:8 }
 			ecart = mM.alea.real [1,2,4,5,10]
 			min = mM.alea.real([0,1,2,3,4,5])*ecart
 			max = (N-1)*ecart+min
@@ -94,8 +94,20 @@ Exercice.liste.push
 					bareme:Math.round(50/totalBareme*100)
 					title:"Donnez les coordonnées de $G$, le point moyen du nuage des $M_i\\left(x_i;#{tagVar}_i\\right)$ à 0,01 près"
 					liste:[
-						{tag:"$x_G$", name:"xG", description:"à 0,01 près", good:serie_x.moyenne(), params:{arrondi:-2}}
-						{tag:"$#{tagVar}_G$", name:"yG", description:"à 0,01 près", good:serie_z.moyenne(), params:{arrondi:-2}}
+						{
+							tag:"$x_G$"
+							name:"xG"
+							description:"à 0,01 près"
+							good:serie_x.moyenne()
+							arrondi:-2
+						}
+						{
+							tag:"$#{tagVar}_G$"
+							name:"yG"
+							description:"à 0,01 près"
+							good:serie_z.moyenne()
+							arrondi:-2
+						}
 					]
 					aide:oHelp.stats.centre
 				}
@@ -106,8 +118,20 @@ Exercice.liste.push
 				bareme:Math.round(100/totalBareme*100)
 				title:"Donnez les coefficients de l'ajustement affine : $#{tagVar}=ax+b$ à 0,001 près"
 				liste:[
-					{tag:"$a$", name:"a", description:"à 0,001 près", good:a, params:{arrondi:-3}}
-					{tag:"$b$", name:"b", description:"à 0,001 près", good:b, params:{arrondi:-3}}
+					{
+						tag:"$a$"
+						name:"a"
+						description:"à 0,001 près"
+						good:a
+						arrondi:-3
+					}
+					{
+						tag:"$b$"
+						name:"b"
+						description:"à 0,001 près"
+						good:b
+						arrondi:-3
+					}
 				]
 				aide:oHelp.stats.ajustement.concat(oHelp.stats.variance,oHelp.stats.covariance)
 			}
@@ -127,13 +151,17 @@ Exercice.liste.push
 					data:data
 					bareme:Math.round(50/totalBareme*100)
 					title:"Donnez la valeur de $y$ pour $x = #{numToStr(i,1)}$ à 0,01 près"
-					liste:[
-						{tag:"$y$", name:"y", description:"(à 0,01 près)", good:y, params:{arrondi:-2}}
-					]
+					liste:[{
+						tag:"$y$"
+						name:"y"
+						description:"(à 0,01 près)"
+						good:y
+						arrondi:-2
+					}]
 				}
 			)
 		out
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itData in data
@@ -147,7 +175,7 @@ Exercice.liste.push
 				pre:"On considère la série statistique donnée par le tableau suivant :"
 				lines: [xs, ys]
 				cols: xs.length
-				large: slide is true
+				large: false
 			}
 			switch cv
 				when 1 then tex_chgt = "On propose le changement de variable suivant : $z = \\ln(y)$."
@@ -171,7 +199,7 @@ Exercice.liste.push
 				content: ennonce + Handlebars.templates["tex_enumerate"] {
 					pre:tex_chgt
 					items: its
-					large:slide is true
+					large:false
 				}
 			}
 		out

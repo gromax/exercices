@@ -24,10 +24,11 @@ Exercice.liste.push
 						name:"a"
 						description:"Valeur de a"
 						good:droite.m()
-						params:
-							custom:(output)->
-								if output.goodObject.toClone().inverse().equals(output.userObject) then output.coeffDirecteur_inverse = true
-							customTemplate:true
+						customVerif:(userObject,goodObject,verif_result)->
+							if goodObject.toClone().inverse().equals(userObject) then verif_result.coeffDirecteur_inverse = true
+						customTemplate: (verif_result) ->
+							if verif_result.coeffDirecteur_inverse then ["Vous avez certainement fait le calcul $\\frac{x_B-x_A}{y_B-y_A}$ au lieu de $\\frac{y_B-y_A}{x_B-x_A}$."]
+							else []
 					}
 					{
 						tag:"$b$"

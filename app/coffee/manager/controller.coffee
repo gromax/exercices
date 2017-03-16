@@ -601,7 +601,7 @@ class @Controller
 							filtre:{finished:false}
 							unfinished:true
 							user:Controller.uLog
-							link:"mes-exercices:"
+							links:{ notes:"mes-exercices:" }
 						}
 				}
 				{

@@ -30,15 +30,38 @@ Exercice.liste.push
 				bareme:100
 				title:"Donnez les indicateurs statistiques de la série"
 				liste:[
-					{tag:"$N$", name:"N", description:"Effectif total", good:serie.N()}
-					{tag:"Médiane", name:"mediane", description:"Médiane (à 0,1 près)", good:serie.mediane(), params:{arrondi:-1}}
-					{tag:"$q_1$", name:"q1", description:"Premier quartile (à 0,1 près)", good:serie.fractile(1,4), params:{arrondi:-1}}
-					{tag:"$q_3$", name:"q3", description:"Premier quartile (à 0,1 près)", good:serie.fractile(3,4), params:{arrondi:-1}}
+					{
+						tag:"$N$"
+						name:"N"
+						description:"Effectif total"
+						good:serie.N()
+					}
+					{
+						tag:"Médiane"
+						name:"mediane"
+						description:"Médiane (à 0,1 près)"
+						good:serie.mediane()
+						arrondi:-1
+					}
+					{
+						tag:"$q_1$"
+						name:"q1"
+						description:"Premier quartile (à 0,1 près)"
+						good:serie.fractile(1,4)
+						arrondi:-1
+					}
+					{
+						tag:"$q_3$"
+						name:"q3"
+						description:"Premier quartile (à 0,1 près)"
+						good:serie.fractile(3,4)
+						arrondi:-1
+					}
 				]
 				aide: oHelp.stats.N.concat(oHelp.stats.mediane, oHelp.stats.quartiles)
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itData in data
@@ -51,7 +74,7 @@ Exercice.liste.push
 				pre:"On considère la série statistique donnée par le tableau suivant :"
 				lines: [xs, ns]
 				cols: xs.length
-				large: slide is true
+				large: false
 			}
 			out.push {
 				title:@title
@@ -61,7 +84,7 @@ Exercice.liste.push
 						"Donnez la médiane de la série, à $0,1$ près"
 						"Donnez les premier et troisième quartile, à $0,1$ près"
 					]
-					large:slide is true
+					large:false
 				}
 			}
 		out

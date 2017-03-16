@@ -11,10 +11,8 @@
 	<button type="button" class="btn {{#if item.locked}}btn-danger{{else}}btn-success{{/if}} btn-sm" name="lockButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Vérouiller/Déverrouiller"><span class="glyphicon glyphicon-lock"></span></button>
 {{!lien voir}}
 	<a href="#{{params.links.test}}{{ item.id }}/exo:1" class="btn btn-primary btn-sm" role="button"><span class="glyphicon glyphicon-eye-open" data-toggle="tooltip" data-placement="top" title="Tester l'examen"></span></a>
-{{!Bouton texSlide}}
-	<button type="button" class="btn btn-default btn-sm" name="texSlideButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Produire le latex version slide"><span class="glyphicon glyphicon-blackboard"></span></button>
 {{!Bouton tex}}
-	<button type="button" class="btn btn-default btn-sm" name="texButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Produire le latex"><span class="glyphicon glyphicon-blackboard"></span></button>
+	<button type="button" class="btn btn-default btn-sm" name="texButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Produire le latex">TEX</button>
 {{!Bouton suppression}}
 	<button type="button" class="btn btn-default btn-sm" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="glyphicon glyphicon-trash"></span></button>
 	</div>

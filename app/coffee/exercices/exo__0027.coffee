@@ -24,19 +24,43 @@ Exercice.liste.push
 				bareme:100
 				title:"Calculs"
 				liste:[
-					{tag:"$z+z'$", name:"s", description:"Somme", good:gSomme},
-					{tag:"$z\\times z'$", name:"p", description:"Produit", good:gProduit},
-					{tag:"$\\frac{1}{z}$", name:"i", description:"Inverse", good:gInverse, params:{formes:"FRACTION"}},
-					{tag:"$\\frac{z}{z'}$", name:"q", description:"Quotient", good:gQuotient, params:{formes:"FRACTION"}}
+					{
+						tag:"$z+z'$"
+						name:"s"
+						description:"Somme"
+						good:gSomme
+					}
+					{
+						tag:"$z\\times z'$"
+						name:"p"
+						description:"Produit"
+						good:gProduit
+					}
+					{
+						tag:"$\\frac{1}{z}$"
+						name:"i"
+						description:"Inverse"
+						good:gInverse
+						formes:"FRACTION"
+					}
+					{
+						tag:"$\\frac{z}{z'}$"
+						name:"q"
+						description:"Quotient"
+						good:gQuotient
+						formes:"FRACTION"
+					}
 				]
 				aide: oHelp.complexes.basics
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:@title
 			content:Handlebars.templates["tex_enumerate"] {
 				pre:"On vous donne $z$ et $z'$. Calculez $z+z'$, $z\\times z'$, $\\frac{1}{z}$ et $\\frac{z}{z'}$"
-				items: ("$z = #{item.tex.zA}$ et $z' = #{item.tex.zB}$" for item in data), large:slide is true }
+				items: ("$z = #{item.tex.zA}$ et $z' = #{item.tex.zB}$" for item in data)
+				large:false
+			}
 		}

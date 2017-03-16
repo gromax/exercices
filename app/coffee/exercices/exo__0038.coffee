@@ -40,89 +40,67 @@ Exercice.liste.push
 				body:"enonce"
 				html:"<p>On propose la fonction $f$ définie par : $f(x)=#{normalTex}$.</p><p>La forme canonique est $f(x)=#{canoniqueTex}$.</p><p>La forme factorisée est $f(x)=#{factoTex}$.</p><p>En utilisant bien ces différentes formes, les deux premières questions ne nécessitent aucun calcul.</p>"
 			}]}
-			new Brique {
+			new BListe {
+				title:"Coordonnées de $S$, sommet de la courbe de $f$."
 				data:data
 				bareme:30
-				needed:["xS","yS"]
-				good:[xS,yS]
-				ask:()->
-					@container.html Handlebars.templates.std_panel {
-						title:"Coordonnées de $S$, sommet de la courbe de $f$."
-						zones:[
-							{
-								body:"champ"
-								html:Handlebars.templates.std_form {
-									id:"form#{@divId}"
-									inputs:[
-										{tag:"$x_S$", description:"Abscisse de S", name:"xS"}
-										{tag:"$y_S$", description:"Ordonnée de S", name:"yS"}
-									]
-								}
-							}
-						]
+				liste:[
+					{
+						name:"xS"
+						good:xS
+						tag:"$x_S$"
+						description:"Abscisse de S"
 					}
-					$("#form#{@divId}").on 'submit', (event) =>
-						@a.xS = $("input[name='xS']",@container).val()
-						@a.yS = $("input[name='yS']",@container).val()
-						@run true
-						false
-					$("input[name='xS']",@container).focus()
-				ver:()->
-					values = [ @verification("xS","$x_S$", @a.xS, @config.good[0],@bareme/2), @verification("yS","$y_S$", @a.yS, @config.good[1],@bareme/2) ]
-					@container.html Handlebars.templates.verif {values:values, title:"Coordonnées : $S\\left(#{@config.good[0].tex()};#{@config.good[1].tex()}\\right)$"}
+					{
+						name:"yS"
+						good:yS
+						tag:"$y_S$"
+						description:"Ordonnée de S"
+					}
+				]
 			}
-			new BSolutions {
+			new BListe {
 				data:data
 				bareme:30
-				aKey:"racines"
 				title:"Solutions de $f(x)=0$"
-				solutions:[x1,x2]
+				touches:["empty"]
+				liste:[{
+					name:"racines"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions:[x1,x2]
+				}]
 			}
-			new BSolutions {
+			new BListe {
 				data:data
 				bareme:40
-				aKey:"sols"
-				touches:["sqrt"]
+				touches:["empty","sqrt"]
 				title:"Solutions de $f(x)=#{A.tex()}$"
-				solutions: mM.polynome.solve.exact poly, { y:A }
+				liste:[{
+					name:"sols"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions: mM.polynome.solve.exact poly, { y:A }
+				}]
 			}
 		]
-	tex: (data,slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData in data
-			if slide is true
-				out.push {
-					title:"Choix de la meilleure forme"
-					contents: [
-						Handlebars.plain["tex_enumerate"] { contents:[
-							"On donne $f(x)$ sous trois formes :"
-							"\\[f(x) = #{itemData.exam.normale}\\]"
-							"\\[f(x) = #{itemData.exam.canonique}\\]"
-							"\\[f(x) = #{itemData.exam.facto}\\]"
-							]}
-						Handlebars.templates["tex_enumerate"] { pre:"Sans, ou avec peu de calcul, en utilisant la forme la plus adaptée, donnez :", items:[
-							"Les coordonnées du sommet $S$ de la courbe de $f$"
-							"Les solutions de $f(x) = 0$"
-							"Les solultions, si elles existent, de $f(x) = #{itemData.exam.A}$"
-							]}
+			out.push {
+				title:"Choix de la meilleure forme"
+				contents: [
+					"On donne $f(x)$ sous trois formes :"
+					"\\[f(x) = #{itemData.exam.normale}\\]"
+					"\\[f(x) = #{itemData.exam.canonique}\\]"
+					"\\[f(x) = #{itemData.exam.facto}\\]"
 
-					]
-				}
-			else
-				out.push {
-					title:"Choix de la meilleure forme"
-					contents: [
-						"On donne $f(x)$ sous trois formes :"
-						"\\[f(x) = #{itemData.exam.normale}\\]"
-						"\\[f(x) = #{itemData.exam.canonique}\\]"
-						"\\[f(x) = #{itemData.exam.facto}\\]"
-
-						Handlebars.templates["tex_enumerate"] { pre:"Sans, ou avec peu de calcul, en utilisant la forme la plus adaptée, donnez :", items:[
-							"Les coordonnées du sommet $S$ de la courbe de $f$"
-							"Les solutions de $f(x) = 0$"
-							"Les solultions, si elles existent, de $f(x) = #{itemData.exam.A}$"
-							]}
-					]
-				}
+					Handlebars.templates["tex_enumerate"] { pre:"Sans, ou avec peu de calcul, en utilisant la forme la plus adaptée, donnez :", items:[
+						"Les coordonnées du sommet $S$ de la courbe de $f$"
+						"Les solutions de $f(x) = 0$"
+						"Les solultions, si elles existent, de $f(x) = #{itemData.exam.A}$"
+						]}
+				]
+			}
 		out

@@ -85,7 +85,7 @@ Exercice.liste.push
 			premier_membre : premier_membre_tex
 			second_membre : second_membre_tex
 			y0: y0
-			p: forme_y1_tex
+			forme_y1_tex: forme_y1_tex
 			symboles_a_trouver: symboles_a_trouver
 		}
 		[
@@ -115,7 +115,7 @@ Exercice.liste.push
 					name:"y0"
 					description:"Solution générale de E0"
 					good:good_y0
-					params: { goodTex:good_y0.tex(altFunctionTex:["exp"]) }
+					goodTex:good_y0.tex(altFunctionTex:["exp"])
 					large:true
 				]
 			}
@@ -129,7 +129,7 @@ Exercice.liste.push
 					name:"y1"
 					description:"Solution particulière de E"
 					good:good_y1
-					params: { goodTex:good_y1.tex(altFunctionTex:["exp"]) }
+					goodTex:good_y1.tex(altFunctionTex:["exp"])
 					large:true
 				]
 			}
@@ -143,25 +143,25 @@ Exercice.liste.push
 					name:"y"
 					description:"Solution telle que y(0) = #{y0}"
 					good:good_y
-					params: { goodTex:good_y.tex(altFunctionTex:["exp"]) }
+					goodTex:good_y.tex(altFunctionTex:["exp"])
 					large:true
 				]
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itData in data
 			out.push {
 				title:@title
 				content: Handlebars.templates["tex_enumerate"] {
-					pre:"Soit l'équation différentielle $(E):#{itData.premier_membre} = #{itData.second_membre}$"
+					pre:"Soit l'équation différentielle $(E):#{itData.tex.premier_membre} = #{itData.tex.second_membre}$"
 					items: [
-						"Donnez $y_0(t)$, expression de la solution générale de $\\left(E_0\\right):#{itData.premier_membre} = 0$"
-						"Une solution générale de $(E)$ est de la forme $y_1(t) = #{itData.forme_y1_tex}. Donnez cette solution en précisant le(s) valeur(s) de #{itData.symboles_a_trouver.join(" ,")}."
-						"Soit $y$ une solution de $(E)$ qui vérifie $y(0) = #{itData.y0}$. Donnez l'expression de y."
+						"Donnez $y_0(t)$, expression de la solution générale de $\\left(E_0\\right):#{itData.tex.premier_membre} = 0$"
+						"Une solution générale de $(E)$ est de la forme $y_1(t) = #{itData.tex.forme_y1_tex}$. Donnez cette solution en précisant le(s) valeur(s) de #{itData.tex.symboles_a_trouver.join(" ,")}."
+						"Soit $y$ une solution de $(E)$ qui vérifie $y(0) = #{itData.tex.y0}$. Donnez l'expression de y."
 					]
-					large:slide is true
+					large:false
 				}
 			}
 		out

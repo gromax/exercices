@@ -36,11 +36,17 @@ Exercice.liste.push
 					modulo:"2k\\pi"
 				}
 			}]}
-			new BSolutions {
+			new BListe {
+				title:"Solutions"
 				data:data
 				bareme:100
-				touches:["pi"]
-				solutions:solutions
-				moduloKey:"k"
+				touches:["empty","pi"]
+				liste:[{
+					name:"solutions"
+					tag:"$\\mathcal{S}$"
+					large:true
+					solutions:solutions
+					moduloKey:"k"
+				}]
 			}
 		]

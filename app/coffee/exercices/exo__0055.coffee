@@ -81,20 +81,19 @@ Exercice.liste.push
 					name:"l"
 					description:"Limite"
 					good:l
-					params: { }
 					large:true
 				]
 				touches:["infini"]
 			}
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:@title
 			content:Handlebars.templates["tex_enumerate"] {
 				pre: "Donnez les limites suivantes :"
 				items: ("$\\displaystyle \\lim_{x \\to #{item.tex.x}} #{item.tex.expression}$" for item in data)
-				large:slide is true
+				large:false
 			}
 		}
 

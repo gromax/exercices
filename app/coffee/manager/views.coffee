@@ -381,7 +381,6 @@ class VExamsList extends VList
 	init_config:(params=null) ->
 		# Lancé seulement par prof et admin
 		@push_action { name:"lockButton", fct_name:"lockAction" }, "button"
-		@push_action { name:"texSlideButton", fct_name:"texSlideAction" }, "button"
 		@push_action { name:"texButton", fct_name:"texAction" }, "button"
 		h_push super(), {
 			showId:Controller.uLog.isAdmin
@@ -393,26 +392,12 @@ class VExamsList extends VList
 		unless @_collection?
 			if @config.fiche? then @_collection=@config.fiche.exams
 		@_collection
-	texSlideAction: (id) ->
-		exam = @collection().get id
-		str = exam.toTex(false)
-		str = str.replace(/&#x3D;/g, "=")
-		str = str.replace(/&#x27;/g, "'")
-		$("#zonetexte#{@divId}").val(str)
-		#console.log exam.toTex(true)
-		#fiche?.load { type:"load", obj:@, cb:(view,fiche)->
-		#	$(view.config.container).html fiche.toTexSlide()
-		#}
 	texAction: (id) ->
 		exam = @collection().get id
 		str = exam.toTex(false)
 		str = str.replace(/&#x3D;/g, "=")
 		str = str.replace(/&#x27;/g, "'")
 		$("#zonetexte#{@divId}").val(str)
-		#console.log exam.toTex(false)
-		#fiche?.load { type:"load", obj:@, cb:(view,fiche)->
-		#	$(view.config.container).html fiche.toTexSlide()
-		#}
 	lockAction: (id) ->
 		item = @collection().get id
 		item.on { type:"change", obj:@, cb:(view,item) ->
@@ -433,18 +418,6 @@ class VNotesList extends VList
 	_glyph: "glyphicon-list-alt"
 	_defaultLink: "erreur"
 	init_config:(params=null) ->
-		# Calcul du titre
-		###
-		switch
-			when params.exoFiche? then @title = "Liste des notes du devoir : #{params.exoFiche.parent.parent.nom}/#{params.exoFiche.exercice.title}"
-			when Controller.uLog.id is params.user.id
-				if params.unfinished then @title = "Liste de vos exercices inachevés"
-				else @title = "Liste de vos notes"
-			else
-				if params.unfinished then @title = "Liste de vos exercices inachevés de #{params.user.prenom} #{params.user.nom}"
-				else @title = "Liste des notes de #{params.user.prenom} #{params.user.nom}"
-		###
-		# Config
 		h_push super(), {
 			showId:Controller.uLog.isAdmin
 			showDel:Controller.uLog.isAdmin or Controller.uLog.isProf

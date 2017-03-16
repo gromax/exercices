@@ -22,8 +22,18 @@ Exercice.liste.push
 				bareme:30
 				title:"Affixe des vecteurs"
 				liste:[
-					{tag:"$z_1$", name:"z1", description:"Affixe de AC", good:zAC}
-					{tag:"$z_2$", name:"z2", description:"Affixe de AB", good:zAB}
+					{
+						tag:"$z_1$"
+						name:"z1"
+						description:"Affixe de AC"
+						good:zAC
+					}
+					{
+						tag:"$z_2$"
+						name:"z2"
+						description:"Affixe de AB"
+						good:zAB
+					}
 				]
 				aide: oHelp.complexes.affixeVecteur
 			}
@@ -31,18 +41,25 @@ Exercice.liste.push
 				data:data
 				bareme:30
 				title:"$z=z_1\\cdot\\overline{z_2}$", text:"Calculez le produit $z=z_1\\cdot\\overline{z_2}$"
-				liste:[
-					{tag:"$z$", name:"z", description:"Forme x+iy", good:z}
-				]
+				liste:[{
+					tag:"$z$"
+					name:"z"
+					description:"Forme x+iy"
+					good:z
+				}]
 			}
 			new BListe {
 				data:data
 				bareme:40
 				title:"Angle $\\widehat{BAC}$"
 				text:"L'angle que l'on cherche est l'argument de $z$. Donnez une approximation à 1° près de cet angle en degrés."
-				liste:[
-					{tag:"$\\widehat{BAC}$", name:"a", description:"Angle = Argument de z", good:ang, params:{ arrondi:0 }}
-				]
+				liste:[{
+					tag:"$\\widehat{BAC}$"
+					name:"a"
+					description:"Angle = Argument de z"
+					good:ang
+					arrondi:0
+				}]
 				aide: oHelp.complexes.argument
 			}
 		]

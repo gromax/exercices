@@ -35,7 +35,7 @@ class TokenVariable extends Token
 	@getRegex: -> "[#π∅ℝ∞a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*"
 	acceptOperOnLeft: -> true
 	acceptOperOnRight: -> true
-	execute: (stack) -> SymbolNumber.makeSymbol @name
+	execute: (stack) -> SymbolManager.makeSymbol @name
 class TokenOperator extends Token
 	operand1: null
 	operand2: null

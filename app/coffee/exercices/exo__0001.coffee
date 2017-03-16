@@ -31,10 +31,11 @@ Exercice.liste.push
 					name:"m"
 					description:"Valeur de m"
 					good:droite.m()
-					params:
-						custom:(output)->
-							if output.goodObject.toClone().inverse().equals(output.userObject) then output.coeffDirecteur_inverse = true
-						customTemplate:true
+					customVerif:(userObject, goodObject,verif_result)->
+						if goodObject.toClone().inverse().equals(userObject) then verif_result.coeffDirecteur_inverse = true
+					customTemplate: (verif_result) ->
+						if verif_result.coeffDirecteur_inverse then ["Vous avez certainement fait le calcul $\\frac{x_B-x_A}{y_B-y_A}$ au lieu de $\\frac{y_B-y_A}{x_B-x_A}$."]
+						else []
 				}
 				{
 					tag:"$p$"
@@ -66,14 +67,14 @@ Exercice.liste.push
 			}
 			lastStage
 		]
-	tex: (data, slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		{
 			title:@title
 			content:Handlebars.templates["tex_enumerate"] {
 				pre:"Dans tous les cas, donnez l'équation réduite de la droite $(AB)$."
 				items: ("Points $#{item.A.texLine()}$ et $#{item.B.texLine()}$" for item in data)
-				large:slide is true
+				large:false
 			}
 		}
 

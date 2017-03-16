@@ -72,21 +72,12 @@ Exercice.liste.push
 				aide:data.divId+"aide"
 			}
 		]
-	tex: (data,slide) ->
+	tex: (data) ->
 		if not isArray(data) then data = [ data ]
 		out = []
 		for itemData in data
-			if slide is true
-				out.push {
-					title:"Associer tableaux et fonctions"
-					contents: [
-						Handlebars.templates["tex_plain"] { multicols:2, contents:(tab.tex() for tab in itemData.tabs) }
-						Handlebars.templates["tex_enumerate"] { multicols:2, items:(item.title for item in itemData.items)}
-					]
-				}
-			else
-				out.push {
-					title:"Associer tableaux et fonctions"
-					contents: (tab.tex( { color:false } ) for tab in itemData.tabs).concat(Handlebars.templates["tex_enumerate"] { items:(item.title for item in itemData.items)})
-				}
+			out.push {
+				title:"Associer tableaux et fonctions"
+				contents: (tab.tex( { color:false } ) for tab in itemData.tabs).concat(Handlebars.templates["tex_enumerate"] { items:(item.title for item in itemData.items)})
+			}
 		out

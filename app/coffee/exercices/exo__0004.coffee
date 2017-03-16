@@ -17,13 +17,16 @@ Exercice.liste.push
 					{body:"enonce", html:"<p>On se place dans un repère $(O;I,J)$</p><p>On donne trois points $#{A.texLine()}$, $#{B.texLine()}$ et $#{C.texLine()}$.</p><p>Il faut déterminer les coordonnées du point $D$ pour que $ABCD$ soit un parallélogramme."}
 				]
 			}
-			new Brique {
+			new BListe {
 				data:data
 				bareme:100
 				needed:["x","y"]
 				title:"Coordonnées de $D$"
-				ask: () ->
-					@helper_disp_inputs(@title,null,[{tag:"$x_D$", description:"Abscisse de D", name:"x"}, {tag:"$y_D$", description:"Ordonnée de D", name:"y"}],{template:"help", plg:true},null)
+				liste:[
+					{tag:"$x_D$", description:"Abscisse de D", name:"x"}
+					{tag:"$y_D$", description:"Ordonnée de D", name:"y"}
+				]
+				aide:{template:"help", plg:true}
 				ver: () ->
 					uD = mM.vector "D", {x:@a.x, y:@a.y}
 					# message de correction par défaut
@@ -41,7 +44,7 @@ Exercice.liste.push
 						when (uD.sameAs @data.good, "x") or (uD.sameAs @data.good, "y")
 							@data.note = @bareme/2
 					@container.html Handlebars.templates.std_panel {
-						title:@title
+						title:@config.title
 						zones:[{
 							list:"correction"
 							html:Handlebars.templates.listItem out
