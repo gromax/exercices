@@ -7,6 +7,7 @@ Exercice.liste.push
 	init: (data) ->
 		inp = data.inputs
 		if (typeof inp.l is "undefined") then inp.l = l = mM.alea.real( {min:1, max:100, coeff:0.0001} )
+		else l = Number inp.l
 		E = 1/l
 
 		# Symbole d'inégalité

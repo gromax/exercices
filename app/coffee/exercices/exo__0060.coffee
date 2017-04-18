@@ -8,7 +8,7 @@ Exercice.liste.push
 		a:{ tag:"type", options:["alea", "K.exp(ax)", "polynome", "ax+b+c/x"], def:0}
 	}
 	init: (data) ->
-		aide:["Pour calculer $\\mathcal{A} = \\int_a^b f(x) dx$, il faut d'abord déterminer une primitive de $f$, c'est à dire une fonction $F$ telle que $F'=f$. Alors : $\\mathcal{A} = [F(x)]_a^b = F(b)-F(a)$."]
+		aide=["Pour calculer $\\mathcal{A} = \\int_a^b f(x) dx$, il faut d'abord déterminer une primitive de $f$, c'est à dire une fonction $F$ telle que $F'=f$. Alors : $\\mathcal{A} = [F(x)]_a^b = F(b)-F(a)$."]
 		if data.inputs.t? then t = Number data.inputs.t
 		else
 			t = data.options.a.value ? 0

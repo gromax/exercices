@@ -476,7 +476,7 @@ class MExoFiche extends Model
 	match: (filter) -> filter.reg?.test(@title+" "+@description) isnt false
 	toNewExam: ->
 		# Produit une instance des exercices pour un nouvel exam
-		exo = new Exercice { model:@exercice }
+		exo = new Exercice { model:@exercice, options:@options }
 		{ idE:@idE, options:@options, inputs:(exo.init().data.inputs for i in [1..@num]) }
 	moyenne: (user,aUF) ->
 		if user? then notes = user.notes().liste { aEF:@id, aUF:aUF }

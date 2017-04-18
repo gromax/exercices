@@ -94,7 +94,7 @@ module.exports = function(grunt) {
           join:true
         },
         files: {
-          'dist/manager.js': 'app/coffee/manager/*.coffee'
+          'dist/manager.js': ['app/coffee/manager/routes.coffee', 'app/coffee/manager/collections.coffee', 'app/coffee/manager/models.coffee', 'app/coffee/manager/controller.coffee', 'app/coffee/manager/views.coffee']
         }
       },
       exercices: {
