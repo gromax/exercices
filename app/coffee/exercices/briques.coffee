@@ -81,75 +81,18 @@ class Brique extends BaseBrique
 				if (typeof @a[name] is "undefined") then return false
 		true
 	ask: ->
-		# exploite les config suivantes :
-		# title = String
-		# text = String => envoyé comme texte de présentation, html non echappé
-		# liste = [{tag, }]
-		# aide = ["it1", "it2", ...]
-		# touches = ["sqrt", "pi", "sqr", "empty", objet{name, title, tag, pre, post, recouvre}]
-		@iList = @config.liste # Lien nécessaire pour la validation de la forme
-		clavier = null
-		if @config.touches?
-			clavier=[]
-			for touche in @config.touches
-				switch
-					when touche is "infini" then clavier.push {name:"infty-button", title:"Infini", tag:"$\\infty$"}
-					when touche is "sqrt" then clavier.push {name:"sqrt-button", title:"Racine carrée", tag:"$\\sqrt{x}$"}
-					when touche is "pi" then clavier.push {name:"pi-button", title:"Pi", tag:"$\\pi$"}
-					when touche is "sqr" then clavier.push {name:"sqr-button", title:"Carré", tag:"$.^2$"}
-					when touche is "x2" then clavier.push {name:"x2-button", title:"x carré", tag:"$x^2$"}
-					when touche is "empty" then clavier.push {name:"empty-button", title:"Ensemble vide", tag:"$\\varnothing$"}
-					when touche is "union" then clavier.push {name:"btnU", title:"Union", tag:"$\\cup$"}
-					when touche is "intersection" then clavier.push {name:"btnInter", title:"Intersection", tag:"$\\cap$"}
-					when touche is "reels" then clavier.push {name:"btnReels", title:"Ensemble des réels", tag:"$\\mathbb{R}$"}
-					when typeof touche is "object" then clavier.push {name:touche.name, title:touche.title, tag:touche.tag}
-		inputs=(item.templateParams for item in @config.liste)
-		if @config.aide?
-			help_zone = "#{@divId}_aide"
-			help_html = Handlebars.templates.help(@config.aide)
-		else help_zone = help_html = null
-		context = {
-			title:@config.title
-			focus:true
-			zones:[{
-				body:"champ"
-				html:Handlebars.templates.std_form {
-					id:"form#{@divId}"
-					inputs:inputs
-					clavier:clavier
-					help_target:help_zone
-				}
-			}]
-		}
-		if help_zone isnt null then context.zones.push { help:help_zone, html:help_html}
-		if @config.text?
-			# On transmet soit un simple texte, soit une structure plus complexe sous forme d'un tableau
-			if isArray @config.text then context.zones = @config.text.concat(context.zones)
-			else context.zones.unshift { body:"texte", html:@config.text }
-		@container.html Handlebars.templates.std_panel context
-		$("#form#{@divId}").on 'submit', (event) =>
-			aList = $(event.target).serializeObject()
-			@a[item.name] = aList[item.name] for item in @iList
+		if (template = @config.customAskTemplate?()) then @container.html Handlebars.templates[template.templateName]?(template)
+		$("form",@container).on 'submit', (event) =>
+			if not( @config.customFormValidation?(event) ) and (@config.needed?)
+				@a[inp] = $("input[name='#{inp}']",@container).val() for inp in @config.needed
 			@run true
 			false
-		if clavier isnt null
-			$inputs_List = ($("input[name='#{item.name}']",@container) for item in @config.liste)
-			@gc = new GestClavier $inputs_List...
-			for touche in @config.touches
-				switch
-					when touche is "infini" then $("button[name='infty-button']",@container).on 'click', (event) => @gc.clavier("∞","",true)
-					when touche is "sqrt" then $("button[name='sqrt-button']",@container).on 'click', (event) => @gc.clavier("sqrt(",")",false)
-					when touche is "pi" then $("button[name='pi-button']",@container).on 'click', (event) => @gc.clavier("π","",true)
-					when touche is "sqr" then $("button[name='sqr-button']",@container).on 'click', (event) => @gc.clavier("","^2",false)
-					when touche is "x2" then $("button[name='x2-button']",@container).on 'click', (event) => @gc.clavier("x^2","",true)
-					when touche is "empty" then $("button[name='empty-button']",@container).on 'click', (event) => @gc.clavier("∅","",true)
-					when touche is "union" then $("button[name='btnU']",@container).on 'click', (event) => @gc.clavier("∪","",true)
-					when touche is "intersection" then $("button[name='btnInter']",@container).on 'click', (event) => @gc.clavier("∩","",true)
-					when touche is "reels" then $("button[name='btnReels']",@container).on 'click', (event) => @gc.clavier("ℝ","",true)
-					when typeof touche is "object" then $("button[name='#{touche.name}']",@container).on 'click', (event) => @gc.clavier(touche.pre,touche.post,touche.recouvre)
-		if @config.liste.length>0 then $("input[name='#{@config.liste[0].name}']",@container).focus()
-
-
+		if @config.foccus? then $("input[name='#{@config.focus}']",@container).focus()
+	ver: ->
+		@container.html Handlebars.templates.std_panel {
+			title:@title
+			zones:@config.customVerif?()
+		}
 	run: (upBDD) -> @parent?.run(upBDD)
 
 
@@ -173,8 +116,10 @@ class BItem
 	# -- solutions : objets numbers multiples, séparées de ; ou ∅ pour rien
 	# - customTemplate : Une fonction qui renvoie un tableau de string à ajouter dans un template
 	# - Des paramètres concernant le parse :
-	# -- developp
-	# -- toLowerCase
+	# -- simplify : true/false
+	# -- alias : { key:[v1, v2] }, chaque occurence de v1, v2... est remplacée par key
+	# -- developp : true/false
+	# -- toLowerCase : true/false
 
 	# - params : paramètres de parse et de notation. Il contient :
 	# -- Des éléments de correction comme arrondi, approximation, custom()
@@ -184,15 +129,18 @@ class BItem
 	customTemplate: () -> []
 	constructor: (item) ->
 		if item.name? then @name = item.name
-		@parseParams = { developp:item.developp is true, toLowerCase:item.toLowerCase is true} # paramètres relatifs au parse : developp, type, toLowerCase
+		@parseParams = {
+			type:item.type ? ""
+			developp:item.developp is true
+			toLowerCase:item.toLowerCase is true
+			alias : item.alias ? false
+		}
 		@verifParams = {
 			arrondi : item.arrondi ? false
 			formes : item.formes ? null
 			custom: if typeof item.customVerif is "function" then item.customVerif else null
 			tolerance : item.tolerance ? false
 		}
-
-		item.params ? {} # autres params pour la verif : arrondi
 		@templateParams = {
 			name:item.name					# nécessaire pour les inputs
 			arrondi:item.arrondi ? false	# Si on demande un arrondi, on précise ici une puissance (-2 pour 0.01 par ex.)
@@ -224,10 +172,25 @@ class BItem
 				@go = @go_solutions
 				@verif = @verif_solutions
 			else # par défaut, ce sera un item avec good
-				unless item.good? then item.good = 0
-				@parseParams = mM.p.type item.good, item.params
-				if (@parseParams.type is "number") then @good = mM.toNumber(item.good)
-				else @good = item.good
+				goodArray = null
+				goodValue = null
+				switch
+					when isArray(item.good)
+						switch item.good.length
+							when 0 then goodValue = 0
+							when 1 then goodValue = item.good[0]
+							else
+								goodArray = item.good
+								goodValue  = item.good[0]
+					when typeof item.good is "undefined" then goodValue = 0
+					else goodValue = item.good
+				@parseParams = mM.p.type goodValue, @parseParams
+				if goodArray isnt null
+					if (@parseParams.type is "number") then @good = ( mM.toNumber(it) for it in goodArray )
+					else @good = goodArray
+				else
+					if (@parseParams.type is "number") then @good = mM.toNumber(goodValue)
+					else @good = goodValue
 				@templateParams.corTemplateName = "cor_number"
 				if typeof item.goodTex is "string" then @templateParams.goodTex = item.goodTex
 				else @templateParams.goodTex = @good.tex()
@@ -242,9 +205,16 @@ class BItem
 						@info = mM.p.userAnswer user, @parseParams
 						@templateParams.userTex = @info.tex
 						@templateParams.invalid = not(@info.valid)
+						@templateParams.parseMessages = @info.messages.join(" ; ")
 						@info.valid
 				@verif = () ->
-					verif_result = mM.verif[@parseParams.type](@info, @good,@verifParams)
+					if isArray(@good)
+						verif_result = ( mM.verif[@parseParams.type](@info, it,@verifParams) for it in @good)
+						verif_result.sort (a,b) ->
+							if b.ponderation>a.ponderation then -1
+							else 1
+						verif_result = verif_result.pop()
+					else verif_result = mM.verif[@parseParams.type](@info, @good,@verifParams)
 					@templateParams.customItems = @templateParams.custom(verif_result)
 					@templateParams[key] = value for key,value of verif_result
 					verif_result.ponderation
@@ -262,10 +232,11 @@ class BItem
 				true
 			else
 				@templateParams.user = user
-				if @moduloKey then user = user.replace @moduloKey, "#"
-				users = ( mM.p.userAnswer(str, @parseParams) for str in user.split ";" when str isnt "")
+				if @moduloKey then user = user.replace(new RegExp(@moduloKey,"g"), "#")
+				users = ( mM.p.userAnswer(str, @parseParams) for str in user.split ";" when str.trim() isnt "")
 				@info = (usItem for usItem in users when usItem.valid is true)
 				@templateParams.invalid = (users.length>@info.length) or (users.length is 0)
+				if (@templateParams.invalid) then @templateParams.parseMessages = "Vérifiez : #{ (infoItem.expression for infoItem in users when infoItem.valid is false).join(' ; ') }"
 				not(@templateParams.invalid)
 	verif_solutions: () ->
 		# fonction servant pour les équations et les solutions
@@ -331,6 +302,73 @@ class BListe extends Brique
 		valid = true
 		valid = item.go(@a) and valid for item in @config.liste # l'ordre est important !
 		valid
+	ask: ->
+		# exploite les config suivantes :
+		# title = String
+		# text = String => envoyé comme texte de présentation, html non echappé
+		# liste = [{tag, }]
+		# aide = ["it1", "it2", ...]
+		# touches = ["sqrt", "pi", "sqr", "empty", objet{name, title, tag, pre, post, recouvre}]
+		clavier = null
+		if @config.touches?
+			clavier=[]
+			for touche in @config.touches
+				switch
+					when touche is "infini" then clavier.push {name:"infty-button", title:"Infini", tag:"$\\infty$"}
+					when touche is "sqrt" then clavier.push {name:"sqrt-button", title:"Racine carrée", tag:"$\\sqrt{x}$"}
+					when touche is "pi" then clavier.push {name:"pi-button", title:"Pi", tag:"$\\pi$"}
+					when touche is "sqr" then clavier.push {name:"sqr-button", title:"Carré", tag:"$.^2$"}
+					when touche is "x2" then clavier.push {name:"x2-button", title:"x carré", tag:"$x^2$"}
+					when touche is "empty" then clavier.push {name:"empty-button", title:"Ensemble vide", tag:"$\\varnothing$"}
+					when touche is "union" then clavier.push {name:"btnU", title:"Union", tag:"$\\cup$"}
+					when touche is "intersection" then clavier.push {name:"btnInter", title:"Intersection", tag:"$\\cap$"}
+					when touche is "reels" then clavier.push {name:"btnReels", title:"Ensemble des réels", tag:"$\\mathbb{R}$"}
+					when typeof touche is "object" then clavier.push {name:touche.name, title:touche.title, tag:touche.tag}
+		inputs=(item.templateParams for item in @config.liste)
+		if @config.aide?
+			help_zone = "#{@divId}_aide"
+			help_html = Handlebars.templates.help(@config.aide)
+		else help_zone = help_html = null
+		context = {
+			title:@config.title
+			focus:true
+			zones:[{
+				body:"champ"
+				html:Handlebars.templates.std_form {
+					id:"form#{@divId}"
+					inputs:inputs
+					clavier:clavier
+					help_target:help_zone
+				}
+			}]
+		}
+		if help_zone isnt null then context.zones.push { help:help_zone, html:help_html}
+		if @config.text?
+			# On transmet soit un simple texte, soit une structure plus complexe sous forme d'un tableau
+			if isArray @config.text then context.zones = @config.text.concat(context.zones)
+			else context.zones.unshift { body:"texte", html:@config.text }
+		@container.html Handlebars.templates.std_panel context
+		$("#form#{@divId}").on 'submit', (event) =>
+			aList = $(event.target).serializeObject()
+			@a[item.name] = aList[item.name] for item in @config.liste
+			@run true
+			false
+		if clavier isnt null
+			$inputs_List = ($("input[name='#{item.name}']",@container) for item in @config.liste)
+			@gc = new GestClavier $inputs_List...
+			for touche in @config.touches
+				switch
+					when touche is "infini" then $("button[name='infty-button']",@container).on 'click', (event) => @gc.clavier("∞","",true)
+					when touche is "sqrt" then $("button[name='sqrt-button']",@container).on 'click', (event) => @gc.clavier("sqrt(",")",false)
+					when touche is "pi" then $("button[name='pi-button']",@container).on 'click', (event) => @gc.clavier("π","",true)
+					when touche is "sqr" then $("button[name='sqr-button']",@container).on 'click', (event) => @gc.clavier("","^2",false)
+					when touche is "x2" then $("button[name='x2-button']",@container).on 'click', (event) => @gc.clavier("x^2","",true)
+					when touche is "empty" then $("button[name='empty-button']",@container).on 'click', (event) => @gc.clavier("∅","",true)
+					when touche is "union" then $("button[name='btnU']",@container).on 'click', (event) => @gc.clavier("∪","",true)
+					when touche is "intersection" then $("button[name='btnInter']",@container).on 'click', (event) => @gc.clavier("∩","",true)
+					when touche is "reels" then $("button[name='btnReels']",@container).on 'click', (event) => @gc.clavier("ℝ","",true)
+					when typeof touche is "object" then $("button[name='#{touche.name}']",@container).on 'click', (event) => @gc.clavier(touche.pre,touche.post,touche.recouvre)
+		if @config.liste.length>0 then $("input[name='#{@config.liste[0].name}']",@container).focus()
 	ver: ->
 		# La fonction verif() renvoie la ponderation
 		score = 0
@@ -516,3 +554,6 @@ class BPoints extends Brique
 				html:template
 			}]
 		}
+class BGenenral extends Brique
+	# Une classe générale qui se contente de gérer le formulaire
+	# requiert que l'on définisse

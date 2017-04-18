@@ -42,32 +42,27 @@ Exercice.liste.push
 				good:deg
 				zone:"droite"
 				waitingTemplate:"std_valid_when_finished"
-				ask: () ->
-					$("form",@container).on 'submit', (event) =>
-						@a.a = Math.round (Math.acos @config.graphContainer.M.X())*180/Math.PI
-						if @config.graphContainer.M.Y()<0 then @a.a *= -1
-						@run true
-						false
-				ver: () ->
-					user = Number @a.a
+				customFormValidation: (event) ->
+					@data.answers.a = Math.round (Math.acos @graphContainer.M.X())*180/Math.PI
+					if @graphContainer.M.Y()<0 then @data.answers.a *= -1
+					true
+				customVerif: () ->
+					user = Number @data.answers.a
 					radUser = user*Math.PI/180
-					ecart = Math.abs(@config.good-user)
+					ecart = Math.abs(@good-user)
 					ecart-=360 while ecart>=355
 					ok = (Math.abs(ecart)<=5)
 					if ok
-						@config.graphContainer.correcOk(radUser)
+						@graphContainer.correcOk(radUser)
 						@data.note = @bareme
 						correc = [{ color:"ok", text:"Point $M$ bien placé."}]
 					else
-						rd = @config.good*Math.PI/180
-						@config.graphContainer.correcNOk(radUser,rd)
+						rd = @good*Math.PI/180
+						@graphContainer.correcNOk(radUser,rd)
 						correc = [{ text:"Point $M$ mal placé.", color:"error"}]
-					@container.html Handlebars.templates.std_panel {
-						title:"Résultats"
-						zones:[{
-							list:"correction"
-							html:Handlebars.templates.listItem correc
-						}]
-					}
+					[{
+						list:"correction"
+						html:Handlebars.templates.listItem correc
+					}]
 			}
 		]

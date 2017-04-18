@@ -7,7 +7,7 @@
 				variable:"x" 	# variable du polynome
 				degre:0 		# impose le degré ou sinon {min, max}
 				monome:false 	# simple monome
-				coeffDom: null # Permet de fixer le numeréteur du degré dominant
+				coeffDom: null	# Permet de fixer le numeréteur du degré dominant
 				values:1		# numérateurs possibles
 				denominators : null	# null-> entiers, nombre-> tous le même, tableau-> valeurs possibles, { min, max } -> intervalle de valeurs
 			}, params
@@ -18,6 +18,8 @@
 			for i in degres
 				coeff = if i is degre and (config.coeffDom isnt null) then @number config.coeffDom
 				else @number {values:config.values, denominator:config.denominators}
+				if i is degre # Si c'est le degré dominant, il ne doit pas être nul
+					coeff = @number({values:config.values, denominator:config.denominators}) while coeff.isNul()
 				if not coeff.isNul()
 					if i isnt 0 then coeff = new Monome( coeff, {name:config.variable, power:i})
 					coeffs.push coeff
@@ -58,6 +60,14 @@
 			# renvoie vrai ou faux pour un alea à la proba up/down
 			Math.random()*down < up
 		in: (arr) -> Proba.aleaIn arr
+		shuffle:(source)->
+			return source unless source.length >= 2
+			for index in [source.length-1..1]
+				# Choose random element `randomIndex` to the front of `index` to swap with.
+				randomIndex = Math.floor Math.random() * (index + 1)
+				# Swap `randomIndex` with `index`, using destructured assignment
+				[source[index], source[randomIndex]] = [source[randomIndex], source[index]]
+			source
 		vector: (params) ->
 			config = mergeObj { axes:["x", "y"], def:{}, name:"?", values:[{min:-10, max:10}] }, params
 			coords = { x:null, y:null, z:null }
@@ -226,6 +236,9 @@
 				if typeof value.reel is "number" then return new ComplexeNumber(value.reel, value.imaginaire)
 				return new RealNumber()
 			when value is "NaN" then return new RealNumber()
+			when typeof value is "string" and (m = value.match /// ^liste:([;\|:,\#@&!?]+)= ///)
+				liste = value.substring(value.indexOf("=")+1).split(m[1])
+				(@toNumber(item) for item in liste)
 			when typeof value is "string" then return @parse value, {type:"number"}
 			else new RealNumber()
 	float: (value,params) ->
@@ -266,11 +279,13 @@
 	equation: (membregauche, membredroite) -> new Equation( @toNumber(membregauche), @toNumber(membredroite) )
 	polynome: {
 		make:(params) ->
+			# Produit un objet polynome
 			switch
 				when typeof params is "string" then params = { expression:params }
 				when params instanceof NumberObject then params = { number:params }
 			config = mergeObj {
 				variable: "x"
+				type: "polynome" # indique le type de sortie. L'alternative est number
 			}, params
 			switch
 				when isArray(config.points)
@@ -284,21 +299,24 @@
 							config.points[indice].x = mM.toNumber(config.points[indice].x)
 							config.points[indice].y = mM.toNumber(config.points[indice].y)
 							indice++
-					PolynomeMaker.lagrangian(config.points,config.variable)
+					if config.type is "number" then PolynomeMaker.lagrangian(config.points,config.variable).toNumberObject().simplify()
+					else PolynomeMaker.lagrangian(config.points,config.variable)
 				when isArray(config.roots)
 					# on donne les racines
 					if config.a? then a = mM.toNumber(a) else a = new RealNumber(1)
 					indice = 0
 					roots = ( mM.toNumber x for x in config.roots )
-					PolynomeMaker.width_roots(a,roots,config.variable)
+					if config.type is "number" then PolynomeMaker.width_roots(a,roots,config.variable).toNumberObject().simplify()
+					else PolynomeMaker.width_roots(a,roots,config.variable)
 				when isArray(config.coeffs)
 					# On donne les coeffs
 					coeffs = ( mM.toNumber x for x in config.coeffs )
-					PolynomeMaker.widthCoeffs(coeffs,config.variable)
-				when config.expression? then PolynomeMaker.parse(config.expression, config.variable)
-				when config.number? then config.number.toPolynome(config.variable)
+					if config.type is "number" then PolynomeMaker.widthCoeffs(coeffs,config.variable).toNumberObject().simplify()
+					else PolynomeMaker.widthCoeffs(coeffs,config.variable)
+				when config.expression? then PolynomeMaker.fromNumberObject( config.variable, (new ParseInfo config.expression,{type:"number"}).object )
+				when config.number? then PolynomeMaker.fromNumberObject(config.variable,config.number)
+				when config.type is "number" then new RealNumber()
 				else PolynomeMaker.invalid(config.variable)
-		parse: (expression, variable="x") -> (new ParseInfo expression,{type:"number"}).object?.toPolynome(variable)
 		solve: {
 			numeric: (poly,params) ->
 				config = mergeObj {
@@ -422,7 +440,7 @@
 			# params sont les éventuels paramètres
 			config = mergeObj {
 				developp:false	# Indique s'il faut développer le résultat de l'utilisateur
-				toLowercase:false # Pour le parser, convertit en petit
+				toLowerCase:false # Pour le parser, convertit en petit
 				type:"number" # type de parse par défaut
 			}, params
 			if user instanceof ParseInfo then info=user # Cas où on fournirait un user déjà parsé

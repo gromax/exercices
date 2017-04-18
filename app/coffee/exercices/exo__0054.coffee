@@ -13,14 +13,14 @@ Exercice.liste.push
 		# c est de la forme u' exp(-b/a.t) + Y
 		# a priori, u est un simple polynome de degré 0 ou 1
 		optA = data.options.a.value
-		if typeof data.inputs.a isnt "undefined" then a = mM.toNumber data.inputs.a
+		if typeof data.inputs.a isnt "undefined" then a = Number data.inputs.a
 		else
-			a = mM.alea.number { min:1, max:10, sign:true }
+			a = mM.alea.real { min:1, max:10, sign:true }
 			data.inputs.a = String a
 
-		if typeof data.inputs.b isnt "undefined" then b = mM.toNumber data.inputs.b
+		if typeof data.inputs.b isnt "undefined" then b = Number data.inputs.b
 		else
-			b = mM.alea.number { min:1, max:10, sign:true }
+			b = mM.alea.real { min:1, max:10, sign:true }
 			data.inputs.b = String b
 		# On envisage pour u' une écriture u1.t+u0
 		switch
@@ -49,6 +49,9 @@ Exercice.liste.push
 			data.inputs.y0 = String y0
 		# le exp(-b/a t) revient tout le temps, je le calcul
 		expo = mM.exec [b, "*-", a, "/", "t", "*", "exp"], {simplify:true}
+		# C'est la même chose mais avec le a/b calculé en flotant parce que sinon
+		# lors de la comparaison, 7/2 et 3,5 sont pris comme différents
+		expoF = mM.exec [b/a, "*-", "t", "*", "exp"], {simplify:true}
 		if (u1 isnt 0) or (u0 isnt 0) then operands = [ u1, "t", "*", u0, "+", expo, "*"]
 		else operands = [ 0 ]
 		if Y isnt 0 then operands.push(Y,"+")
@@ -56,10 +59,13 @@ Exercice.liste.push
 		premier_membre_tex = mM.exec([a,"symbol:y'","*",b,"symbol:y","*","+"],{simplify:true}).tex()
 		second_membre_tex = c.tex(altFunctionTex:["exp"])
 		good_y0 = mM.exec ["symbol:K", expo, "*"], {simplify:true}
+		good_y0F = mM.exec ["symbol:K", expoF, "*"], {simplify:true}
 		# On précise la forme de la solution générale
 		good_y1 = mM.exec [u1, "t", "t", 2, "/", "*", "*", u0, "t", "*", "+", expo, "*", Y, b, "/", "+"], { simplify:true }
+		good_y1F = mM.exec [u1, "t", "t", 2, "/", "*", "*", u0, "t", "*", "+", expoF, "*", Y, b, "/", "+"], { simplify:true }
 		K_good = mM.exec [ y0, Y, b, "/", "-"], { simplify:true }
 		good_y = mM.exec [u1, "t", "t", 2, "/", "*", "*", u0, "t", "*", "+", K_good, "+", expo, "*", Y, b, "/", "+"], { simplify:true }
+		good_yF = mM.exec [u1, "t", "t", 2, "/", "*", "*", u0, "t", "*", "+", K_good, "+", expoF, "*", Y, b, "/", "+"], { simplify:true }
 		switch
 			when u_nul
 				# On est sûr que Y<>0
@@ -99,8 +105,8 @@ Exercice.liste.push
 					{
 						list:"infos"
 						items:[
-							{class:"warning", html:"Attention : vous devez savoir que dans l'équation $a\\cdot y'+b\\cdot y =\\cdots$, on voit apparaître des calculs de cette forme : $\\exp\\left(-\\frac{b}{a}t\\right)$. Vous noterez le $-\\frac{b}{a}$ sous forme <b>réduite</b> et pas sous forme décimale, sinon votre réponse, même bonne, ne serait pas reconnue."}
-							{class:"warning", html:"Vous pouvez écrire $K e^{\\cdots}$ ou $K \\exp(\\cdots)$ pour l'exponentielle, mais faites attention de séparer $\\exp$ et $K$ au minimum d'une espace."}
+							{class:"warning", html:"Écrivez exp(...) et pas e^..."}
+							{class:"warning", html:"Utilisez $K$ comme constante et quand vous écrivez $K \\exp(\\cdots)$, faites attention de séparer $K$ et $\\exp$ au minimum d'une espace."}
 						]
 					}
 				]
@@ -114,7 +120,8 @@ Exercice.liste.push
 					tag:"$y_0(t)$"
 					name:"y0"
 					description:"Solution générale de E0"
-					good:good_y0
+					alias:{K:["K","k","A","C"]}
+					good:[good_y0, good_y0F]
 					goodTex:good_y0.tex(altFunctionTex:["exp"])
 					large:true
 				]
@@ -128,7 +135,7 @@ Exercice.liste.push
 					tag:"$y_1(t)$"
 					name:"y1"
 					description:"Solution particulière de E"
-					good:good_y1
+					good:[good_y1, good_y1F]
 					goodTex:good_y1.tex(altFunctionTex:["exp"])
 					large:true
 				]
@@ -142,7 +149,7 @@ Exercice.liste.push
 					tag:"$y(t)$"
 					name:"y"
 					description:"Solution telle que y(0) = #{y0}"
-					good:good_y
+					good:[good_y, good_yF]
 					goodTex:good_y.tex(altFunctionTex:["exp"])
 					large:true
 				]

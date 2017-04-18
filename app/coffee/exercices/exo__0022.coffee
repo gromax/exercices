@@ -19,9 +19,8 @@ Exercice.liste.push
 				else poly = mM.exec [@aleaMult(0,false), @aleaMult(2,false), "+"]
 			data.inputs.p = String poly
 		data.polyTex = polyTex = poly.tex()
-		polyObj = poly.toPolynome()
-		data.polyDev = polyObj.toNumberObject()
-		data.polyDevTex = "P(x)="+polyObj.tex()
+		polyDev = data.polyDev = mM.exec [ poly ], { simplify:true, developp:true }
+		data.polyDevTex = "P(x)="+polyDev.tex()
 		data.liste = []
 		if data.answers.Ps?
 			# Il faut récupérer toutes les entrées

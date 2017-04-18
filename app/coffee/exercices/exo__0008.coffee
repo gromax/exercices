@@ -13,7 +13,7 @@ Exercice.liste.push
 		# Initialisation du polynome
 		poly = null
 		if typeof inp.p isnt "undefined"
-			poly = mM.polynome.parse inp.p, "x"
+			poly = mM.polynome.make inp.p
 			if not poly.isValid() then poly = null
 		if poly is null
 			# On crée un nouveau polynome
@@ -73,43 +73,37 @@ Exercice.liste.push
 				precision:.2
 				good: { antecedents:antecedents, yi:yi, ya:ya}
 				title: "Image et antécédent"
-				ask: () ->
-					cor = @config.good
-					@container.html Handlebars.templates.std_panel {
-						title:@config.title
-						focus:true
-						zones:[
-							{
-								body:"texte"
-								html:"Donnez l'image de #{numToStr inp.xi} et <b>un</b> antécédent de #{numToStr cor.ya} à ±#{numToStr @config.precision}"
-							}, {
-								body:"champ"
-								html:Handlebars.templates.std_form {
-									id:"form#{@divId}"
-									inputs:[
-										{tag:"Image de #{numToStr inp.xi}", description:"Valeur décimale", name:"i", large:true}
-										{tag:"Antécédent de #{numToStr cor.ya}", description:"Valeur décimale", name:"a", large:true}
-									]
-								}
+				focus:"i"
+				customAskTemplate : -> {
+					title:@title
+					templateName:"std_panel"
+					focus:true
+					zones:[
+						{
+							body:"texte"
+							html:"Donnez l'image de #{numToStr inp.xi} et <b>un</b> antécédent de #{numToStr @good.ya} à ±#{numToStr @precision}"
+						}, {
+							body:"champ"
+							html:Handlebars.templates.std_form {
+								id:"form#{@divId}"
+								inputs:[
+									{tag:"Image de #{numToStr inp.xi}", description:"Valeur décimale", name:"i", large:true}
+									{tag:"Antécédent de #{numToStr @good.ya}", description:"Valeur décimale", name:"a", large:true}
+								]
 							}
-						]
-					}
-					$("#form#{@divId}").on 'submit', (event) =>
-						@a.i = $("input[name='i']",@container).val()
-						@a.a = $("input[name='a']",@container).val()
-						@run true
-						false
-					$("input[name='i']",@container).focus()
-				ver: () ->
-					cor = @config.good
+						}
+					]
+				}
+				customVerif: () ->
+					cor = @good
 					inp = @data.inputs
 					str_antecedents = (numToStr(x,1) for x in cor.antecedents)
 
 					messages = []
 					# image
 					color="error"
-					message = "<b>Image de #{numToStr inp.xi} :</b> Vous avez répondu <b>#{ pointToComma(@a.i) }</b>."
-					if isRealApproxIn([cor.yi],@a.i,@config.precision) isnt false
+					message = "<b>Image de #{numToStr inp.xi} :</b> Vous avez répondu <b>#{ pointToComma(@data.answers.i) }</b>."
+					if isRealApproxIn([cor.yi],@data.answers.i,@precision) isnt false
 						message+=" Bonne réponse."
 						color="ok"
 						@data.note += @bareme/2
@@ -118,8 +112,8 @@ Exercice.liste.push
 					messages.push { color:color, text:message+" La construction graphique est donnée en orange."}
 					# antecedent
 					color="error"
-					message = "<b>Antécédent de #{numToStr cor.ya} :</b> Vous avez répondu <b>#{ pointToComma(@a.a) }</b>."
-					if isRealApproxIn(cor.antecedents,@a.a,@config.precision) isnt false
+					message = "<b>Antécédent de #{numToStr cor.ya} :</b> Vous avez répondu <b>#{ pointToComma(@data.answers.a) }</b>."
+					if isRealApproxIn(cor.antecedents,@data.answers.a,@precision) isnt false
 						color="ok"
 						message+=" Bonne réponse."
 						@data.note += @bareme/2
@@ -127,15 +121,13 @@ Exercice.liste.push
 						if cor.antecedents.length is 1 then message+= " La bonne était #{numToStr inp.xa, 1}."
 						else message+= " Les bonnes réponses possibles étaient : <b>#{str_antecedents.join("</b> ; <b>")}</b>."
 					messages.push { color:color, text:message+" La construction graphique est donnée en vert."}
-					@container.html Handlebars.templates.std_panel {
-						title:@config.title
-						zones:[{
-							list:"correction"
-							html:Handlebars.templates.listItem messages
-						}]
-					}
 					# tracé de la solution
-					@config.graphContainer.solutions(cor,inp,str_antecedents)
+					@graphContainer.solutions(cor,inp,str_antecedents)
+					# sortie des zones pour le template
+					[{
+						list:"correction"
+						html:Handlebars.templates.listItem messages
+					}]
 			}
 		]
 	tex: (data) ->

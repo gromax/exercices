@@ -6,7 +6,7 @@ Exercice.liste.push
 	keyWords:["logarithme","exponentielle","équation","TSTL"]
 	options: {
 		a:{ tag:"ln ou exp" , options:["ln()", "exp()", "e^()"] , def:0 }
-		b:{ tag:"équation", options:["f(ax+b)=f(cx+d)","a.f(x)+b = c.f(x)+d","a.f²(x)+...=0,","c.f(ax+b).d=...","a.f²(ax+b)+...=0"], def:0 }
+		b:{ tag:"équation", options:["f(ax+b)=f(cx+d)","a.f(x)+b = c.f(x)+d","a.f²(x)+...=0,","c.f(ax+b)+d=...","a.f²(ax+b)+...=0"], def:0 }
 	}
 	init: (data) ->
 		a = data.options.a.value
@@ -18,6 +18,8 @@ Exercice.liste.push
 		# b = 3 pour 3 ln(expr) +2 = 2 ln(expr) -1 (ou exp)
 		# b = 4 pour ln(expr)^2 - 5 ln(expr) + 2 =0
 		infos = []
+		# Dans le cas b = 1 à 4 on stocke dans inputs.b l'expression dans ln/exp et dans c l'expression du premier membre et éventuellement d au second membre
+		# dans le cas b=0, on se contente de c et d qui sont les expressions dans ln/exp au premier et second membre
 		switch
 			when typeof data.inputs.b isnt "undefined"
 				expr = mM.toNumber(data.inputs.b)
@@ -32,23 +34,23 @@ Exercice.liste.push
 				{ goods, eqTex } = @cas_b0(expr1,expr2,a)
 			else
 				# On commence par créer expr qui sera dans ln ou exp
-				# Cas b = 2, il faut un polynome
 				switch
 					when (b is 2) or (b is 4)
+						# Cas d'un polynome du second degré
+						# On choisit l'expression qui ira dans le ln/exp : soit ax+b, soit x
 						if b is 4 then expr = mM.alea.poly { degre:1, coeffDom:{ min:1, max:5, sign:true }, values:{min:-10, max:10} }
 						else expr = mM.exec ["x"]
+						# Il faut d'abord résoudre une équation du second degré, puis prendre le ln (si a=1) ou le exp (si a=0) Donc on prend une parabole. Pour le cas a=1, on place un sommet xS>0 pour garantir l'existence d'une racine positive, s'il y a des racines
 						if a is 0 then xS = mM.alea.real { values:{min:-10, max:10} }
-						else xS = mM.alea.real { values:{min:0, max:10} } # Pour une équation en exp, on prendra le ln, il vaut mieux qu'il y ait des sol>0
-						# Une fois sur 8 on prend le cas sans solution
+						else xS = mM.alea.real { values:{min:0, max:10} }
+						# Une fois sur 8 on prend le cas d'une fonction du second degré sans racine
+						# Je ne prend que des parabole convexe
 						if mM.alea.dice(1,8)
-							yS = mM.alea.real { values:{min:1, max:20, sign:true} }
-							opp = (yS<0)
+							yS = mM.alea.real { values:{min:1, max:20} }
+							expr1 = mM.exec [ "x", xS, "-", 2, "^", yS, "+"], { simplify:true, developp:true }
 						else
-							yS = mM.alea.real { min:1, max:10, sign:true }
-							opp = (yS>0)
-							yS = yS*yS
-						if opp then expr1 = mM.exec [ "x", xS, "-", 2, "^", "*-", yS, "+"], { simplify:true, developp:true }
-						else expr1 = mM.exec [ "x", xS, "-", 2, "^", yS, "-"], { simplify:true, developp:true }
+							sqrtYS = mM.alea.real { min:1, max:10 }
+							expr1 = mM.exec [ "x", xS, "-", 2, "^", sqrtYS, 2, "^", "-"], { simplify:true, developp:true }
 						expr2 = mM.toNumber 0
 						data.inputs.a = String a
 						data.inputs.b = String expr
@@ -59,18 +61,42 @@ Exercice.liste.push
 					when (b is 1) or (b is 3)
 						if b is 3 then expr = mM.alea.poly { degre:1, coeffDom:{ min:1, max:5, sign:true }, values:{min:-10, max:10} }
 						else expr = mM.exec ["x"]
-						a1 = mM.alea.real { min:-10, max:10 }
-						aff1 = mM.alea.poly { degre:1, coeffDom:a1, values:{min:-10, max:10} }
-						aff2 = mM.alea.poly { degre:1, coeffDom:{min:-10, max:10, no:[a1]}, values:{min:-10, max:10} }
+						# On aura u.ln(ax+b)+v = w.ln(ax+b)+t
+						# Dans le cas d'une exponentielle, il faut être sûr que la solution (t-v)/(u-w)>0
+						u = mM.alea.real { min:-10, max:10 }
+						v = mM.alea.real { min:-10, max:10 }
+						w = mM.alea.real { min:-10, max:10, no:[u] }
+						if a is 0 then t = mM.alea.real { min:-10, max:10 }
+						else
+							tm = Math.floor(-v/(u-w)+1)
+							t = mM.alea.real { min:tm, max:tm+15 }
+						aff1 = mM.exec [u, "x", "*", v, "+"], { simplify:true}
+						aff2 = mM.exec [w, "x", "*", t, "+"], { simplify:true}
 						data.inputs.a = String a
 						data.inputs.b = String expr
 						data.inputs.c = String aff1
 						data.inputs.d = String aff2
 						{ goods, eqTex } = @cas_b12(expr,aff1,aff2,a)
 					else
-						a1 = mM.alea.real { min:-10, max:10 }
-						expr1 = mM.alea.poly { degre:1, coeffDom:a1, values:{min:-10, max:10} }
-						expr2 = mM.alea.poly { degre:1, coeffDom:{min:-10, max:10, no:[a1]}, values:{min:-10, max:10} }
+						# on résout ln(u x+v) = ln(w x +t)
+						u = mM.alea.real { min:1, max:20 }
+						w = mM.alea.real { min:1, max:20, no:[u] }
+						v = mM.alea.real { min:-10, max:10 }
+						t = mM.alea.real { min:-10, max:10 }
+						# Il faut contrôler l'absence ou la présence de solutions
+						x0 = (t-v)/(u-w)
+						g = Math.min(u*x0+v,w*x0+t)
+						if dice(1,8) and (a is 0)
+							# une fois sur 8, on ne veut pas de solution
+							if (g>0)
+								t -= g+1
+								v -= g+1
+						else
+							if (a is 0) and (g<0)
+								t -= g-1
+								v -= g-1
+						expr1 = mM.exec [u, "x", "*", v, "+"], { simplify:true }
+						expr2 = mM.exec [w, "x", "*", t, "+"], { simplify:true }
 						data.inputs.a = String a
 						data.inputs.c = String expr1
 						data.inputs.d = String expr2

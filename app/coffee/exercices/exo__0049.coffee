@@ -18,7 +18,7 @@ Exercice.liste.push
 		deriveeTex = data.f = derivee.tex()
 		poly = mM.exec [poly.toNumberObject(), "symbol:c", "+"]
 		[
-			new BEnonce {zones:[{body:"enonce", html:"<p>Soit $f(x) = #{deriveeTex}$</p><p>Donnez l'expression générale de $F$, fonction primitive de $f$ sur $\\mathbb{R}$.</p><p><b>Attention :</b> : Utilisez la lettre $c$ pour la constante faisant la généralité de $F$.</p>"}]}
+			new BEnonce {zones:[{body:"enonce", html:"<p>Soit $f(x) = #{deriveeTex}$</p><p>Donnez l'expression générale de $F$, fonction primitive de $f$ sur $\\mathbb{R}$.</p><p><b>Attention :</b> Utilisez la lettre $c$ pour la constante faisant la généralité de $F$.</p>"}]}
 			new BListe {
 				data:data
 				bareme:100
@@ -28,7 +28,7 @@ Exercice.liste.push
 					description:"Expression de la primitive"
 					good:poly
 					developp:true
-					toLowercase:true
+					alias: { c: ["c", "C"] }
 					customVerif:(userObject,goodObject,verif_result)->
 						if mM.exec([goodObject, "symbol:c", "-", userObject, "-"], {simplify:true}).isNul()
 							verif_result.manque_constante_c = true

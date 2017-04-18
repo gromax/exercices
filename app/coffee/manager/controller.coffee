@@ -6,8 +6,6 @@ thisTime = () ->
 	d= new Date()
 	d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()+" "+d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()
 
-closeModal = () -> $("#modalContainer").modal "hide"
-
 pushUrlInHistory = (url) ->
 	if (url isnt "") and (url isnt "#")
 		Controller.load url
@@ -17,6 +15,17 @@ formToObject = (theArray) ->
 	out = {}
 	out[item.name] = item.value for item in theArray
 	out
+
+closeModal = () -> $("#modalContainer").modal "hide"
+
+currentDate = (francais=false)->
+	date = new Date()
+	day = String date.getDate()
+	if day.length is 1 then day = "0"+day
+	month = String(date.getMonth()+1)
+	if month.length is 1 then month = "0"+month
+	if francais then "#{day}/#{month}/#{date.getFullYear()}"
+	else "#{date.getFullYear()}-#{month}-#{day}"
 
 ###
 Un exemple
@@ -64,6 +73,11 @@ class @Controller
 		}
 		@uLog.setLocal(local)
 		@uLog.init(local)
+		# Quand on parcours les pages, il n'y a pas toujours de rechargement de données et donc
+		# pas d'accès serveur qui remettrait le lastTime du serveur à jour
+		# Donc, à chaque load de page, on actualise le lastTime côté client et quand ce lastTime
+		# dépasse 60min, on met à jour le lastTime du serveur
+		# A vrai dire, je ne suis pas sûr que cette fonctionnalité soit très utile
 		@lastTime = (new Date()).getTime()
 	@initRoutes: (user) ->
 		switch
@@ -80,7 +94,18 @@ class @Controller
 						@setAriane [{text:"Liste des utilisateurs"}]
 						new VUsersList {}
 				}
-				{ #user:id/edit - aussi prof
+				{ #utilisateurs/add - aussi prof
+					regex:/// ^utilisateurs/add$ ///i
+					exec:(m)->
+						@setAriane [
+							{link:"comptes", text:"Liste des utilisateurs"}
+							{text:"Ajout d'un utilisateur"}
+						]
+						new VUserMod {
+							links: { cancel:"comptes" }
+						}
+				}
+				{ #utilisateur:id/edit - aussi prof
 					regex:/// ^utilisateur:([0-9]+)/edit$ ///i
 					exec:(m)->
 						idUser = Number m[1]
@@ -92,7 +117,6 @@ class @Controller
 							]
 							new VUserMod {
 								item:user
-								container:"#mainContent"
 								links: { cancel:"comptes" }
 							}
 				}
@@ -104,7 +128,6 @@ class @Controller
 						]
 						new VUserMod {
 							item:Controller.uLog
-							container:"#mainContent"
 							links: { cancel:"Home" }
 						}
 				}
@@ -122,7 +145,6 @@ class @Controller
 							{text:"Création d'une classe"}
 						]
 						new VClasseMod {
-							container:"#mainContent"
 							links: { cancel:"classes" }
 						}
 				}
@@ -138,7 +160,6 @@ class @Controller
 							]
 							new VClasseMod {
 								item:classe
-								container:"#mainContent"
 								links: { cancel:"classes" }
 							}
 				}
@@ -161,7 +182,10 @@ class @Controller
 					regex:/// ^devoirs$ ///i
 					exec:(m)->
 						@setAriane [{text:"Liste des devoirs"}]
-						new VFichesList { links:{devoir:"devoir:", notes:"notes-devoir:"} }
+						new VFichesList { links:{
+							devoir:"devoir:"
+							notes:"notes-devoir:"
+						} }
 				}
 				{ # devoirs/add - aussi prof
 					regex:/// ^devoirs/add$ ///i
@@ -175,7 +199,6 @@ class @Controller
 							Controller.load "#devoirs"
 						}
 						new VFicheMod {
-							container: "#mainContent"
 							links: { cancel:"devoirs" }
 						}
 				}
@@ -206,8 +229,59 @@ class @Controller
 							]
 							new VFicheMod {
 								item:fiche
-								container: "#mainContent"
 								links: { cancel:"devoirs" }
+							}
+						}
+				}
+				{ # devoir:id/add - aussi prof - ajout d'un exercice dans une fiche
+					regex:/// ^devoir:([0-9]+)/add$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						fiche?.load { type:"load", cb:(fiche)->
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{link:"devoir:#{fiche.id}", text:"Devoir : #{fiche.nom}"}
+								{text:"Ajout d'un exercice"}
+							]
+							new VExercicesList {
+								fiche:fiche
+								links:{ cancel: "devoir:#{fiche.id}" }
+							}
+						}
+				}
+				{ # devoir:id/add:id - aussi prof - ajout d'un exercice dans une fiche
+					regex:/// ^devoir:([0-9]+)/add:([0-9]+)$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						idExercice = Number m[2]
+						fiche?.load { type:"load", cb:(fiche)->
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{link:"devoir:#{fiche.id}", text:"Devoir : #{fiche.nom}"}
+								{text:"Ajout d'un exercice"}
+							]
+							new VExoFicheMod {
+								item:idExercice
+								fiche:fiche
+								links:{ cancel: "devoir:#{fiche.id}" }
+							}
+						}
+				}
+				{ # devoir:id/edit:id - aussi prof - Modification d'un exercice dans une fiche
+					regex:/// ^devoir:([0-9]+)/edit:([0-9]+)$ ///i
+					exec:(m)->
+						fiche = Controller.uLog.fiches.get(Number m[1])
+						idEF = Number m[2]
+						fiche?.load { type:"load", cb:(fiche)->
+							Controller.setAriane [
+								{link:"devoirs", text:"Liste des devoirs"}
+								{link:"devoir:#{fiche.id}", text:"Devoir : #{fiche.nom}"}
+								{text:"Ajout d'un exercice"}
+							]
+							new VExoFicheMod {
+								item:fiche.exercices.get(idEF)
+								fiche:fiche
+								links:{ cancel: "devoir:#{fiche.id}" }
 							}
 						}
 				}
@@ -239,7 +313,6 @@ class @Controller
 							]
 							new VExamMod {
 								item:exam
-								container: "#mainContent"
 								links: { cancel:"devoir:#{m[1]}/exams" }
 							}
 						}
@@ -577,7 +650,6 @@ class @Controller
 						]
 						new VUserMod {
 							item:Controller.uLog
-							container:"#mainContent"
 							links: { cancel:"Home" }
 						}
 				}
@@ -756,7 +828,7 @@ class @Controller
 					exec:(m)->
 						Controller.uLog.on { type:"connexion", cb: ()-> new VHome {} }
 						@setAriane()
-						new VConnexion { container:"#mainContent" }
+						new VConnexion { }
 				}
 				{
 					regex:/// ^rejoindre-une-classe:([0-9]+)$ ///i
@@ -806,6 +878,7 @@ class @Controller
 			delta = currentTime - @lastTime
 			if delta>60000
 				$.post("./action.php?action=logged", { }, @updateLoggedTime, "json")
+				@lastTime = currentTime
 
 		unless routeFound then @defaultView()
 	@updateLoggedTime: (data) =>

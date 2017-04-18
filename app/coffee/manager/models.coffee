@@ -20,13 +20,6 @@ class SimpleModel
 		@parent = parent
 		@
 	equals: (other) -> (other?.id is @id)
-	currentDate: ->
-		date = new Date()
-		day = String date.getDate()
-		if day.length is 1 then day = "0"+day
-		month = String(date.getMonth()+1)
-		if month.length is 1 then month = "0"+month
-		"#{date.getFullYear()}-#{month}-#{day}"
 
 class MExercice extends SimpleModel
 	_glyph: "glyphicon-edi"
@@ -73,9 +66,10 @@ class Model extends SimpleModel
 			if data.unlogged
 				Controller.uLog.on {
 					type:"connexion"
-					cb:()=>$.post("./action.php?action=#{@_name}Save", @pending_save, @saveCB, "json")
+					cb:() => $.post("./action.php?action=#{@_name}Save", @pending_save, @saveCB, "json")
 				}
-				new VConnexion { reconnexion:true }
+				console.log "pwet"
+				new VConnexion { reconnexion:true, container:"modalContent" }
 			else
 				Controller.errorMessagesList data.messages, @enteteForMessages(), @_glyph
 				@pending_save = null
@@ -383,7 +377,7 @@ class MExam extends Model
 		else @idFiche = @parent?.parent?.id
 		if typeof @data is "string" then @data = JSON.parse @data
 		if @date? then @dateFr = @date.replace /(\d{4})-(\d{2})-(\d{2})/, "$3/$2/$1"
-		else @date = @currentDate()
+		else @date = currentDate()
 		@locked = (@locked is "1") or (@locked is true)
 		@
 	bddJSON: (mods) ->
@@ -441,7 +435,7 @@ class MCon extends Model
 			jour = @date.replace /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/, "$3/$2/$1"
 			heure = @date.replace /(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/, "$4:$5:$6"
 			@dateFr = "#{jour} #{heure}"
-		else @date = @currentDate()
+		else @date = currentDate()
 		@success = (@success is "1") or (@success is true)
 		if @identifiant?
 			@user = Controller.uLog.users.getByField("email",@identifiant)

@@ -18,8 +18,10 @@ class Proba
 						else out = sign*( (Math.random() * (mx-mn)) + mn )
 						j++
 				else
-					if input.real isnt true then out = sign* Math.floor((Math.random() * (mx+1-mn)) + mn)
-					else out = sign*( (Math.random() * (mx-mn)) + mn )
+					switch
+						when input.real is true then  out = sign*( (Math.random() * (mx-mn)) + mn )
+						when typeof input.real is "number" then out = fixNumber(sign*( Math.random() * (mx-mn) + mn ), input.real)
+						else out = sign* Math.floor((Math.random() * (mx+1-mn)) + mn)
 				if input.coeff? then out *= @alea(input.coeff)
 				out
 			when isArray(input) then input[ Math.floor((Math.random() * input.length) ) ]

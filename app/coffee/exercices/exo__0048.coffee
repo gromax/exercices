@@ -26,7 +26,7 @@ Exercice.liste.push
 		inp = data.inputs
 		poly = null
 		if typeof inp.p isnt "undefined"
-			poly = mM.toNumber(inp.p).toPolynome("x")
+			poly = mM.polynome.make inp.p
 			if not poly.isValid() then poly = null
 		if poly is null
 			# On crée un nouveau polynome
@@ -37,7 +37,7 @@ Exercice.liste.push
 				{x:@max/2, y:mM.alea.real({min:-40, max:40})/100*@max},
 				{x:@max, y:mM.alea.real({min:-40, max:40})/100*@max}
 			]
-			poly = mM.polynome.lagrangian { points:points, variable:"x" }
+			poly = mM.polynome.make { points:points, variable:"x" }
 			inp.p = String(poly)
 		# Calcul de la dérivée
 		polyDer = poly.derivate()

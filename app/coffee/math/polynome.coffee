@@ -1,18 +1,19 @@
 
 PolynomeMaker = {
 	invalid: (variable) -> (new Polynome(variable)).setInvalid()
+	unite: (variable) -> new Polynome variable, [new RealNumber(1)]
+	nul: (variable) -> new Polynome(variable)
 	lagrangian: (liste, variable) ->
 		# Génère le polynome passant par les points dont les couples yi = f(xi) sont spécifiés
-		oPoly = new Polynome(variable)
-		if liste.length is 0 then return oPoly # Polynôme identiquement nul
-		if liste.length is 1 # Polynôme constant
-			return oPoly.addMonome(0,liste[0].y)
-		arrPoly_0 = @lagrange_base(0,liste)
-		for i in [1..liste.length-1]
-			arrPoly_i = @lagrange_base(i,liste)
-			arrPoly_0[j] = coeff.am arrPoly_i[j], false for coeff, j in arrPoly_0
-		oPoly.addMonome(power, coeff) for coeff, power in arrPoly_0
-		oPoly
+		switch
+			when liste.length is 0 then new Polynome(variable) # Polynôme identiquement nul
+			when liste.length is 1 then new Polynome(variable, [liste[0].y])# Polynôme constant
+			else
+				arrPoly_0 = @lagrange_base(0,liste)
+				for i in [1..liste.length-1]
+					arrPoly_i = @lagrange_base(i,liste)
+					arrPoly_0[j] = coeff.am arrPoly_i[j], false for coeff, j in arrPoly_0
+				new Polynome(variable,arrPoly_0)
 	lagrange_base: (index, liste) ->
 		# on considère que la fonction est toujours envoyé d'un contexte ok
 		# et donc on ne revérifie pas la liste
@@ -46,23 +47,69 @@ PolynomeMaker = {
 				else coeffs[indice] = coeffs[indice-1].toClone().am(coeffs[indice].md(xi, false), true)
 				indice--
 			coeffs[0] = coeffs[0].md(xi, false).opposite()
-		oPoly = new Polynome variable
-		oPoly.addMonome power, coeff for coeff,power in coeffs
-		oPoly
-	widthCoeffs: (monomes, variable) ->
-		poly = new Polynome(variable)
-		poly.addMonome(power,coeff) for coeff,power in monomes
-		poly
-	parse: (expression, variable="x") -> (new ParseInfo(expression, {type:"number"})).object?.toPolynome?(variable)
+		new Polynome variable, coeffs
+	widthCoeffs: (monomes, variable) -> new Polynome variable, monomes
+	fromNumberObject: (variable, oNumber) ->
+		if oNumber instanceof NumberObject then new Polynome variable, @recursiveFromNumberObject(oNumber.getPolynomeFactors(variable))
+		else @invalid()
+	recursiveFromNumberObject: (oFactors) ->
+		# Cette fonction renvoie un tableau représentant le polynome
+		switch
+			when oFactors is null then [ new RealNumber() ]
+			when typeof oFactors is "number" then [ new RealNumber(oFactors) ]
+			when oFactors instanceof NumberObject then [ oFactors ]
+			when oFactors.add?
+				output = []
+				for addFactor in oFactors.add
+					addArray = @recursiveFromNumberObject(addFactor)
+					output.push(new RealNumber(0)) while output.length<addArray.length
+					output[i] = output[i].am(item,false) for item,i in addArray
+				output
+			when oFactors.mult?
+				if oFactors.mult.length is 0 then [ new RealNumber(1) ]
+				else
+					output = @recursiveFromNumberObject(oFactors.mult.shift())
+					while (multFactor=oFactors.mult.shift())?
+						multArray = @recursiveFromNumberObject(multFactor)
+						add = ( new RealNumber(0) for i in [0..output.length+multArray.length-2])
+						# Il faut parcourir tous items de output, tous les items de multArray
+						# pour produire un objet résultant du produit
+						for it1,i in output
+							for it2,j in multArray
+								add[i+j] = add[i+j].am(it1.toClone().md(it2,false),false)
+						output = add
+					output
+			when oFactors.power?
+				switch
+					when oFactors.power is 0 then [ new RealNumber(1) ]
+					when oFactors.power is 1 then @recursiveFromNumberObject(oFactors.base)
+					else
+						base = output = @recursiveFromNumberObject(oFactors.base)
+						output = ( it.toClone() for it in base )
+						for i in [2..oFactors.power]
+							add = ( new RealNumber(0) for i in [0..output.length+base.length-2])
+							for it1,i1 in output
+								for it2,i2 in base
+									add[i1+i2] = add[i1+i2].am( it1.toClone().md(it2,false),false)
+							output = add
+						output
+			when oFactors.monome?
+				output = (new RealNumber(0) for i in [1..oFactors.monome])
+				output.push(oFactors.factor)
+				output
+			else []
 }
 
 class Polynome
+	# Le polynome est un simple tableau de coefficients
 	_isValidPolynome: true
-	constructor: (variable) ->
+	constructor: (variable, monomes) ->
 		# Les monomes seront des objets {coeff:NumberObject, power:integer>=0}
 		@_monomes = []
 		if typeof variable is "string" then @_variable = variable
 		else @_variable = "x"
+		if monomes?
+			@addMonome(i,m) for m,i in monomes
 	getVariable: () -> @_variable
 	toString: () ->
 		if @isNul() then return "0"
@@ -164,45 +211,6 @@ class Polynome
 		if not(operand instanceof Polynome) or not @_isValidPolynome or not operand._isValidPolynome then return @setInvalid()
 		@addMonome(monome.power, monome.coeff, minus) for monome in operand._monomes
 		@
-	mult: (operand) ->
-		if not @_isValidPolynome then return @
-		if operand instanceof NumberObject
-			if operand.isNul()
-				@_monomes = []
-				return @
-			if operand.isFunctionOf(@_variable) then return @setInvalid()
-			for monome in @_monomes
-				monome.coeff = monome.coeff.md(operand,false)
-			return @
-		if not(operand instanceof Polynome) or not operand._isValidPolynome then return @setInvalid()
-		output = new Polynome(@_variable)
-		for monome_o in operand._monomes
-			for monome_t in @_monomes
-				output.addMonome(monome_o.power+monome_t.power, monome_o.coeff.toClone().md(monome_t.coeff, false))
-		output
-	divide: (operand) ->
-		deno = undefined
-		if not @_isValidPolynome then return @
-		if operand instanceof Polynome then deno = operand.constant()
-		if operand instanceof SimpleNumber then deno= operand
-		if typeof deno is "undefined" then return @setInvalid()
-		monome.coeff = monome.coeff.md(deno, true) for monome in @_monomes
-		@
-	constant: () ->
-		# Pour un polynome de degré 0, on renvoie le coeff de puissance 0
-		# undefined sinon
-		if (@_monomes.length is 1) and (@_monomes[0].power is 0) then return @_monomes[0].coeff
-		undefined
-	puissance: (exposant) ->
-		if (exposant instanceof NumberObject) then exposant = exposant.floatify().float()
-		if not isInteger(exposant) or (exposant<0) then return @setInvalid()
-		output = (new Polynome(@_variable)).addMonome(0,new RealNumber(1))
-		for i in [1..exposant]
-			output = output.mult(@)
-		output
-	opposite: () ->
-		monome.coeff.opposite() for monome in @_monomes
-		@
 	assignValueToSymbol: (liste) ->
 		for key,value of liste
 			switch
@@ -242,11 +250,6 @@ class Polynome
 				power++
 			out = out.am(monome.coeff.toClone().md(xpow,false),false)
 		out.simplify()
-	isFunctionOf: (symbolName) ->
-		if @_variable is symbolName then return true
-		for monome in @_monomes
-			if monome.coeff.isFunctionOf symbolName then return true
-		return false
 	sort: () ->
 		# trie dans l'ordre croissant
 		@_monomes.sort (a,b) ->

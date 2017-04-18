@@ -18,7 +18,7 @@
 	<button type="button" class="btn btn-warning btn-sm" data-toggle="tooltip" data-placement="top" title="Coefficent {{item.coeff}}"><span class="glyphicon glyphicon-scale"></span>{{ item.coeff }}</button>
 {{#unless params.links.direct}}
 {{!Bouton d'édition}}
-	<button type="button" class="btn btn-default btn-sm" name="editButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Modifier"><span class="glyphicon glyphicon-pencil"></span></button>
+	<a href="#devoir:{{params.idFiche}}/edit:{{item.id}}" class="btn btn-default btn-sm" role="button"><span class="glyphicon glyphicon-pencil" data-toggle="tooltip" data-placement="top" title="Modifier"></span></a>
 {{!Bouton suppression}}
 	<button type="button" class="btn btn-default btn-sm" name="deleteButton" _id="{{ item.id }}" data-toggle="tooltip" data-placement="top" title="Supprimer"><span class="glyphicon glyphicon-trash"></span></button>
 {{!Lien pour voir l'exercice}}

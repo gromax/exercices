@@ -2,7 +2,11 @@
 {{#if params.showId}}
 	<td><span class="badge">{{ item.id }}</span></td>
 {{/if}}
+{{#if item.nom}}
 	<td><a href="#{{params.links.edit}}{{item.id}}/edit">{{ item.nom }}</a></td>
+{{else}}
+	<td><a href="#{{params.links.edit}}{{item.id}}/edit"><i>Sans nom</i></a></td>
+{{/if}}
 	<td>{{ item.dateFr }}</td>
 {{#if params.showModify}}
 	<td align="right">

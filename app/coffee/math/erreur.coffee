@@ -19,7 +19,7 @@ erreurManager = {
 			g = goodObject.toClone().simplify(null,true)
 			a = answer.toClone().simplify(null,true)
 			# Cette façon de faire plus lourde est là pour permettre la gestion d'expression plus complexe comme (3t+2)exp(4t)
-			ecart = g.am(a,true).simplify().floatify(symbols).abs().float()
+			ecart = g.am(a,true).simplify(null,false,true).floatify(symbols).abs().float()
 		if floatModulo>0
 			ecart -= floatModulo while floatModulo<=ecart
 		if ecart<ERROR_MIN then ecart = 0

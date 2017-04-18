@@ -29,8 +29,16 @@
 		{{#if this.tag}}<span class="input-group-addon">{{ this.tag }}</span>{{/if}}
 		<input type="text" name={{ this.name }} class="form-control" placeholder="{{ this.description }}" {{#if this.user}}value="{{this.user}}"{{/if}}>
 		{{#if postTag}}<span class="input-group-addon">{{ this.postTag }}</span>{{/if}}
+		{{#if this.invalid}}
+			{{#if this.parseMessages}}
+			<div class="input-group-btn">
+				<button type="button" class="btn btn-default btn-danger" data-container="#{{../id}}" data-toggle="popover" data-placement="bottom" title="Erreur !" data-content="{{this.parseMessages}}"><span class="glyphicon glyphicon-warning-sign"></span></button>
+			</div>
+			{{else}}
+			<span class="input-group-addon glyphicon glyphicon-warning-sign"></span>
+			{{/if}}
+		{{/if}}
 		</div>
-		{{#if this.invalid}}<p class="text-danger">Vérifiez la saisie</p>{{/if}}
 	</div>
 	{{/if}}
 	{{/if}}

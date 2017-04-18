@@ -77,6 +77,7 @@ class @Exercice
 		#if @finished then @displayNote()
 		@displayNote()
 		$('[data-toggle="tooltip"]').tooltip()
+		$('[data-toggle="popover"]').popover()
 		MathJax.Hub.Queue(["Typeset",MathJax.Hub])
 	displayNote: ->
 		if @oEF?
@@ -93,12 +94,11 @@ class @Exercice
 	#----------------------------------------------------
 	#--------- exécution d'un exercice ------------------
 	#----------------------------------------------------
-	updateBDD: (force=false)->
-		# On ne sauvegarde que si c'est un élève connecté
-		if Controller.uLog.isEleve or (force and @data.noteObject?)
-			if @data.noteObject?
+	updateBDD: ->
+		switch
+			when @data.noteObject?
 				@data.noteObject.save { inputs:@data.inputs, answers:@data.answers, note:Math.round(@data.note), finished:@finished }, true
-			else if @oEF?
+			when @oEF?
 				@data.noteObject = Controller.uLog.pushNote { aEF:@oEF.id, aUF:@aUF }
 				@data.noteObject.save { inputs:@data.inputs, answers:@data.answers, note:Math.round(@data.note), finished:@finished }, true
 	finish: -> @finished = true
@@ -131,7 +131,7 @@ class @Exercice
 		# La base de données n'est remise à jour que s'il s'agit d'une version notée de l'exercice
 		# Et quand run() s'est déclenché suite à une réponse utilisateur.
 		# Lors du premier affichage de l'exercice, aucune raison de remettre à jour la BDD
-		if upBdd then @updateBDD()
+		if upBdd and Controller.uLog.isEleve then @updateBDD()
 		@refreshDisplay()
 	makeContainers: ->
 		# Création des containers des différentes étapes

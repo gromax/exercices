@@ -5,13 +5,14 @@ Exercice.liste.push
 	description:"Une fonction polynome est donnée, il faut la dériver."
 	keyWords:["Analyse", "fonction", "Dérivation", "Première"]
 	options: {
-		a:{ tag:"Avec ln ou exp" , options:["Sans", "ln(x)", "ln(ax+b)", "exp(x)", "exp(ax+b)"] , def:0 }
+		a:{ tag:"Avec ln ou exp" , options:["Sans", "ln(x)", "ln(ax+b)", "exp(x)", "exp(ax)"] , def:0 }
 		d:{ tag:"Degré max du polynôme", options:[0,1,2,3,4,5], def:5 }
 		e:{ tag:"Tangente", options:["non", "oui"], def:0}
 	}
 	init: (data) ->
 		opt = data.options
-		xmin = -10
+		xmin = -10 # pour le calcul de la tangente
+		xmax=10
 		# debug ancienne version
 		if data.inputs.poly then data.inputs.fct = data.inputs.poly
 		if (typeof data.inputs.fct is "undefined")
@@ -22,25 +23,33 @@ Exercice.liste.push
 				mM.alea.poly { degre:{min:1, max:opt.d.value}, coeffDom:[1,2,3], denominators:[1,2,3], values:{ min:-10, max:10} }
 			]
 			if (opt.a.value is 1) or (opt.a.value is 2)
-				# Il y aura un ln que l'on va multiplier pae :
-				# Soit du a, soiut ax, soit du ax^2+bx,au pire par du degré 2
+				# Il y aura un ln que l'on va multiplier par :
+				# Soit du a, soit du ax, soit du ax^2+bx,au pire par du degré 2
 				if mM.alea.dice(2,3) then coeff = mM.exec [ mM.alea.poly({ degre:[0,1], coeffDom:[1,2,3], values:{ min:-10, max:10} }), "x", "*" ], { simplify:true, developp:true }
 				else coeff = mM.alea.number { denominators:[1,2], values:{ min:-10, max:10} }
 				operands.push coeff
 				if opt.a.value is 2
 					a = mM.alea.real {min:1, max:10}
 					b = mM.alea.real {min:-10, max:10}
-					xmin = -b/a+1 # Pour l'éventuel calcul de tangente
+					xmin = (1-b)/a # Pour l'éventuel calcul de tangente
+					xmax = (20-b)/a
 					operands.push(a,"x","*",b,"+")
 				else
 					operands.push "x"
 					xmin = 1 # Pour l'éventuel calcul de tangente
+					xmax = 20
 				operands.push "ln", "*", "+"
-
 			if (opt.a.value is 3) or (opt.a.value is 4)
 				# Il y aura un exp que l'on va multiplier avec le polynome
-				if opt.a.value is 4 then operands.push mM.alea.poly({ degre:1, coeffDom:{min:1, max:10}, values:{min:-10, max:10} })
-				else operands.push "x"
+				if opt.a.value is 4
+					aPol = mM.alea.real({min:0.01, max:0.5, real:2, sign:true})
+					xmin = -2/Math.abs(aPol)
+					xmax = 2/Math.abs(aPol)
+					operands.push aPol, "x", "*"
+				else
+					operands.push "x"
+					xmin = -2
+					xmax = 2
 				operands.push "exp", "*"
 			fct = mM.exec operands, { simplify:true }
 			data.inputs.fct = String fct
@@ -72,7 +81,7 @@ Exercice.liste.push
 		if opt.e.value is 1
 			if (typeof data.inputs.x isnt "undefined") then x = Number data.inputs.x
 			else
-				x = mM.alea.real { min:xmin, max:Math.max(xmin+1,10) }
+				x = mM.alea.real { min:xmin, max:xmax }
 				data.inputs.x = String x
 			fa = mM.float fct, { x:x, decimals:2 }
 			f2a = mM.float derivee, { x:x, decimals:2 }

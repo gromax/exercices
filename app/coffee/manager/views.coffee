@@ -77,6 +77,7 @@ class View
 	final: ->
 		# éventuels traitements finaux comme le mathjax ou les toolstips
 		$('[data-toggle="tooltip"]').tooltip()
+		$('[data-toggle="popover"]').popover()
 		MathJax.Hub.Queue(["Typeset",MathJax.Hub])
 	formatValues: (arrValues)->
 		out = {}
@@ -102,20 +103,22 @@ class VList extends View
 	_pagination: 20
 	_template: "Defaut_parent"
 	_liste:null
-	_buttonActionList:null
 	_actionList:null
+	constructor: (params) ->
+		@_actionList = {
+			deleteButton:{ name:"delete", dom:["_id"] }
+		}
+		super(params)
 	init_config:(params=null) -> h_push super(), {
 			pagination:@_pagination
 			template:@_template
 			filtre:{}
 		}
-	push_action: (obj,type) ->
-		if type is "button"
-			if @_buttonActionList is null then @_buttonActionList=[]
-			@_buttonActionList.push obj
-		else
-			if @_actionList is null then @_actionList=[]
-			@_actionList.push obj
+	push_action: (name,obj) ->
+		# obj contient :
+		# - les éléments du dom à récupérer
+		# - le nom de la fonction de la vue que l'on doit utiliser
+		@_actionList[name] = obj
 		@
 	html: ->
 		liste = @collection().liste(@config.filtre)
@@ -166,12 +169,14 @@ class VList extends View
 			{ evt:"click", selector:null, subSelector:"button", callback:"buttonAction" },
 			{ evt:"keyup", selector:"input[name='search']", callback:"searchAction" }
 		]
-	add: ->
-		@collection().on {type:"add", obj:@, cb:(view, item)->
-			view.renderItems()
-			view.final()
-		}
-		@modal()
+	delete: (id) ->
+		item = @collection().get id
+		if confirm("Supprimer : #{item}")
+			item.on { type:"delete", obj:@, cb:(view, item)->
+				view.renderItems()
+				view.final()
+			}
+			item.delete()
 	action: (event) ->
 		view = $(event.delegateTarget).data("view")
 		dom = $(@)
@@ -188,42 +193,13 @@ class VList extends View
 					view._page = Number $(@).attr("page")
 					view.renderItems()
 					view.final()
-				else
-					if view._actionList isnt null
-						name = dom.attr("name")
-						id = Number dom.attr("_id")
-						for item in view._actionList
-							if item.name is name then view[item.fct_name](id)
-		#event.stopPropagation() -> Pose aussi problème dans le modal lors du choix d'exercice...
+				when (action = view._actionList[dom.attr("name")])?
+					view[action.name]?( (dom.attr(domItem) for domItem in action.dom)... )
 	buttonAction: (event) ->
 		view = $(event.delegateTarget).data("view")
 		dom = $(@)
-		if view?
-			name = dom.attr("name")
-			switch name
-				when "_add_button" then view.add()
-				when "_eleves_button"
-					new VUserChoice { fiche:view.config.fiche, viewToRefresh:view }
-				when "deleteButton"
-					item = view.collection().get dom.attr("_id")
-					if confirm("Supprimer : #{item}")
-						item.on { type:"delete", obj:view, cb:(view,item)->
-							view.renderItems()
-							view.final()
-						}
-						item.delete()
-				when "editButton"
-					item = view.collection().get dom.attr("_id")
-					item.on { type:"change", obj:view, cb:(view,item) ->
-						view.itemUpdateLine item
-						view.final()
-					}
-					view.modal item
-				else
-					if view._buttonActionList?
-						id = Number dom.attr("_id")
-						for ba in view._buttonActionList
-							if ba.name is name then view[ba.fct_name](id)
+		if view? and (action = view._actionList[dom.attr("name")])?
+			view[action.name]?( (dom.attr(domItem) for domItem in action.dom)... )
 		event.stopPropagation()
 	searchAction: (event) =>
 		searchStr = $(event.currentTarget).val().toLowerCase()
@@ -243,9 +219,9 @@ class VUsersList extends VList
 	_itemTemplate: "User_item"
 	_glyph: "glyphicon-user"
 	init_config:(params=null)->
-		@push_action { name:"lockButton", fct_name:"lockAction" }, "button"
-		@push_action { name:"filtreClasseButton", fct_name:"filtrerClasse" }, "button"
-		@push_action { name:"forgottenButton", fct_name:"forgottenAction" }, "button"
+		@push_action "lockButton", { name:"lockAction", dom:["_id"] }
+		@push_action "filtreClasseButton", { name:"filtrerClasse", dom:["_id"] }
+		@push_action "forgottenButton", { name:"forgottenAction", dom:["_id"] }
 		h_push super(), {
 			showEmail:true
 			showClasses:true
@@ -255,18 +231,18 @@ class VUsersList extends VList
 			showPseudo:USE_PSEUDO and Controller.uLog.isAdmin
 			showRanks:Controller.uLog.isAdmin
 			filtre:@collection().permanentFilter
-			buttons: if Controller.uLog.isAdmin then [{ name:"_add_button", title:"Ajouter un utilisateur"}] else null
+			buttons: if Controller.uLog.isAdmin then [{ link:"utilisateurs/add", title:"Ajouter un utilisateur"}] else null
 		}
 	collection: -> Controller.uLog.users
-	modal: (item) -> new VUserMod { item:item }
 	lockAction: (idUser) ->
-		item = @collection().get idUser
+		item = @collection().get(Number idUser)
 		item.on { type:"change", obj:@, cb:(view,item) ->
 			view.itemUpdateLine item
 			view.final()
 		}
 		item.save {locked:not item.locked}
 	filtrerClasse: (idClasse) ->
+		idClasse = Number idClasse
 		if idClasse is @config.filtre?.idClasse
 			@collection().setFilter null
 			@config.filtre = null
@@ -277,7 +253,7 @@ class VUsersList extends VList
 		@renderItems()
 		@final()
 	forgottenAction: (idUser) ->
-		item = @collection().get idUser
+		item = @collection().get(Number idUser)
 		identifiant = item?.email
 		emailRegEx = /// ^[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)*@[a-zA-Z0-9._-]{2,}\.[a-z]{2,4}$ ///i
 		if (identifiant?.match emailRegEx) and confirm("Envoyez un mail à #{item.nom} #{item.prenom} [#{identifiant}] ?")
@@ -291,7 +267,7 @@ class VConsList extends VList
 	_itemTemplate: "Con_item"
 	_glyph: "glyphicon-off"
 	init_config:(params=null) ->
-		@push_action { name:"_purge_button", fct_name:"purge" }, "button"
+		@push_action "_purge_button", { name:"purge", dom:[] }
 		h_push super(), { buttons:[ { name:"_purge_button", title:"Purger cette liste"} ] }
 	collection: -> Controller.uLog.cons
 	purge: ->
@@ -305,8 +281,8 @@ class VUserChoice extends VList
 	_itemTemplate: "User_item"
 	_glyph: "glyphicon-user"
 	init_config: (params=null) ->
-		@push_action { name:"userAddButton", fct_name:"userAdd" }, "button"
-		@push_action { name:"filtreClasseButton", fct_name:"filtreClasse" }, "button"
+		@push_action "userAddButton", { name:"userAdd", dom:["_id"] }
+		@push_action "filtreClasseButton", { name:"filtreClasse", dom:["_id"] }
 		h_push super(), {
 			showClasses:true
 			addButton:true
@@ -315,7 +291,7 @@ class VUserChoice extends VList
 
 		}
 	userAdd: (idUser) ->
-		user = @collection().get idUser
+		user = @collection().get(Number idUser)
 		fiche = @config.fiche
 		Controller.uLog.UFlist.on {type:"add", obj:@, cb:(view,fiche)->
 			view.renderItems()
@@ -323,6 +299,7 @@ class VUserChoice extends VList
 		Controller.uLog.UFlist.add { idUser:idUser, idFiche:fiche.id }
 	collection: -> Controller.uLog.users
 	filtreClasse: (idClasse) ->
+		idClasse = Number idClasse
 		if idClasse is @config.filtre.idClasse
 			@config.filtre = null
 			@collection().setFilter = null
@@ -351,8 +328,8 @@ class VFichesList extends VList
 	_glyph: "glyphicon-file"
 	init_config:(params=null) ->
 		# Lancé seulement par prof et admin
-		@push_action { name:"activateButton", fct_name:"activateAction" }, "button"
-		@push_action { name:"visibleButton", fct_name:"visibleAction" }, "button"
+		@push_action "activateButton", { name:"activateAction", dom:["_id"] }
+		@push_action "visibleButton", { name:"visibleAction", dom:["_id"] }
 		h_push super(), {
 			showId:Controller.uLog.isAdmin
 			showOwner:Controller.uLog.isAdmin
@@ -361,14 +338,14 @@ class VFichesList extends VList
 		}
 	collection: -> Controller.uLog.fiches
 	activateAction: (id) ->
-		item = @collection().get id
+		item = @collection().get(Number id)
 		item.on { type:"change", obj:@, cb:(view,item) ->
 			view.itemUpdateLine item
 			view.final()
 		}
 		item.save {actif:not item.actif}
 	visibleAction: (id) ->
-		item = @collection().get id
+		item = @collection().get(Number id)
 		item.on { type:"change", obj:@, cb:(view,item) ->
 			view.itemUpdateLine item
 			view.final()
@@ -380,26 +357,27 @@ class VExamsList extends VList
 	_glyph: "glyphicon-blackboard"
 	init_config:(params=null) ->
 		# Lancé seulement par prof et admin
-		@push_action { name:"lockButton", fct_name:"lockAction" }, "button"
-		@push_action { name:"texButton", fct_name:"texAction" }, "button"
+		@push_action "lockButton", { name:"lockAction", dom:["_id"] }
+		@push_action "texButton", { name:"texAction", dom:["_id"] }
+		@push_action "addExamButton", { name:"add", dom:[] }
 		h_push super(), {
 			showId:Controller.uLog.isAdmin
 			showOwner:Controller.uLog.isAdmin
 			showModify:true
-			buttons:[{ name:"_add_button", title:"Ajouter un exam"}]
+			buttons:[{ name:"addExamButton", title:"Ajouter un exam"}]
 		}
 	collection: ->
 		unless @_collection?
 			if @config.fiche? then @_collection=@config.fiche.exams
 		@_collection
 	texAction: (id) ->
-		exam = @collection().get id
+		exam = @collection().get(Number id)
 		str = exam.toTex(false)
 		str = str.replace(/&#x3D;/g, "=")
 		str = str.replace(/&#x27;/g, "'")
 		$("#zonetexte#{@divId}").val(str)
 	lockAction: (id) ->
-		item = @collection().get id
+		item = @collection().get(Number id)
 		item.on { type:"change", obj:@, cb:(view,item) ->
 			view.itemUpdateLine item
 			view.final()
@@ -407,11 +385,15 @@ class VExamsList extends VList
 		item.save {locked:not item.locked}
 	add: ->
 		if @config.fiche?
-			@collection().on {type:"add", obj:@, cb:(view, item)->
+			@collection().on { type:"add", obj:@, cb:(view, item)->
 				view.renderItems()
 				view.final()
 			}
-			@collection().add { idFiche:@config.fiche.id, data:@config.fiche.toNewExam() }
+			@collection().add {
+				idFiche:@config.fiche.id
+				data:@config.fiche.toNewExam()
+				nom:"#{ @config.fiche.nom } : #{currentDate(true)}"
+			}
 class VNotesList extends VList
 	_template: "Note_parent"
 	_itemTemplate: "Note_item"
@@ -429,8 +411,8 @@ class VList_aUF extends VList
 	_glyph: "glyphicon-file"
 	textIfEmpty: "Aucun devoir dans la liste."
 	init_config:(params=null) ->
-		@push_action { name:"_sort_notes_by_name", fct_name:"sortNotesByName" }, "button"
-		@push_action { name:"activateButton", fct_name:"activateAction" }, "button"
+		@push_action "_sort_notes_by_name", { name:"sortNotesByName", dom:[] }
+		@push_action "activateButton", { name:"activateAction", dom:["_id"] }
 		othersNav = null
 		buttons = null
 		if params.user? and (Controller.uLog.isProf or Controller.uLog.isAdmin)
@@ -470,7 +452,15 @@ class VList_aEF extends VList
 	init_config:(params=null) ->
 		# En présence de aUF, on s'intéresse aux notes. Sinon on s'intéresse à l'objet fiche
 		if params.aUF? then complement = { user:params.user, aUF:params.aUF }
-		else complement = { buttons:[ { name:"_add_button", title:"Ajouter un exercice"}, { link:"#{params.links?.notes}#{params.fiche.id}", title:"Voir les élèves"}], actif:params.fiche.actif, visible:params.fiche.visible }
+		else complement = {
+			buttons:[
+				{ link:"devoir:#{params.fiche.id}/add", title:"Ajouter un exercice"}
+				{ link:"#{params.links?.notes}#{params.fiche.id}", title:"Voir les élèves"}
+			]
+			actif:params.fiche.actif
+			visible:params.fiche.visible
+			idFiche:params.fiche.id
+		}
 		# Calcul du titre
 		###
 		@title = "Liste des exercices du devoir : "+params.fiche?.nom
@@ -479,31 +469,20 @@ class VList_aEF extends VList
 		###
 		# Sortie config
 		h_push super(), complement
-	collection: ->
-		unless @_collection?
-			if @config.oUF? then @_collection = @config.oUF.fiche()?.exercices
-			else if @config.fiche? then @_collection=@config.fiche?.exercices
-		@_collection
-	modal: (item) ->
-		if item? then new VExoFicheMod { item:item, fiche:@config.fiche ? @config.oUF.fiche() }
-		else new VExercicesList { container:"#modalContent", exoChoice:@ }
+	collection: -> @_collection ? (@_collection=@config.fiche?.exercices)
 class VExercicesList extends VList
 	_itemTemplate: "Exercice_item"
 	_glyph: "glyphicon-edit"
 	init_config:(params=null) ->
-		exoChoice = if params.exoChoice? then true else false
-		if exoChoice then @push_action { name:"exoChoice", fct_name:"exoChoice" }, "a"
+		if params.fiche? then link = "devoir:#{params.fiche.id}/add:"
+		else link = "tester-exercice:"
 		h_push super(), {
 			search:true
 			showKeyWords:Controller.uLog.isAdmin
-			exoChoice:exoChoice
+			link:link
 		}
 	collection: -> Controller.uLog.exercices
-	exoChoice: (idExo) ->
-		# L'objet VExercicesList a été attaché à un config.exoChoice = VList_EF. Son modal gère la création d'une exercice.
-		@config.exoChoice?.modal(idExo)
 class VMod extends View
-	_defaultContainer: "#modalContent"
 	formulaire:"form"
 	init_config: (params=null) -> h_push super(), { idForm:@formulaire+@divId }
 	html:-> Handlebars.templates[@_template]({ item: @config.item, params:@config })
@@ -524,9 +503,6 @@ class VMod extends View
 						if view.config.links?.cancel? then view.collection().on { type:"add", url:"#"+view.config.links.cancel }
 				false
 		}
-		if @config.container is "#modalContent"
-			if @config.item? then @config.item.on {type:"change", modal:true}
-			else @collection().on {type:"add", modal:true}
 class VUserMod extends VMod
 	_template:"modUser"
 	_rules: {
@@ -716,7 +692,7 @@ class VInscription extends View
 					}
 					false
 			}
-			classe.on { type:"inscription", modal:true, cb: (classe, data) ->
+			classe.on { type:"inscription", cb: (classe, data) ->
 				Controller.uLog.log data.user, data
 				pushUrlInHistory "#nouvelinscrit"
 				Controller.load "#nouvelinscrit"
@@ -821,7 +797,7 @@ class VExercice extends View
 		Handlebars.templates.exoHeader(@config)+html_showOptions+html_showDebug+@exo.makeContainers()+"<div id='note_#{@divId}'></div>"
 	bind_dom_and_events:($container)->
 		$("#upBDD_#{@divId}").on 'click', (event) =>
-			@exo.updateBDD(true)
+			@exo.updateBDD()
 			Controller.notyMessage("Mise à jour éffectuée","success")
 			false
 		$("#again_#{@divId}").on 'click', (event) =>
@@ -876,7 +852,6 @@ class VHome extends View
 			}
 		else Handlebars.templates.home { user:Controller.uLog, reinit:@config.reinit }
 class VConnexion extends View
-	_defaultContainer: "#modalContent"
 	formulaire:"connexion"
 	init_config:(params=null)->
 		if params.reconnexion is true
@@ -905,7 +880,7 @@ class VConnexion extends View
 						Controller.uLog.connexion $("input[name='identifiant']").val(), $("input[name='pwd']").val()
 					false
 			}
-			Controller.uLog.on { type:"connexion", modal:true }
+			Controller.uLog.on { type:"connexion" }
 		else
 			$("##{@formulaire}#{@divId}").validate {
 				rules: { "identifiant":{"required": true}, "pwd":{"required":true} },
@@ -927,5 +902,5 @@ class VConnexion extends View
 					Controller.uLog.forgotten identifiant
 				else
 					$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:"Indiquez un <b>email valide</b> !" }
-			Controller.uLog.on { type:"connexion", modal:true }
+			Controller.uLog.on { type:"connexion" }
 		$("input[name='identifiant']").focus()
