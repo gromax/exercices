@@ -24,7 +24,7 @@ oHelp = {
 			plg : [
 				"Pour que $ABCD$ soit un parallélogramme, il faut que $[AC]$ et $[BD]$ aient le même milieu. On peut donc passer par les coordonnées des milieux."
 				"Suivant la même idée, on peut aussi dire que $D$ est le symétrique e $B$ par rapport au milieu de $[AC]$. Il faut alors calculer les coordonnées du milieu de $[AC]$ puis faire le calcul de la symétrie."
-				"La technique la plus efficace reste d'utiliser les vecteurs : on doit avoir $\\overrightarrow{AB} = \\overrightarrow{DC}$. On calcule les coordonnées des deux vecteurs ce qui donne les équations pour trouver $x_D$ et $y_D$."
+				"La technique la plus efficace reste d'utiliser les vecteurs : on doit avoir $\\overrightarrow{BA} = \\overrightarrow{CD}$. Connaissant le premier, on déduit le second et ensuite la position de $D$."
 			]
 			distance : [
 				"La formule est alors : $AB = \\sqrt{\\left(x_A-x_B\\right)^2+\\left(y_A-y_B\\right)^2}$."

@@ -36,25 +36,25 @@ Exercice.liste.push
 				texte:"Une usine fabrique des ampoules. On s'intéresse à la durée de vie d'une ampoule prélevée dans le stock. Soit $T$ cette durée de vie en heures."
 				unite:"h"
 				question: switch sy
-					when 0 then "Soit A l'événement : L'ampoule a une durée de vie inférieure à #{b} heures."
-					when 2 then "Soit A l'événement : L'ampoule a une durée de vie supérieure à #{a} heures."
-					else "Soit A l'événement : L'ampoule a une durée de vie comprise entre #{a} et #{b} heures."
+					when 0 then "A : « L'ampoule a une durée de vie inférieure à #{b} heures. »"
+					when 2 then "A : « L'ampoule a une durée de vie supérieure à #{a} heures. »"
+					else "A : « L'ampoule a une durée de vie comprise entre #{a} et #{b} heures. »"
 			}
 			{
 				texte:"Des bactéries sont soumis à un antibiotique. On s'intéresse à la durée de vie d'une  bactérie prise au hasard. Soit $T$ cette durée de vie en minutes."
 				unite:"min"
 				question: switch sy
-					when 0 then "Soit A l'événement : La bactérie a une durée de vie inférieure à #{b} minutes."
-					when 2 then "Soit A l'événement : La bactérie a une durée de vie supérieure à #{a} minutes."
-					else "Soit A l'événement : La bactérie a une durée de vie comprise entre #{a} et #{b} minutes."
+					when 0 then "A : « La bactérie a une durée de vie inférieure à #{b} minutes. »"
+					when 2 then "A : « La bactérie a une durée de vie supérieure à #{a} minutes. »"
+					else "A : « La bactérie a une durée de vie comprise entre #{a} et #{b} minutes. »"
 			}
 			{
 				texte:"On s'intéresse à un stock des objets radioactifs. Pour chacun de ces objets, $T$ est le temps en jours pendant lequel sa radioactivité reste trop importante. On prélève un de ces objets au hasard."
 				unite:"j"
 				question: switch sy
-					when 0 then "Soit A l'événement : L'objet reste radioactif pendant moins de #{b} jours."
-					when 2 then "Soit A l'événement : L'objet reste radioactif pendant plus de #{a} jours."
-					else "Soit A l'événement : L'objet reste radioactif entre #{a} et #{b} jours."
+					when 0 then "A : « L'objet reste radioactif pendant moins de #{b} jours. »"
+					when 2 then "A : « L'objet reste radioactif pendant plus de #{a} jours. »"
+					else "A : « L'objet reste radioactif entre #{a} et #{b} jours. »"
 			}
 		]
 		if inp.dl is "y"
@@ -99,6 +99,7 @@ Exercice.liste.push
 			}
 			texteEnnonce = habillage.texte+" $T$ suit une loi exponentielle de paramètre $\\lambda = #{numToStr(l,4)}~#{habillage.unite}^{-1}$."
 			premiereQuestionPourTex = "Donnez l'espérance $E(T)$ à l'unité près"
+		l = fixNumber l,4
 		if sy is 2 then goodP = Math.exp(-l*a)
 		else goodP = Math.exp(-l*a) - Math.exp(-l*b)
 
@@ -119,7 +120,7 @@ Exercice.liste.push
 			new BListe {
 				data:data
 				bareme:100
-				title:"Calcul de probabilité"
+				title:"Probabilité de #{habillage.question}"
 				text:habillage.question+" Donnez $p(A)$ à $10^{-3}$ près."
 				liste:[
 					{

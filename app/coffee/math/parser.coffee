@@ -16,9 +16,11 @@ ParseManager = {
 	parse: (expression,type, info) ->
 		if @initOk is false then @initParse()
 		# Les élèves ont le réflexe d'utiliser la touche ² présente sur les claviers
-		expression = expression.replace?("²", "^2 ")
-		expression = expression.replace?("³", "^3 ")
-		expression = expression.replace?("⁴", "^4 ")
+		if typeof expression is "string"
+			# Les élèves utilisent la touche ²
+			expression = expression.replace /²/g, "^2 "
+			# Dans certains cas, le - est remplacé par un autre caractère plus long
+			expression = expression.replace /−/g, "-"
 		matchList = expression.match(@globalRegex)
 		if matchList?
 			tokensList = @correction ( @createToken(strToken,type, info) for strToken in matchList ) , info

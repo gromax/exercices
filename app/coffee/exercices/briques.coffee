@@ -294,6 +294,7 @@ class BListe extends Brique
 	# aide : objet d'aide pour produire le html avec le template help
 	# touches : un tableau des touches utiles parmi ["infini", sqrt, pi, x2 sqr, empty] ou un objet { name, title, tag }
 	# text : un texte html à faire apparaître avant les questions
+	# textPreCor : un texte html à faire apparaître avant les corrections
 	default: () ->  { liste:[], title:"titre ?" }
 	constructor: (params) ->
 		super(params)
@@ -375,12 +376,17 @@ class BListe extends Brique
 		score += item.verif() for item in @config.liste
 		@data.note += score*@bareme/Math.max(@config.liste.length,1)
 		# De plus, l'objet verif a achevé de mettre à jour @templateParams
-		@container.html Handlebars.templates.std_panel {
-			title: @config.title
-			zones:[{
+		zones = [{
 				list:"correction"
 				html: (Handlebars.templates[item.templateParams.corTemplateName](item.templateParams) for item in @config.liste).join("")
 			}]
+		if @config.textPreCor? then zones.unshift {
+			body:"preCor"
+			html:@config.textPreCor
+		}
+		@container.html Handlebars.templates.std_panel {
+			title: @config.title
+			zones: zones
 		}
 
 #-------------------------------------------------------
@@ -534,14 +540,14 @@ class BPoints extends Brique
 		bar = @bareme/Math.max(1,ptsListe.length)
 		for pt in ptsListe
 			points.push(correc = @config.verif_point?.apply(@,[pt]))
-			pt.setProperty({fixed:true})
+			pt.setAttribute {fixed:true}
 			if correc.good
 				# On fournit le bon point, c'est qu'il est mal placé
-				pt.setProperty({color:'red'})
+				pt.setAttribute {color:'red'}
 				@config.el?.apply(@,[pt])
 				erreur_global = true
 			else
-				pt.setProperty({color:'green'})
+				pt.setAttribute {color:'green'}
 				@data.note+=bar
 		template = Handlebars.templates.cor_points { points: points}
 		if erreur_global and (typeof @config.eg isnt "undefined")

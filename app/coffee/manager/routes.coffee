@@ -1,7 +1,6 @@
 # Dans le choix admin/prof il peut y avoir un distingo utilisateurs/élèves
 
 routes = [
-
 	{# deconnexion
 		admin:true
 		prof:true
@@ -346,8 +345,7 @@ routes = [
 			fiche?.load { type:"load", cb:(fiche)->
 				Controller.setAriane [
 					{link:"devoirs", text:"Liste des devoirs"}
-					{link:"devoir:#{fiche.id}", text:"Devoir : #{fiche.nom}"}
-					{text:"Liste des élèves"}
+					{text:"Liste des élèves du devoir : #{fiche.nom}"}
 				]
 				new VList_aUF {
 					filtre:{idFiche:fiche.id}
@@ -594,6 +592,197 @@ routes = [
 			}
 			Controller.uLog.cons.fetch()
 	}
-
-
+	{
+		eleve:true
+		regex:/// ^nouvelinscrit$ ///i
+		exec:(m)->
+			@setAriane []
+			new VHome { nouveau:true }
+	}
+	{
+		eleve:true
+		regex:/// ^mes-exercices$ ///i
+		exec:(m)->
+			@setAriane [{text:"Mes exercices inachevés"}]
+			new VNotesList {
+				filtre:{finished:false}
+				unfinished:true
+				user:Controller.uLog
+				links:{ notes:"mes-exercices:" }
+			}
+	}
+	{
+		eleve:true
+		regex:/// ^mes-exercices:([0-9]+)$ ///i
+		exec:(m)->
+			if (note = Controller.uLog.notes().get Number(m[1]))?
+				oEF = note.exoFiche()
+				@setAriane [{link:"mes-exercices", text:"Mes exercices inachevés"},{text:"Exercice : #{oEF?.exercice.title} | Essai du #{note.dateFr} à #{note.hour}"}]
+				new VExercice {
+					oNote:note
+					links:{ notes:"mes-exercices:" }
+				}
+	}
+	{
+		eleve:true
+		regex:/// ^devoir:([0-9]+)$ ///i
+		exec:(m)->
+			Controller.uLog.load { obj:Number(m[1]), cb:(aUF,user)->
+				# Normalement chargé avec un utilisateur élève
+				oUF = user.UFlist.get aUF, {idUser:user.id}
+				if (fiche = oUF?.fiche())?
+					if fiche.actif and oUF.actif then Controller.setAriane [{text:"Devoir : #{fiche.nom}"}]
+					else Controller.setAriane [{text:"Devoir : #{fiche.nom} [Vérouillé]"}]
+					new VList_aEF {
+						fiche: fiche
+						aUF:aUF
+						links: { direct:"devoir:#{aUF}/exercice:", test:null, notes:"notes-devoir:" }
+					}
+			}
+	}
+	{
+		eleve:true
+		regex:/// ^devoir:([0-9]+)/exercice:([0-9]+)$ ///i
+		exec:(m)->
+			Controller.uLog.load { obj:{aUF:Number(m[1]), aEF:Number(m[2])}, cb:(p,user)->
+				# Normalement chargé avec un utilisateur élève
+				# On transmet les paramètres oUF et uri via l'objet p
+				{ aUF, aEF} = p
+				oUF = user.UFlist.get aUF, {idUser:user.id}
+				fiche = oUF?.fiche()
+				if (oEF = fiche?.exercices?.get aEF)?
+					if fiche.actif and oUF.actif
+						Controller.setAriane [
+							{link:"devoir:#{oUF.id}", text:"Devoir : #{fiche.nom}"}
+							{text:"Exercice : #{oEF.exercice.title}"}
+						]
+						new VExercice { oEF:oEF, aUF:aUF }
+					else
+						Controller.setAriane [
+							{link:"devoir:#{aUF}", text:"Devoir : #{oEF.fiche()?.nom} [Vérouillé]"}
+							{text:"Notes pour l'exercice : #{oEF.exercice.title}"}
+						]
+						new VNotesList {
+							fiche:fiche
+							exoFiche:oEF
+							filtre:{aEF:oEF.id, aUF:aUF}
+							user:user
+							link:"devoir:#{aUF}/exercice:#{oEF.id}"
+						}
+			}
+	}
+	{
+		eleve:true
+		regex:/// ^mes-notes$ ///i
+		exec:(m)->
+			@setAriane [ {text:"Mes notes"} ]
+			new VList_aUF {
+				filtre:{idUser:Controller.uLog.id}
+				showFiche:true
+				user:Controller.uLog
+				links:{ direct:"mes-notes/devoir:", indirect:null }
+			}
+	}
+	{
+		eleve:true
+		regex:/// ^mes-notes/devoir:([0-9]+)$ ///i
+		exec:(m)->
+			# uLog déjà chargé
+			oUF=Controller.uLog.UFlist.get(Number(m[1]), {idUser:Controller.uLog.id} )
+			fiche = oUF?.fiche()
+			@setAriane [
+				{link:"mes-notes", text:"Mes notes"}
+				{text:"Devoir : #{fiche.nom}"}
+			]
+			new VList_aEF {
+				fiche:fiche
+				aUF:oUF.id
+				links: { direct:"mes-notes/devoir:#{m[1]}/exercice:", test:null, notes:"notes-devoir:" }
+			}
+	}
+	{
+		eleve:true
+		regex:/// ^mes-notes/devoir:([0-9]+)/exercice:([0-9]+)$ ///i
+		exec:(m)->
+			# uLog déjà chargé
+			aUF = Number m[1]
+			aEF = Number m[2]
+			oUF=Controller.uLog.UFlist.get(aUF, {idUser:Controller.uLog.id} )
+			fiche = oUF?.fiche()
+			oEF = fiche?.exercices?.get Number aEF
+			@setAriane [
+				{link:"mes-notes", text:"Mes notes"}
+				{link:"mes-notes/devoir:#{aUF}", text:"Devoir : #{fiche?.nom}"}
+				{text:"Exercice : #{oEF?.exercice.title}"}
+			]
+			new VNotesList {
+				fiche:fiche
+				exoFiche:oEF
+				aUF:aUF
+				filtre:{aEF:aEF, aUF:aUF}
+				user:Controller.uLog
+				link:"mes-notes/devoir:#{aUF}/note:"
+			}
+	}
+	{
+		eleve:true
+		regex:/// ^mes-notes/devoir:([0-9]+)/note:([0-9]+)$ ///i
+		exec:(m)->
+			# uLog déjà chargé
+			aUF = Number m[1]
+			idNote = Number m[2]
+			oUF=Controller.uLog.UFlist.get(aUF, {idUser:Controller.uLog.id} )
+			fiche = oUF?.fiche()
+			note=Controller.uLog.notes().get idNote
+			oEF = note?.exoFiche()
+			@setAriane [
+				{link:"mes-notes", text:"Mes notes"}
+				{link:"mes-notes/devoir:#{aUF}", text:"Devoir : #{fiche?.nom}"}
+				{link:"mes-notes/devoir:#{aUF}/exercice:#{oEF?.id}", text:"Exercice : #{oEF?.exercice.title}"}
+				{text:"Essai du #{note?.dateFr} à #{note?.hour}"}
+			]
+			new VExercice {
+				oNote:note
+				links:{ notes:"mes-notes/devoir:#{aUF}/note:"}
+			}
+	}
+	{
+		off:true
+		regex:/// ^connexion$ ///i
+		exec:(m)->
+			Controller.uLog.on { type:"connexion", cb: ()-> new VHome {} }
+			@setAriane()
+			new VConnexion { }
+	}
+	{
+		off:true
+		regex:/// ^rejoindre-une-classe:([0-9]+)$ ///i
+		exec:(m)->
+			if (classe = Controller.uLog.classes.get Number(m[1]))?
+				@setAriane [
+					{link:"rejoindre-une-classe", text:"Rejoindre une classe"}
+					{text:classe.nom}
+				]
+				new VInscription { classe:classe }
+			else new VClassesJoin {}
+	}
+	{
+		off:true
+		regex:/// ^rejoindre-une-classe$ ///i
+		exec:(m)->
+			@setAriane [{text:"Rejoindre une classe"}]
+			new VClassesJoin {}
+	}
+	{
+		off:true
+		regex:/// ^reinit:([a-z0-9]+)$ ///i
+		exec:(m)->
+			Controller.uLog.on { type:"reinitMDP", cb: (user,success)->
+				Controller.setAriane()
+				new VHome { reinit:success }
+				if success then new VUserMod { item:user, mdp:true }
+				else Controller.notyMessage "La clef n'est pas ou plus valide", "error"
+			}
+			Controller.uLog.reinitMDP m[1]
+	}
 ]

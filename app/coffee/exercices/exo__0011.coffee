@@ -14,6 +14,7 @@ Exercice.liste.push
 			x2 = mM.alea.real { min:-40, max:40 } while x2 is x1
 			S = data.S = mM.toNumber(i.S = x1+x2)
 			P = data.P = mM.toNumber(i.P = x1*x2)
+		data.tex = { S:S, P:P }
 		poly = mM.polynome.make { coeffs:[P.toClone(), S.toClone().opposite(), 1] }
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>On cherche les valeurs de $x$ et $y$ telles que $x+y=#{S.tex()}$ et $x\\cdot y =#{P.tex()}$.</p>"}]}
@@ -58,3 +59,12 @@ Exercice.liste.push
 				}]
 			}
 		]
+	tex: (data) ->
+		if not isArray(data) then data = [ data ]
+		{
+			title:@title
+			content:Handlebars.templates["tex_enumerate"] {
+				pre: "Dans chaque cas, déterminez $x$ et $y$."
+				items: ("$x+y=#{item.tex.S}$ et $x\\cdot y = #{item.tex.P}$" for item in data)
+			}
+		}

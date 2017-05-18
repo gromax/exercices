@@ -16,6 +16,7 @@ Exercice.liste.push
 		else
 			m = mM.alea.number {min:1, max:10}
 			inp.m = String m
+		data.tex = { m:m.tex(), a:angleRad.tex() }
 		z = mM.trigo.complexe(m,a)
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>Donnez $z$ sous sa <b>forme algébrique</b> $z = x+iy$ sachant que $|z|=#{m.tex()}$ et $Arg(z) = #{angleRad.tex()}$ <i>en radians</i></p>"}]}
@@ -31,3 +32,12 @@ Exercice.liste.push
 				touches:["sqrt"]
 			}
 		]
+	tex: (data) ->
+		if not isArray(data) then data = [ data ]
+		{
+			title:@title
+			content:Handlebars.templates["tex_enumerate"] {
+				pre: "Dans chaque cas, connaissant $|z|$ et $arg(z)$ en radians, donnez la forme algébrique de $z$."
+				items: ("$|z| = #{item.tex.m}$ et $arg(z) = #{item.tex.a}$" for item in data)
+			}
+		}

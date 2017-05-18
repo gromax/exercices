@@ -115,7 +115,7 @@ Exercice.liste.push
 			title:@title
 			content:Handlebars.templates["tex_enumerate"] {
 				pre: "Calculez les valeurs exates des intégrales suivantes :"
-				items: ("$x \\mapsto #{item.tex}$" for item in data)
+				items: ("$#{item.tex}$" for item in data)
 				large:false
 			}
 		}

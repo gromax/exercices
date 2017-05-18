@@ -17,6 +17,7 @@ Exercice.liste.push
 			m = mM.alea.number { min:1, max:10 }
 			inp.m = String m
 		z = mM.trigo.complexe(m,a)
+		data.tex = { z:z.tex() }
 		[
 			new BEnonce {zones:[{body:"enonce", html:"<p>Donnez le module et l'argument de $z=#{z.tex()}$.</p><p><i>Donnez l'argument $\\theta$ en radians et en valeur principale, c'est à dire $-\\pi<\\theta\\leqslant \\pi$</i></p>"}]}
 			new BListe {
@@ -31,3 +32,12 @@ Exercice.liste.push
 				touches:["pi"]
 			}
 		]
+	tex: (data) ->
+		if not isArray(data) then data = [ data ]
+		{
+			title:@title
+			content:Handlebars.templates["tex_enumerate"] {
+				pre: "Dans chaque cas, donnez le module $|z|$ et l'argument $arg(z)$."
+				items: ("$z = #{item.tex.z}$" for item in data)
+			}
+		}

@@ -2,9 +2,12 @@
 Exercice.liste.push
 	id:6
 	title:"Placer des points dans un repère"
-	description:"Connaissant leurs coordonnées, placer des points dans un repère."
-	keyWords:["Géométrie", "Droite", "Équation", "Seconde"]
+	description:"Connaissant leurs coordonnées, placer des points dans un repère. L'exercice existe aussi dans une variante où les coordonnées sont données sous forme complexe."
+	keyWords:["Géométrie", "Repère", "Complexes", "Seconde", "1STL"]
 	template:"2cols"
+	options: {
+		a:{ tag:"complexes", options:["non", "oui"], def:0}
+	}
 	init: (data) ->
 		iPts = ( mM.alea.vector({ name:name, def:data.inputs}).save(data.inputs) for name in ["A", "B", "C", "D", "E"] )
 		uPts = ( mM.alea.vector({ name:name, def:data.answers}) for name in ["A", "B", "C", "D", "E"] )
@@ -15,12 +18,17 @@ Exercice.liste.push
 			customInit: ()->
 				@points = ( @graph.create('point',mM.float [pt.x,pt.y], {name:pt.name, fixed:false, size:4, snapToGrid:true, color:'blue', showInfoBox:false}) for pt in uPts )
 		}
-
+		if data.options.a.value is 0
+			liste = ( "<li>$#{pt.texLine()}$</li>" for pt in iPts )
+			enonce = "Vous devez placer les point suivants : <ul>#{ liste.join('') }</ul>"
+		else
+			liste = ( "<li>$z_#{pt.name} = #{pt.affixe().tex()}$</li>" for pt in iPts )
+			enonce = "Dans le plan complexe, vous devez placer les point $A$, $B$, $C$, $D$, $E$ dont les affixes respectives sont : <ul>#{ liste.join('') }</ul>"
 		[
 			new BEnonce {
 				zone:"droite"
 				zones:[
-					{body:"enonce", html:"<p>Vous devez placer les point suivants : #{ ( "$"+pt.texLine()+"$" for pt in iPts ).join(", ") }</p>"}
+					{body:"enonce", html:enonce }
 				]
 			}
 			graphContainer

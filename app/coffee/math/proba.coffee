@@ -174,33 +174,30 @@ class Proba
 	@binomial_IF: (n,p,seuil) ->
 		if seuil>=1 then return { Xlow:0, Xhigh:n }
 		if seuil<0 then seuil = 0
-		_m = (1-seuil)/2
-		_M = (1+seuil/2)
+		_m = (1-seuil)/2 # Seuil bas : Xlow est la valeur pour laquelle P(X<=Xlow) dépésse _m
+		_M = (1+seuil)/2 # Seuil haut : Xhigh est la valeur pour laquelle P(X<=Xhigh) dépésse _M
 		esperance = n*p
 		std = Math.sqrt(n*p*(1-p))
+		# Estimation des bornes en utilisant E(X)+-2 sigma
 		low = Math.max Math.round(esperance-2*std), 0
 		high = Math.min Math.round(esperance+2*std), n
-		# recherche de la transition au-dessus de 2,5%
+		# recherche de la transition au-dessus de _m
 		pk = @binomial_rep(n,p,low)
-		if pk is _m then low++
-		else
-			k = low
-			asc = (pk<_m)
-			while (k>0) and (k<esperance) and (pk isnt _m) and ((pk<_m) is asc)
-				if asc then k++
-				else k--
-				pk = @binomial_rep(n,p,k)
-			if pk<=_m then low = k+1
-			else low = k
-		# recherche de la transition au-dessus de 97,5%
+		asc = (pk <= _m)
+		while (asc is (pk<=_m)) and ((low > 0) or asc)
+			if asc then low++
+			else low--
+			pk = @binomial_rep(n,p,low)
+		# Si au final on est toujours en dessous du seuil, c'est qu'on l'a franchi en descendant
+		# Dans ce cas on le refranchit dans l'autre sens.
+		if pk<=_m then low++
+		# recherche de la transition au-dessus de _M
 		pk = @binomial_rep(n,p,high)
-		if pk isnt _M
-			k = high
-			asc = (pk<_M)
-			while (k<n) and (k>esperance) and (pk isnt _M) and ((pk<_M) is asc)
-				if asc then k++
-				else k--
-				pk = @binomial_rep(n,p,k)
-			if pk<_M then high = k+1
-			else high = k
+		asc = (pk<_M)
+		while (asc is (pk<_M)) and ((high < n) or not asc)
+			if asc then high++
+			else high--
+			pk = @binomial_rep(n,p,high)
+		# Si au final on toujours en dessous du seuil c'est qu'on l'a franchit en descendant
+		if pk<_M then high++
 		return { Xlow:low, Xhigh:high }

@@ -3,10 +3,12 @@
 		<tr>
 			{{#if params.showId}}<th width="16px">#</th>{{/if}}
 			<th>Nom</th>
-			{{#if params.showOwner}}<th width="100px">Prof.</th>{{/if}}
+			{{#if params.showModify}}
+			<th width="120px"></th> <!-- lien vers liste exercices|lien vers liste aUF|lien vers exams -->
+			{{/if}}			{{#if params.showOwner}}<th width="100px">Prof.</th>{{/if}}
 			<th width="80px">Création</th><!-- date -->
 			{{#if params.showModify}}
-				<th width="250px"></th> <!-- bouton visible/invisible|bouton actif/inactif|lien vers liste aUF|bouton d'édition|bouton de suppression -->
+				<th width="170px"></th> <!-- bouton visible/invisible|bouton actif/inactif|lien vers liste aUF|bouton d'édition|bouton de suppression -->
 			{{/if}}
 		</tr>
 	</thead>

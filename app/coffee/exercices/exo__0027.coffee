@@ -61,6 +61,5 @@ Exercice.liste.push
 			content:Handlebars.templates["tex_enumerate"] {
 				pre:"On vous donne $z$ et $z'$. Calculez $z+z'$, $z\\times z'$, $\\frac{1}{z}$ et $\\frac{z}{z'}$"
 				items: ("$z = #{item.tex.zA}$ et $z' = #{item.tex.zB}$" for item in data)
-				large:false
 			}
 		}
