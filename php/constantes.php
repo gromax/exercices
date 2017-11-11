@@ -5,7 +5,6 @@
 	// Sel pour les mots de passe
 	define("PRE_SALT", "l@;1Az");
 	define("POST_SALT", "6G)i*");
-	define("SEND_CRYPTED_PWD",false);
 
 	// Chemin du dossier
 	define("BDD_CONFIG","./config/bddConfig.php");

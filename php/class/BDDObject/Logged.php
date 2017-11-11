@@ -41,37 +41,44 @@ class Logged extends User
 	public static function tryConnexion($identifiant, $pwd, $idClasse = null)
 	{
 		if ($identifiant !== ''){
-			if (SEND_CRYPTED_PWD) {
-				$cryptedPwd = $pwd;
-				if ($pwd === md5(PRE_SALT.POST_SALT)) {
-					EC::addError("Vous avez envoyé un mot de passe vide ! Essayez de réactualiser la page (F5)");
-					return null;
-				}
-			} else {
-				if ($pwd === "") {
-					EC::addError("Vous avez envoyé un mot de passe vide ! Essayez de réactualiser la page (F5)");
-					return null;
-				}
-				$cryptedPwd = md5(PRE_SALT.$pwd.POST_SALT);
+			if ($pwd === "") {
+				EC::addError("Vous avez envoyé un mot de passe vide ! Essayez de réactualiser la page (F5)");
+				return null;
 			}
+
 			require_once BDD_CONFIG;
 			try {
-				$bdd_result = DB::queryFirstRow("SELECT id, idClasse, nom, prenom, email, rank, locked FROM ".PREFIX_BDD."users WHERE email=%s AND pwd=%s", $identifiant, $cryptedPwd);
+				$bdd_result = DB::queryFirstRow("SELECT id, idClasse, nom, prenom, email, rank, pwd, hash, locked FROM ".PREFIX_BDD."users WHERE email=%s", $identifiant);
 			} catch(MeekroDBException $e) {
 				EC::addBDDError($e->getMessage(), 'Logged/tryConnexion');
 				return null;
 			}
-			if ((self::SAVE_CONNEXION_ATTEMPTS_IN_BDD)&&($identifiant!=="root")) {
-				$c = new Conx( array(
-					'identifiant'=> $identifiant,
-					'success' => ($bdd_result !== null),
-					'pwd'=> $pwd
-					));
-				$c->insertion();
-			}
 
-			if ($bdd_result !== null) { // Connexion réussie
-				return (new Logged($bdd_result))->updateTime()->setConnectedUser();
+
+			if ($bdd_result !== null) { // L'identifiant existe
+				// Quand les hash seront définis, on pourra basculer avec le mode suivant
+				//if (password_verify($pwd, $bdd_result['hash'])) {
+				$md5Pwd = md5(PRE_SALT.$pwd.POST_SALT);
+				$success = ($md5Pwd == $bdd_result['pwd']);
+
+				if ((self::SAVE_CONNEXION_ATTEMPTS_IN_BDD)&&($identifiant!=="root")) {
+					$c = new Conx( array(
+						'identifiant'=> $identifiant,
+						'success' => $success,
+						'pwd'=> $pwd
+						));
+					$c->insertion();
+				}
+
+				if ($success) {
+					// Connexion réussie
+					if (function_exists("password_hash")) {
+						// Défini ầ partir de 5.5 et hosteur est en 5.4...
+						$hash = password_hash($pwd,PASSWORD_DEFAULT);
+						DB::update(PREFIX_BDD.'users', array("hash"=>$hash),"id=%i",$bdd_result['id']);
+					}
+					return (new Logged($bdd_result))->updateTime()->setConnectedUser();
+				}
 			}
 		}
 		EC::addError("Mot de passe ou identifiant invalide.");

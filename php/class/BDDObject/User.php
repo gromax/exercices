@@ -23,9 +23,10 @@ class User
 	protected $nom = 'Disconnected';
 	protected $prenom ='';
 	protected $email ='';
-	protected $_cryptedPwd =null;
 	protected $date = null;
 	protected $locked = false;
+	protected $bcryptHash = null;
+	protected $md5Hash = null;
 
 	protected $_notes = null;			// Liste des notes, tableau trié par idClasse
 
@@ -41,18 +42,8 @@ class User
 		if(isset($options['date'])) $this->date = $options['date'];
 		else $this->date = date('Y-m-d H:i:s');
 		if(isset($options['rank'])) $this->rank = $options['rank'];
-		if(isset($options['pwd'])) $this->_cryptedPwd = $options['pwd'];
 		if(isset($options['locked'])) $this->locked = (boolean)$options['locked'];
-		if (isset($options['userToCopy'])) {
-			$modele = $otions['userToCopy'];
-			$this->nom = $modele->nom;
-			$this->prenom = $modele->prenom;
-			$this->email = $modele->email;
-			$this->rank = $modele->rank;
-			$this->_cryptedPwd = $modele->_cryptedPwd;
-			$this->date = $modele->date;
-			$this->locked = $modele->locked;
-		}
+		if(isset($options['pwd'])) $this->updatePwd($options['pwd']);
 	}
 
 	public static function getList($params=array())
@@ -125,29 +116,17 @@ class User
 	}
 
 
-	public static function identifiantExists($identifiant)
+	public static function emailExists($email)
 	{
 		require_once BDD_CONFIG;
 		try {
-			// Vérification que l'identifiant
-			$results = DB::query("SELECT id FROM ".PREFIX_BDD."users WHERE email=%s",$identifiant);
+			// Vérification que l'email
+			$results = DB::query("SELECT id FROM ".PREFIX_BDD."users WHERE email=%s",$email);
 			if (DB::count()>0) return $results[0]["id"];
 		} catch(MeekroDBException $e) {
 			EC::addBDDError($e->getMessage());
 		}
 		return false;
-	}
-
-	public static function initKey($id)
-	{
-		$key = md5(rand());
-		try {
-			DB::insert(PREFIX_BDD.'initKeys', array("initKey"=>$key, "idUser"=>$id));
-			return $key;
-		} catch(MeekroDBException $e) {
-			EC::addBDDError($e->getMessage());
-		}
-		return null;
 	}
 
 	##################################### METHODES #####################################
@@ -165,11 +144,6 @@ class User
 	public function getName()
 	{
 		return $this->nom;
-	}
-
-	public function cryptedPwd()
-	{
-		return $this->_cryptedPwd;
 	}
 
 	public function isRoot ()
@@ -237,32 +211,68 @@ class User
 		return false;
 	}
 
-	public function insertion($force = false)
+	public function insertion_validation()
 	{
-		// $force permet de passer les tests
-		if (!$force) {
-			if (!self::checkEMail($this->email)) {
-				EC::addError("EMail invalide.");
-				return null;
-			}
-		}
+		// vérifie si l'utilisateur peut-être inséré
+		$errors = array();
+		$email_errors = array();
+		if (!self::checkEMail($this->email))
+			$email_errors[] = "Email invalide.";
+		if (self::emailExists($this->email)!==false )
+			$email_errors[] = "L'identifiant (email) existe déjà.";
+		if (count($email_errors)>0)
+			$errors['email'] = $email_errors;
+		if (count($errors)>0)
+			return $errors;
+		else
+			return true;
+	}
+
+
+	public function insertion()
+	{
 		require_once BDD_CONFIG;
 		try {
-			// Vérification que l'identifiant n'existe pas déjà
-			if ((!$force) && (self::identifiantExists($this->identifiant())!==false )) {
-				EC::addError("L'identifiant existe déjà.");
-				return null;
-			}
-			DB::insert(PREFIX_BDD.'users', $this->toArray(false));
+			DB::insert(PREFIX_BDD.'users', $this->toBDDArray());
+			$this->id=DB::insertId();
+			return $this->id;
 		} catch(MeekroDBException $e) {
 			EC::addBDDError($e->getMessage());
-			return null;
 		}
-
-		$this->id=DB::insertId();
-		EC::add($this->prenom." ".$this->nom." a bien été ajouté.");
-		return $this->id;
+		return null;
 	}
+
+	public function update_validation($params=array())
+	{
+		$errors = array();
+
+		if (isset($params['email'])&&($params['email']!==$this->email))
+		{
+			$email_errors = array();
+			if (!self::checkEMail($params['email']))
+			{
+				$email_errors[] = "Email invalide.";
+			}
+			if ( self::emailExists($params['email'])!==false )
+			{
+				$email_errors[] = "L'EMail existe déjà.";
+			}
+			if ($this->isRoot()) {
+				$email_errors[] = "L'email du root ne peut être changé.";
+			}
+			if (count($email_errors)>0)
+				$errors['email'] = $email_errors;
+		}
+		if (isset($params['rank']) && ($params['rank']!=$this->rank))
+		{
+			$errors['rank'] = array("Le rang ne peut pas être modifié.");
+		}
+		if (count($errors)>0)
+			return $errors;
+		else
+			return true;
+	}
+
 
 	public function update($params=array(),$updateBDD=true)
 	{
@@ -271,33 +281,44 @@ class User
 			EC::addDebugError('Id manquant.');
 			return false;
 		}
-		if (isset($params['email'])&&($params['email']!==$this->email)) {
-			if (!self::checkEMail($params['email'])) {
-				EC::addError("EMail invalide.");
-				return false;
+
+		if(isset($params['nom']))
+		{
+			$this->nom = $params['nom']; $bddModif=true;
+		}
+		if(isset($params['prenom']))
+		{
+			$this->prenom = $params['prenom']; $bddModif=true;
+		}
+		if(isset($params['rank']))
+		{
+			$this->rank = $params['rank']; $bddModif=true;
+		}
+		if(isset($params['email']))
+		{
+			$this->email = $params['email']; $bddModif=true;
+		}
+		if(isset($params['pwd']))
+		{
+			$this->updatePwd($params['pwd']);
+			$bddModif=true;
+		}
+		if(isset($params['locked']))
+		{
+			$locked = $params['locked'];
+			if (($locked==true)||($locked=="1")||($locked==1))
+			{
+				$this->locked = true;
 			}
-			if ( self::identifiantExists($this->identifiant())!==false ) {
-				EC::addError("L'EMail existe déjà.");
-				return false;
+			else
+			{
+				$this->locked = false;
 			}
-			if ($this->isRoot()) {
-				EC::addError("L'EMail du root ne peut être changé.");
-				return false;
-			}
+			$bddModif=true;
 		}
 
-		if(isset($params['locked'])) { $this->locked = (boolean) $params['locked']; $bddModif=true; }
-		if (!$this->locked) {
-			# locked empêche la modification du nom et du prénom
-			if(isset($params['nom'])) { $this->nom = $params['nom']; $bddModif=true; }
-			if(isset($params['prenom'])) { $this->prenom = $params['prenom']; $bddModif=true; }
-		}
-		if(isset($params['rank'])) { $this->rank = $params['rank']; $bddModif=true; }
-		if(isset($params['email'])) { $this->email = $params['email']; $bddModif=true; }
-		if(isset($params['pwd'])) { $this->_cryptedPwd = $params['pwd']; $bddModif=true; }
-
-
-		if (!$bddModif) {
+		if (!$bddModif)
+		{
 			EC::add("Aucune modification.");
 			return true;
 		}
@@ -307,13 +328,21 @@ class User
 		}
 		require_once BDD_CONFIG;
 		try{
-			DB::update(PREFIX_BDD.'users', $this->toArray(false),"id=%i",$this->id);
+			DB::update(PREFIX_BDD.'users', $this->toBDDArray() ,"id=%i",$this->id);
 		} catch(MeekroDBException $e) {
 			EC::addBDDError($e->getMessage(), 'User/update');
 			return false;
 		}
 		EC::add("La modification a bien été effectuée.");
 		return true;
+	}
+
+	public function updatePwd($pwd)
+	{
+		if (function_exists("password_hash")) {
+			$this->bcryptHash = password_hash($pwd,PASSWORD_DEFAULT);
+		}
+		$this->md5Hash = MD5(PRE_SALT.$pwd.POST_SALT);
 	}
 
 	public function updateTime()
@@ -333,15 +362,46 @@ class User
 		return ( ($this->id ===$key) || ($this->email === $key) );
 	}
 
-	public function toArray($notForBDDUpdate = true)
+	public function toArray()
 	{
-		$answer=array('nom'=>$this->nom, 'prenom'=>$this->prenom, 'email'=>$this->email, 'rank'=>$this->rank, 'date'=>$this->date, 'locked'=>$this->locked);
-		if ($this->_cryptedPwd !== null) $answer['pwd']=$this->_cryptedPwd;
+		$answer = array(
+			'nom'=>$this->nom,
+			'prenom'=>$this->prenom,
+			'email'=>$this->email,
+			'rank'=>$this->rank,
+			'date'=>$this->date,
+			'locked'=>$this->locked
+		);
 		if ($this->id !== null) $answer['id']=$this->id;
 		if ($this->idClasse !== null) $answer['idClasse'] = $this->idClasse;
-		if ($notForBDDUpdate) {
-			$classe = $this->getClasse();
-			if ($classe !== null) $answer['nomClasse'] = $classe->getNom();
+		$classe = $this->getClasse();
+		if ($classe !== null) $answer['nomClasse'] = $classe->getNom();
+		return $answer;
+	}
+
+	private function toBDDArray()
+	{
+		$answer=array(
+			'nom'=>$this->nom,
+			'prenom'=>$this->prenom,
+			'email'=>$this->email,
+			'rank'=>$this->rank,
+			'date'=>$this->date,
+			'locked'=>$this->locked
+		);
+
+		if ($this->id !== null) $answer['id']=$this->id;
+		if ($this->idClasse !== null) $answer['idClasse'] = $this->idClasse;
+		// La seule façon pour que les paramètres de hash soient non null
+		// C'est qu'on ait fait un updatePwd($pwd)
+		// soit lors d'un update, soit lors du constructeur
+		if ($this->bcryptHash !== null)
+		{
+			$answer["hash"] = $this->bcryptHash;
+		}
+		if ($this->md5Hash !==null)
+		{
+			$answer["pwd"] = $this->md5Hash;
 		}
 		return $answer;
 	}
@@ -412,6 +472,19 @@ class User
 		if (is_numeric($idClasse)) $idClasse = (integer) $idClasse;
 		// test si l'utilisateur est membre d'une classe
 		return ($idClasse === $this->idClasse);
+	}
+
+	public function initKey()
+	{
+		$key = md5(rand());
+		require_once BDD_CONFIG;
+		try {
+			DB::insert(PREFIX_BDD.'initKeys', array("initKey"=>$key, "idUser"=>$this->id));
+			return $key;
+		} catch(MeekroDBException $e) {
+			EC::addBDDError($e->getMessage());
+		}
+		return null;
 	}
 
 }

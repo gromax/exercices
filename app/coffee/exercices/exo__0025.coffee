@@ -5,7 +5,7 @@ Exercice.liste.push
 	description:"Calculer un intervalle de fluctuation."
 	keyWords:["probabilités","binomiale","Intervalle de fluctuation","Première"]
 	options: {
-		a:{ tag:"Calcul de E(X) et sigma", options:["non", "oui"], def:1}
+		a:{ tag:"Calcul de E(X) et sigma", options:["non", "oui"], def:0}
 	}
 	init: (data) ->
 		inp = data.inputs
@@ -27,7 +27,11 @@ Exercice.liste.push
 		flow=Xlow/inp.n
 		fhigh=Xhigh/inp.n
 		IF = mM.ensemble.intervalle "[", fixNumber(flow,2), fixNumber(fhigh,2), "]"
-
+		data.tex = {
+			p:inp.p
+			n:inp.n
+			nf:nf
+		}
 		out = [
 			new BEnonce { zones:[
 				{
@@ -117,4 +121,20 @@ Exercice.liste.push
 			aide:["Il faut calculer $f$, la fréquence de tuyaux poreux dans l'échantillon. Ensuite, on accepte si $f\\in I_F$."]
 		}
 		out
-
+	tex: (data) ->
+		if not isArray(data) then data = [ data ]
+		out=[]
+		for itemData in data
+			items = [
+				"Donnez l'intervalle de fluctuation à 95\\%."
+				"Doit-on accepter l'affirmation du fabriquant ?"
+			]
+			if itemData.options.a.value is 1 then items.unshift "$X$ le nombre de tuyaux poreux suit $\\mathcal{B}(#{itemData.tex.n};#{itemData.tex.p}\\%)$. Donnez $E(X)$ et $\\sigma(X)$."
+			out.push {
+				title:@title
+				content:Handlebars.templates["tex_enumerate"] {
+					pre: "Une usine fabrique des tuyaux en caoutchouc. Le fabriquant affirme que #{itemData.tex.p}\\% des tuyaux sont poreux. On prélève #{itemData.tex.n} tuyaux dans la production et on obtient #{itemData.tex.nf} tuyaux poreux."
+					items: items
+				}
+			}
+		out

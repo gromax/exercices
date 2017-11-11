@@ -254,13 +254,12 @@ class VUsersList extends VList
 		@final()
 	forgottenAction: (idUser) ->
 		item = @collection().get(Number idUser)
-		identifiant = item?.email
-		emailRegEx = /// ^[a-zA-Z0-9_-]+(.[a-zA-Z0-9_-]+)*@[a-zA-Z0-9._-]{2,}\.[a-z]{2,4}$ ///i
-		if (identifiant?.match emailRegEx) and confirm("Envoyez un mail à #{item.nom} #{item.prenom} [#{identifiant}] ?")
-			Controller.uLog.on { type:"forgotten", cb:(data)=>
-				Controller.notyMessage "Un email vous a été envoyé.", "success"
+		if item?
+			item.on {
+				type:"forgotten", cb:(data)->
+					Controller.notyMessage "Un email a été envoyé.", "success"
 			}
-			Controller.uLog.forgotten identifiant
+			item.forgottenPwd()
 class VConsList extends VList
 	_pagination:40
 	_template: "Con_parent"
@@ -688,7 +687,7 @@ class VInscription extends View
 						prenom:$("input[name='prenom']").val()
 						email:$("input[name='email']").val()
 						pwdClasse: $("input[name='pwdClasse']").val()
-						pwd:MD5(PRE_SALT+$("input[name='pwd']").val()+POST_SALT)
+						pwd:$("input[name='pwd']").val()
 					}
 					false
 			}
@@ -899,7 +898,7 @@ class VConnexion extends View
 						else message = "Aucun utilisateur n'a cet email."
 						$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:message }
 					}
-					Controller.uLog.forgotten identifiant
+					Controller.uLog.forgottenPwd identifiant
 				else
 					$("#messages#{@divId}").html Handlebars.templates.alertMessage { message:"Indiquez un <b>email valide</b> !" }
 			Controller.uLog.on { type:"connexion" }

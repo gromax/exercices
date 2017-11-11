@@ -87,16 +87,24 @@ class TokenFunction extends TokenObject
 	# Debug : Le name semble limité deux fois de suite
 	constructor: (@name) ->
 	toString: -> @name
-	@getRegex: -> "sqrt|racine|cos|sin|ln|exp"
+	@getRegex: -> "sqrt|racine|cos|sin|ln|exp|frac"
 	getPriority: -> 10
 	acceptOperOnLeft: -> true
 	operateOnRight: -> true
-	execute: (stack) -> FunctionNumber.make(@name, stack.pop())
+	execute: (stack) ->
+		if @name is "frac"
+			op2 = stack.pop()
+			op1 = stack.pop()
+			MultiplyNumber.makeDiv( op1, op2 )
+		else FunctionNumber.make(@name, stack.pop())
+
 class TokenParenthesis extends TokenObject
 	constructor: (token) ->
 		@type = token
 	toString: -> @type
-	@getRegex: -> "[\\(\\)]"
+	@getRegex: (type) ->
+		if type is "ensemble" then "[\\(\\)]"
+		else "[\\(\\{\\[\\]\\}\\)]"
 	acceptOperOnLeft: -> @type is "("
 	acceptOperOnRight: -> @type is ")"
 	isOpeningParenthesis: -> @type is "("

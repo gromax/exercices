@@ -2,13 +2,13 @@
 \begin{tikzpicture}[scale={{scale}}]
 {{#if index}}\draw (-{{max}},{{max}}) node[below right,color=white,fill=black]{\textbf{ {{index}} } };{{/if}}
 \draw [color=black, line width=.1pt] (-{{max}}, -{{max}}) grid[step=1]({{max}},{{max}});
-\draw[line width=1pt] (0,0) node[below left]{$O$} (1,-2pt) node[below, fill=white]{$1$}--++(0,4pt) (-2pt,1) node[left, fill=white]{$1$}--++(4pt,0);
+\draw[line width=1pt] (0,0) node[below left, fill=white]{$O$} (1,-2pt) node[below, fill=white]{$1$}--++(0,4pt) (-2pt,1) node[left, fill=white]{$1$}--++(4pt,0);
 \draw[line width=2pt](-{{max}},0)--({{max}},0) (0,-{{max}})--(0,{{max}});
-\begin{scope}
+{{#if courbes}}\begin{scope}
 \clip (-{{max}},-{{max}}) rectangle ({{max}},{{max}});
 {{#each courbes}}
 \draw[line width=2pt,color={{this.color}} ] plot[smooth, domain=-{{../max}}:{{../max}}](\x,{ {{this.expr}} });
 {{/each}}
-\end{scope}
+\end{scope}{{/if}}
 \end{tikzpicture}
 {{#if center}}\end{center}{{/if}}

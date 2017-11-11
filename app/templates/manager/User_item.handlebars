@@ -14,7 +14,9 @@
 {{/if}}
 {{#if params.showClasses}}
 <td>
+	{{#if item.idClasse }}
 	<button type="button" class="btn {{#if params.filtre.idClasse}}btn-danger{{else}}btn-default{{/if}} btn-sm" name="filtreClasseButton" _id="{{ item.idClasse }}">{{ item.nomClasse }}</button>
+	{{/if}}
 </td>
 {{/if}}
 <td>{{ item.dateFr }} à {{ item.hour }}</td>

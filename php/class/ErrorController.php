@@ -6,6 +6,7 @@
 		const BDD_DEBUG = true;
 		const DEBUG = true;
 		private static $_messages = null;
+		private static $_error_code = 200;
 
 		##################################### METHODES STATIQUES #####################################
 
@@ -37,6 +38,37 @@
 		{
 			if (self::$_messages === null) return array();
 			else return self::$_messages;
+		}
+
+		public static function set_error_code($code)
+		{
+			if ($code == null)
+				self::$_error_code = 501;
+			else
+				self::$_error_code = $code;
+		}
+
+		public static function header()
+		{
+			switch (self::$_error_code) {
+				case 401:
+					header('HTTP/1.0 401 Unauthorized');
+					break;
+				case 403:
+					header('HTTP/1.0 403 Forbidden');
+					break;
+				case 404:
+					header('HTTP/1.0 404 Not Found');
+					break;
+				case 422:
+					header('HTTP/1.0 422 Unprocessable entity');
+					break;
+				case 501:
+					header('HTTP/1.0 501 Not Implemented');
+					break;
+				default:
+					header('HTTP/1.0 200 OK');
+			}
 		}
 
 

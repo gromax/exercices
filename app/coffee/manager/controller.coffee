@@ -78,7 +78,7 @@ class @Controller
 		# Donc, à chaque load de page, on actualise le lastTime côté client et quand ce lastTime
 		# dépasse 60min, on met à jour le lastTime du serveur
 		# A vrai dire, je ne suis pas sûr que cette fonctionnalité soit très utile
-		@lastTime = (new Date()).getTime()
+		@uLog.timeOut()
 	@initRoutes: (user) ->
 		switch
 			when user.isAdmin then @routes = (item for item in routes when item.admin is true)
@@ -100,17 +100,9 @@ class @Controller
 				route.exec?.apply(@,[m])
 				routeFound = true
 				break
-		if (@uLog isnt null) and (not @uLog.isOff) and (uri.toLowerCase() isnt "deconnexion")
-			currentTime = (new Date()).getTime()
-			delta = currentTime - @lastTime
-			if delta>60000
-				$.post("./action.php?action=logged", { }, @updateLoggedTime, "json")
-				@lastTime = currentTime
-
+		if (uri.toLowerCase() isnt "deconnexion")
+			@uLog?.timeOut()
 		unless routeFound then @defaultView()
-	@updateLoggedTime: (data) =>
-		if data.logged then @lastTime = (new Date()).getTime()
-		else new VConnexion { reconnexion:true }
 	@errorMessagesList: (liste, entete, glyph) ->
 		if liste?.length >0
 			for message in liste

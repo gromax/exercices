@@ -494,6 +494,7 @@
 					# On exige un arrondi.
 					# On envisage pas le cas d'un modulo, donc si l'utilisateur en a mis un, c'est faux
 					approx = Math.pow(10,config.arrondi)
+
 					output.arrondi = {
 						resolution: numToStr(approx)
 						good:  numToStr(mM.float(goodObject), -config.arrondi)

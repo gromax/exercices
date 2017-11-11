@@ -116,6 +116,7 @@ abstract class Item
 		if (method_exists($this, "customDelete")) {
 			$this->customDelete();
 		}
+
 		try {
 			// Suppression des assoc liées
 			if (method_exists(get_called_class(),"getAssocs")) {
@@ -150,7 +151,6 @@ abstract class Item
 
 		$this->id=DB::insertId();
 		$this->values["id"] = $this->id;
-		EC::add($this." a bien été ajouté.");
 		return $this->id;
 	}
 
@@ -177,7 +177,6 @@ abstract class Item
 			EC::addBDDError($e->getMessage(), static::$myName."/update");
 			return false;
 		}
-		EC::add(static::$myName."/update : Succès.");
 		return true;
 	}
 

@@ -17,6 +17,10 @@ ParseManager = {
 		if @initOk is false then @initParse()
 		# Les élèves ont le réflexe d'utiliser la touche ² présente sur les claviers
 		if typeof expression is "string"
+			# Si le string vient d'un latex, on risque d'avoir des \ et left et right
+			expression = expression.replace /\\\\/g, " "
+			expression = expression.replace /left/g, " "
+			expression = expression.replace /right/g, " "
 			# Les élèves utilisent la touche ²
 			expression = expression.replace /²/g, "^2 "
 			# Dans certains cas, le - est remplacé par un autre caractère plus long

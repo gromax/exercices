@@ -159,13 +159,26 @@ final class Classe
 		return '[#'.$this->id.'] '.$this->nom;
 	}
 
+	public function insertion_update_validation()
+	{
+		// vérifie si l'utilisateur peut-être inséré
+		$errors = array();
+		if (strlen($this->nom)>NOMCLASSE_MAX_SIZE)
+		{
+			$errors["nom"] = "Nom trop long";
+		}
+		elseif (strlen($this->nom)<NOMCLASSE_MIN_SIZE)
+		{
+			$errors["nom"] = "Nom trop court";
+		}
+		if (count($errors)>0)
+			return $errors;
+		else
+			return true;
+	}
+
 	public function insertion()
 	{
-		if (!self::checkNomClasse($this->nom)) {
-			EC::addError("Nom invalide.");
-			return null;
-		}
-
 		require_once BDD_CONFIG;
 		try {
 			// Ajout de la classe
@@ -176,12 +189,12 @@ final class Classe
 				'pwd' => $this->pwd,
 				'idOwner' => $this->getOwnerId(),
 				'date' => $this->date
-				));
+			));
 		} catch(MeekroDBException $e) {
 			EC::addBDDError($e->getMessage(),'Classe/insertion');
 			return null;
 		}
-		$this->id=DB::insertId();
+		$this->id = DB::insertId();
 		// sauvegarde d'une copie de la classe en session
 		if (self::SAVE_IN_SESSION) $session=SC::get()->setParamInCollection('classes', $this->id, $this);
 
@@ -248,7 +261,7 @@ final class Classe
 
 	public function toArray()
 	{
-		$answer=array('id'=>$this->id, 'nom'=>$this->nom, 'description'=>$this->description, 'pwd'=>$this->pwd, 'idOwner'=>$this->getOwnerId(), 'ouverte'=>$this->ouverte);
+		$answer=array('id'=>$this->id, 'nom'=>$this->nom, 'description'=>$this->description, 'pwd'=>$this->pwd, 'idOwner'=>$this->getOwnerId(), 'ouverte'=>$this->ouverte, 'date'=>$this->date);
 		if (($owner = $this->getOwner()) !== null) $answer['owner']=$owner->toArray();
 		return $answer;
 	}

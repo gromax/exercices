@@ -8,22 +8,31 @@ Exercice.liste.push
 	options: {
 		a:{ tag:"complexes", options:["non", "oui"], def:0}
 	}
+	max:11
 	init: (data) ->
-		iPts = ( mM.alea.vector({ name:name, def:data.inputs}).save(data.inputs) for name in ["A", "B", "C", "D", "E"] )
-		uPts = ( mM.alea.vector({ name:name, def:data.answers}) for name in ["A", "B", "C", "D", "E"] )
+		iPts = ( mM.alea.vector({ name:name, def:data.inputs, values:[{min:-@max+1, max:@max-1}]}).save(data.inputs) for name in ["A", "B", "C", "D", "E"] )
+		uPts = ( mM.alea.vector({ name:name, def:data.answers, values:[{min:-@max+1, max:@max-1}]}) for name in ["A", "B", "C", "D", "E"] )
 		graphContainer = new BGraph {
-			params: {axis:true, grid:true, boundingbox:[-11,11,11,-11]}
+			params: {axis:true, grid:true, boundingbox:[-@max,@max,@max,-@max]}
 			zone:"gauche"
 			pts:uPts
 			customInit: ()->
 				@points = ( @graph.create('point',mM.float [pt.x,pt.y], {name:pt.name, fixed:false, size:4, snapToGrid:true, color:'blue', showInfoBox:false}) for pt in uPts )
 		}
 		if data.options.a.value is 0
-			liste = ( "<li>$#{pt.texLine()}$</li>" for pt in iPts )
-			enonce = "Vous devez placer les point suivants : <ul>#{ liste.join('') }</ul>"
+			liste = ( "$#{pt.texLine()}$" for pt in iPts )
+			enonce = "Vous devez placer les point suivants : <ul><li>#{ liste.join('</li><li>') }</li></ul>"
+			data.tex = {
+				liste:liste
+				enonce: "Vous devez placer les points "
+			}
 		else
-			liste = ( "<li>$z_#{pt.name} = #{pt.affixe().tex()}$</li>" for pt in iPts )
-			enonce = "Dans le plan complexe, vous devez placer les point $A$, $B$, $C$, $D$, $E$ dont les affixes respectives sont : <ul>#{ liste.join('') }</ul>"
+			liste = ( "$z_#{pt.name} = #{pt.affixe().tex()}$" for pt in iPts )
+			enonce = "Dans le plan complexe, vous devez placer les point $A$, $B$, $C$, $D$, $E$ dont les affixes respectives sont : <ul><li>#{ liste.join('</li><li>') }</li></ul>"
+			data.tex = {
+				liste:liste
+				enonce: "Dans le plan complexe, placez les points $A$, $B$, $C$, $D$, $E$ d'affixes"
+			}
 		[
 			new BEnonce {
 				zone:"droite"
@@ -58,3 +67,15 @@ Exercice.liste.push
 					@config.graphContainer.graph.create 'point',[g_x,g_y], {name:name, fixed:true, size:4, color:'green'}
 			}
 		]
+	tex: (data) ->
+		if not isArray(data) then data = [ data ]
+		out = []
+		for itemData,i in data
+			out.push {
+				title:@title
+				contents: [
+					Handlebars.templates["tex_courbes"] { max:@max, scale:.03*@max }
+					itemData.tex.enonce + " " + itemData.tex.liste.join(" ; ")
+				]
+			}
+		out

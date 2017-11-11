@@ -23,7 +23,7 @@ Exercice.liste.push
 		canoniqueTex = polyCanonique.tex()
 		poly = mM.exec [ polyFacto ], {simplify:true, developp:true }
 		normalTex = poly.tex()
-		yA = mM.exec [a, xA, xS, "-", 2, "^", yS, "+"], { simplify:true }
+		yA = mM.exec [a, xA, xS, "-", 2, "^", "*", yS, "+"], { developp:true, simplify:true }
 		if xA is (x1+x2)/2 then solutionsA = [ mM.toNumber(xA) ]
 		else solutionsA = [ mM.toNumber(xA), mM.toNumber(x1+x2-xA) ]
 		data.tex = { normale:normalTex, canonique:canoniqueTex, facto:factoTex, yA:yA }
@@ -67,7 +67,7 @@ Exercice.liste.push
 				data:data
 				bareme:40
 				touches:["empty","sqrt"]
-				title:"Solutions de $f(x)=#{yA}$"
+				title:"Solutions de $f(x)=#{yA.tex()}$"
 				liste:[{
 					name:"sols"
 					tag:"$\\mathcal{S}$"

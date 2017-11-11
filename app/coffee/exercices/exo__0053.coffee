@@ -86,7 +86,7 @@ Exercice.liste.push
 						# Il faut contrôler l'absence ou la présence de solutions
 						x0 = (t-v)/(u-w)
 						g = Math.min(u*x0+v,w*x0+t)
-						if dice(1,8) and (a is 0)
+						if mM.alea.dice(1,8) and (a is 0)
 							# une fois sur 8, on ne veut pas de solution
 							if (g>0)
 								t -= g+1

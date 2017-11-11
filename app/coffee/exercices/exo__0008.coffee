@@ -24,9 +24,10 @@ Exercice.liste.push
 		h_init("xi",inp,-max,max) # x dont on demandera l'image
 		h_init("xa",inp,-max,max) # x dont on calculera l'image afin de demander un antécédant
 		h_init("xa",inp,-max,max,true) while inp.xa is inp.xi
-		yi = mM.float poly, { x:inp.xi, decimals:decimals }
-		ya = mM.float poly, { x:inp.xa, decimals:decimals }
+		yi = mM.float poly, { x:inp.xi }
+		ya = mM.float poly, { x:inp.xa }
 		antecedents = mM.polynome.solve.numeric poly, { bornes:{min:-max, max:max}, decimals:decimals, y:ya }
+		# Par l'effet des approximations, il est possible que xa ne soit pas détecté comme antécédent de ya
 		data.values = { poly:poly, ya:ya, xi:inp.xi}
 		# Création de l'objet graphiques
 		graphContainer = new BGraph {
@@ -53,7 +54,7 @@ Exercice.liste.push
 					@graph.create('line',[[inp.xi,cor.yi],[0,cor.yi]], {color:'orange', straightFirst:false, straightLast:false, strokeWidth:2, dash:2, fixed:true})
 					if (inp.xi>0) then anchorX = 'right'
 					else anchorX = 'left'
-					@graph.create('text',[0,cor.yi,numToStr(cor.yi)], {color:'orange', anchorX:anchorX, anchorY:'middle'})
+					@graph.create('text',[0,cor.yi,numToStr(cor.yi,1)], {color:'orange', anchorX:anchorX, anchorY:'middle'})
 			}
 		}
 
@@ -81,14 +82,14 @@ Exercice.liste.push
 					zones:[
 						{
 							body:"texte"
-							html:"Donnez l'image de #{numToStr inp.xi} et <b>un</b> antécédent de #{numToStr @good.ya} à ±#{numToStr @precision}"
+							html:"Donnez l'image de #{numToStr inp.xi} et <b>un</b> antécédent de #{numToStr @good.ya, 1} à ±#{numToStr @precision}"
 						}, {
 							body:"champ"
 							html:Handlebars.templates.std_form {
 								id:"form#{@divId}"
 								inputs:[
 									{tag:"Image de #{numToStr inp.xi}", description:"Valeur décimale", name:"i", large:true}
-									{tag:"Antécédent de #{numToStr @good.ya}", description:"Valeur décimale", name:"a", large:true}
+									{tag:"Antécédent de #{numToStr @good.ya, 1}", description:"Valeur décimale", name:"a", large:true}
 								]
 							}
 						}
@@ -112,13 +113,13 @@ Exercice.liste.push
 					messages.push { color:color, text:message+" La construction graphique est donnée en orange."}
 					# antecedent
 					color="error"
-					message = "<b>Antécédent de #{numToStr cor.ya} :</b> Vous avez répondu <b>#{ pointToComma(@data.answers.a) }</b>."
+					message = "<b>Antécédent de #{numToStr cor.ya, 1} :</b> Vous avez répondu <b>#{ pointToComma(@data.answers.a) }</b>."
 					if isRealApproxIn(cor.antecedents,@data.answers.a,@precision) isnt false
 						color="ok"
 						message+=" Bonne réponse."
 						@data.note += @bareme/2
 					else
-						if cor.antecedents.length is 1 then message+= " La bonne était #{numToStr inp.xa, 1}."
+						if cor.antecedents.length is 1 then message+= " La bonne était #{str_antecedents}."
 						else message+= " Les bonnes réponses possibles étaient : <b>#{str_antecedents.join("</b> ; <b>")}</b>."
 					messages.push { color:color, text:message+" La construction graphique est donnée en vert."}
 					# tracé de la solution

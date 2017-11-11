@@ -94,7 +94,36 @@ module.exports = function(grunt) {
           join:true
         },
         files: {
-          'dist/manager.js': ['app/coffee/manager/routes.coffee', 'app/coffee/manager/collections.coffee', 'app/coffee/manager/models.coffee', 'app/coffee/manager/controller.coffee', 'app/coffee/manager/views.coffee']
+          'dist/manager.js': [
+            'app/coffee/manager/routes.coffee',
+            'app/coffee/manager/collections/functions.coffee',
+            'app/coffee/manager/collections/nobase.coffee',
+            'app/coffee/manager/collections/fichesUser.coffee',
+            'app/coffee/manager/collections/exercices.coffee',
+            'app/coffee/manager/collections/base.coffee',
+            'app/coffee/manager/collections/users.coffee',
+            'app/coffee/manager/collections/classes.coffee',
+            'app/coffee/manager/collections/fiches.coffee',
+            'app/coffee/manager/collections/exams.coffee',
+            'app/coffee/manager/collections/exosFiche.coffee',
+            'app/coffee/manager/collections/notes.coffee',
+            'app/coffee/manager/collections/assosUF.coffee',
+            'app/coffee/manager/collections/cons.coffee',
+            'app/coffee/manager/modeles/nobase.coffee',
+            'app/coffee/manager/modeles/exercice.coffee',
+            'app/coffee/manager/modeles/base.coffee',
+            'app/coffee/manager/modeles/user.coffee',
+            'app/coffee/manager/modeles/log.coffee',
+            'app/coffee/manager/modeles/classe.coffee',
+            'app/coffee/manager/modeles/fiche.coffee',
+            'app/coffee/manager/modeles/exam.coffee',
+            'app/coffee/manager/modeles/con.coffee',
+            'app/coffee/manager/modeles/exoFiche.coffee',
+            'app/coffee/manager/modeles/note.coffee',
+            'app/coffee/manager/modeles/assoUF.coffee',
+            'app/coffee/manager/controller.coffee',
+            'app/coffee/manager/views.coffee'
+          ]
         }
       },
       exercices: {
